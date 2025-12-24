@@ -1,0 +1,154 @@
+Model,Brand,Intro Year,Freq. Bands (TX),Power (W),Satellite Tracking,Harmonic Suppression Status,GPS,APRS,Air Band,DMR,Display,Battery (mAh),Cost (Approx),Known Rebadges / Clones,Website
+8600,Senhaix,2021,"VHF, UHF",5W,No,Unknown,No,No,Yes,No,Color LCD,2000,$50,Radtel RT-470L,senhaix.com
+8800,Senhaix,2022,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,3000,$70,Radtel RT-470X,senhaix.com
+5RH PRO,Baofeng,2024,"VHF, UHF",10W,No,Mixed,No,No,Yes,No,"1.77"" TFT",2500,$50,Baofeng UV-5RM Plus,baofengradio.com
+AR-26,Baofeng,2024,"VHF, 220, UHF",10W,No,Mixed,Yes,Yes (Analog),Yes,No,"1.77"" TFT",2500,$55,Baofeng UV-5RH Pro (Variant),baofengradio.com
+AT-318UV,AnyTone,2016,"VHF, UHF",6W,No,Good (Part 90),No,No,No,No,LCD,1300,$85,N/A,anytone.net
+AT-3208UVII,AnyTone,2015,"VHF, UHF",5W,No,Good (Part 90),No,No,No,No,LCD,1350,$75,N/A,anytone.net
+AT-398UV,AnyTone,2018,"VHF, UHF",5W,No,Good (Part 90),No,No,Yes,No,LCD,2200,$90,N/A,anytone.net
+AT-D168UV,AnyTone,2023,"VHF, UHF",5W,No,Excellent (Part 90),No,Beacon,No,Yes,"1.77"" TFT",2500,$150,Alinco DJ-MD5X,anytone.net
+AT-D878UVII Plus,AnyTone,2021,"VHF, UHF",7W,No,Excellent (Part 90),Yes,Yes (A/D),No,Yes,"1.77"" TFT",3100,$250,Alinco DJ-MD5,anytone.net
+AT-D890UV,AnyTone,2025,"VHF, UHF",7W,Yes (Native),Excellent,Yes,Yes (A/D),Yes,Yes,"1.77"" TFT",3100,~$299,BridgeCom Maverick,anytone.net
+B3H,Retevis,2025,FRS,2W,No,Good,No,No,No,No,Hidden LED,1620,$25,"""3rd Gen RT22""",retevis.com
+BF-1904,Baofeng,2019,UHF,10W,No,Unknown,No,No,No,No,None,4200 (Adv),$50,Retevis RT29 (Similar),baofengradio.com
+BF-33C,Baofeng,2023,FRS,2W,No,Good,No,No,No,No,LCD,1400,$25/3pk,N/A,baofengradio.com
+BF-528,Baofeng,2020,"VHF, UHF",10W,No,Unknown,No,No,No,No,None,1800,$35,N/A,baofengradio.com
+BF-530,PoFung,2018,UHF,5W,No,Good,No,No,No,No,None,2200,$30,BelFone BF-530,baofengradio.com
+BF-888S,Baofeng,2013,UHF,5W,No,Notorious,No,No,No,No,None,1500,$12,"Retevis H777, Arcshell AR-5",baofengradio.com
+BF-88ST,Baofeng,2021,FRS,2W,No,Good,No,No,No,No,None,1500,$25/pair,N/A,baofengradio.com
+BF-920,PoFung,2019,UHF,2W,No,Mixed,No,No,No,No,None,1500,$25,BF-888S (Slim),baofengradio.com
+BF-F8HP,Baofeng,2014,"VHF, UHF",8W,No,Poor,No,No,No,No,Tri-color,2000,$65,N/A,baofengtech.com
+BF-F8HP PRO,Baofeng,2024,"VHF, 220, UHF",10W,No,Mixed,No,No,Yes,No,Color LCD,2500,$65,N/A,baofengtech.com
+BF-H6,Baofeng,2020,"VHF, UHF",10W,No,Mixed,No,No,No,No,LCD,2200,$40,N/A,baofengradio.com
+BJ-7700,Bajeton,2024,"VHF, UHF",5W,No,Unknown,No,No,Yes,No,Color LCD,2500,$40,Radtel RT-860 / BinTolk BT7700,bajeton (AliExpress)
+BJ-7800,Bajeton,2025,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,2500,$45,Radtel RT-920 (Variant),bajeton (AliExpress)
+BJ-8200,Bajeton,2024,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,2800,$55,Radtel RT-900 / BinTolk BT8200,bajeton (AliExpress)
+BJ-8300,Bajeton,2025,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,2500,$50,Radtel RT-920,bajeton (AliExpress)
+BJ-9000,Bajeton,2025,Multi-Band,10W,No,Unknown,Yes,Yes (Analog),Yes,No,Color LCD,2600,$80,Radtel RT-950 PRO,bajeton (AliExpress)
+BT7700,BinTolk,2024,"VHF, UHF",5W,No,Unknown,No,No,Yes,No,Color LCD,2500,$35,Radtel RT-860 / Bajeton BJ-7700,bintolk (AliExpress)
+BT8200,BinTolk,2024,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,2800,$50,Radtel RT-900 / Bajeton BJ-8200,bintolk (AliExpress)
+CP-268,IRadio,2018,UHF,2W,No,Good,No,No,No,No,None,1800,$25,Baofeng BF-888S (Likely),iradio.com
+DJ-500,Alinco,2014,"VHF, UHF",5W,No,Excellent,No,No,No,No,LCD,1500,$130,N/A,alinco.com
+DJ-500E,Alinco,2014,"VHF, UHF",5W,No,Excellent,No,No,No,No,LCD,1500,$130,N/A,alinco.com
+DJ-CRX7,Alinco,2023,"VHF, UHF",5W,No,Excellent,No,No,No,No,Dot-matrix,1800,$80,N/A,alinco.com
+DJ-MD5,Alinco,2018,"VHF, UHF",5W,No,Excellent (Part 90),Yes,No,No,Yes,Color LCD,1700,$140,AnyTone AT-D868/878 (Base),alinco.com
+DJ-MD5XEG,Alinco,2021,"VHF, UHF",5W,No,Excellent,Yes,Yes (Digital),No,Yes,Color LCD,1700,$180,AnyTone AT-D878 (Variant),alinco.com
+DJ-VX50HT,Alinco,2019,"VHF, UHF",5W,No,Excellent,No,No,Yes,No,LCD,1800,$90,DJ-VX50 (Global),alinco.com
+DJ-W70HE,Alinco,2020,"VHF, UHF",5W,No,Excellent,No,No,Yes,No,LCD,2000,$150,N/A,alinco.com
+DJ-W70HT,Alinco,2024,"VHF, UHF",8W,No,Excellent,No,No,Yes,No,Color LCD,2600,$160,N/A,alinco.com
+DM-5000,Bajeton,2025,"VHF, UHF",5W,No,Unknown,No,No,No,Yes,Color Screen,3500,$60,Radtel RT-4D / IRadio DM-UV4R,bajeton (AliExpress)
+DM-V1,Baofeng,2019,UHF,2W,No,Good,No,No,No,Yes,None,2000,$40,Retevis RT22 (Similar),baofengradio.com
+DMR-6X2 PRO,BTECH,2022,"VHF, UHF",7W,Yes (FW Update),Good (Filtered),Yes,Yes (A/D),Yes,Yes,Color TFT,3100,$180,AnyTone AT-D878 (Custom FW),baofengtech.com
+DP4801,HongXun,2023,"VHF, UHF",5W,No,Unknown,No,No,No,No,Color LCD,2000,$40,Motorola DP4801 (Cosmetic Clone),N/A
+DP4801,HongXun,2023,"VHF, UHF",5W,No,Unknown,No,No,No,No,Color LCD,2000,$40,Motorola DP4801 (Cosmetic Clone),N/A
+FC9 Pro,Scom,2023,"VHF, UHF",5W,No,Borderline,No,No,Yes,No,Dot-matrix,1600,$35,Quansheng UV-K5 (Clone),scom (AliExpress)
+FRS-A1,Baofeng,2019,FRS,2W,No,Good (Part 95B),No,No,No,No,LCD,1500,$25,BTECH FRS-A1,baofengradio.com
+FRS-A1,BTECH,2019,FRS,2W,No,Good (Part 95B),No,No,No,No,LCD,1500,$35/pair,Baofeng BF-888S (Internals),baofengtech.com
+FRS-B1,BTECH,2019,FRS,2W,No,Good (Part 95B),No,No,No,No,LCD,1500,$35/pair,Baofeng BF-88E,baofengtech.com
+FT-4XE,Yaesu,2018,"VHF, UHF",5W,No,Excellent,No,No,Yes,No,LCD,1750,$70,FT-4XR (US Version),yaesu.com
+FT-5DE,Yaesu,2021,"VHF, UHF",5W,No,Excellent,Yes,Yes (Digital),Yes,C4FM,Touch TFT,2200,$450,FT-5DR (US Version),yaesu.com
+FT-65E,Yaesu,2017,"VHF, UHF",5W,No,Excellent,No,No,Yes,No,LCD,1950,$90,FT-65R (US Version),yaesu.com
+GMRS-PRO,BTECH,2022,GMRS,5W,No,Good (Part 95E),Yes,No,No,No,Color LCD,2600,$135,VR-N7500 (Mobile relative),baofengtech.com
+GMRS-V2,BTECH,2022,GMRS,5W,No,Good (Part 95E),No,No,No,No,Tri-color,1800,$55,Baofeng UV-5G (Variant),baofengtech.com
+GT-1,PoFung,2014,UHF,2W / 5W,No,Mixed,No,No,No,No,None,1500,$20,Baofeng BF-888S (High Perf.),baofengradio.com
+GT-10,Senhaix,2023,"VHF, UHF",10W,No,Unknown,No,No,No,No,None,3000,$45,N/A,senhaix.com
+GT-12,Senhaix,2022,"VHF, UHF",5W,No,Unknown,No,No,Yes,No,Color LCD,2000,$55,Anysecu GT-12,senhaix.com
+GT-22,Baofeng,2020,FRS,2W,No,Good,No,No,No,No,None,1500,$25/pair,N/A,baofengradio.com
+GT-5,PoFung,2021,"VHF, UHF",5W / 8W,No,Good,No,No,No,No,Tri-color,2000,$35,Baofeng UV-82 (Upgrade),baofengradio.com
+GXT1000VP4,Midland,2010,GMRS,5W (Max),No,Good (Part 95),No,No,No,No,LCD,700 (NiMH),$80/pair,N/A,midlandusa.com
+GXT3000,Midland,2024,GMRS,5W,No,Good (Part 95E),No,No,No,No,LCD,2000,$150,N/A,midlandusa.com
+GXT67 Pro,Midland,2024,GMRS,5W,No,Good (Part 95E),No,No,No,No,LCD,2000,$199,N/A,midlandusa.com
+HA1G,Retevis,2024,GMRS,5W,No,Good (Part 95E),No,No,No,No,Color LCD,2800,$55,Ailunce HA1G,retevis.com
+HA1UV,Retevis,2024,"VHF, UHF",5W,No,Good (IP67),No,No,Yes,No,Color LCD,2800,$60,Ailunce HA1UV,retevis.com
+HP-788,Hongxun,2024,"VHF, UHF",5W,No,Unknown,No,No,No,No,Color LCD,2500,$50,Hytera HP788 (Clone),N/A
+IC-T10,ICOM,2022,"VHF, UHF",5W,No,Excellent,No,No,Yes,No,LCD,2400,$230,N/A,https://www.google.com/search?q=icomjapan.com
+IP68 (A1050),Radtel,2024,"VHF, UHF",5W,No,Unknown,No,No,No,No,None,2000,$35,RT-495 (Variant),radtels.com
+K61 PRO,Baofeng,2024,Multi-Band,5W,No,Unknown,No,No,Yes,No,"1.54"" TFT",2600,$35,N/A,baofengradio.com
+KG-1000G Plus,Wouxun,2022,GMRS,50W,No,Good (Part 95E),No,No,Yes,No,Detachable,N/A (Mobile),$389,N/A,wouxun.com
+KG-935H,Wouxun,2025,Tri-Band (220),8W,No,Excellent,No,No,No,No,Color LCD,2600,$150,KG-935G (GMRS Variant),wouxun.com
+KG-Q10H,Wouxun,2024,Quad-Band,6W,No,Excellent,Yes,No,Yes,No,Color LCD,3000,$220,N/A,wouxun.com
+KG-UV980P,Wouxun,2020,Quad-Band,50W,No,Good,No,No,Yes,No,Detachable,N/A (Mobile),$329,N/A,wouxun.com
+KG-UV9D,Wouxun,2015,"VHF, UHF",5W,No,Good,No,No,Yes,No,Color LCD,2000,$110,N/A,wouxun.com
+KG-UV9P,Wouxun,2019,"VHF, UHF",9W,No,Good,No,No,Yes,No,Color LCD,3200,$150,N/A,wouxun.com
+KG-XS20H,Wouxun,2024,Tri-Band (220),20W,No,Good,No,No,No,No,Color LCD,N/A (Mobile),$159,N/A,wouxun.com
+LXT500VP3,Midland,2013,FRS,0.5W,No,Good (Part 95),No,No,No,No,LCD,600,$40/pair,N/A,midlandusa.com
+LXT600VP3,Midland,2013,FRS,0.5W/2W,No,Good (Part 95),No,No,No,No,LCD,700,$50/pair,N/A,midlandusa.com
+M10,Zastone,2024,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,2800,$45,N/A,zastone.com
+Maverick,BridgeCom,2025,"VHF, UHF",7W,Yes (Native),Excellent,Yes,Yes (A/D),Yes,Yes,Color TFT,3100,$299,AnyTone AT-D890UV,bridgecomsystems.com
+P3,Retevis,2024,UHF (DMR),5W,No,Good,No,No,No,Yes,Color LCD,2000,$335,N/A,retevis.com
+PFG-TEN4,PoFung,2022,GMRS,5W,No,Good (Part 95E),No,No,No,No,"1.5"" LCD",1800,$35,Baofeng UV-5G / UV-5X,baofengradio.com
+R8,Hongxun,2024,"VHF, UHF",10W,No,Unknown,No,No,No,No,Color LCD,6800 (Adv),$45,Motorola R8 (Clone),N/A
+R8000,Radtel,2024,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,2800,$50,N/A,radtels.com
+RA79,Retevis,2023,"VHF, UHF",5W,No,Borderline,No,No,Yes,No,Dot-matrix,1600,$35,Quansheng UV-K5 (Direct Clone),retevis.com
+RA89,Retevis,2023,"VHF, UHF",10W,No,Mixed,No,No,No,No,Color LCD,2500,$60,Baofeng UV-17 Pro / GT-3WP,retevis.com
+RB48,Retevis,2021,FRS/GMRS,2W/5W,No,Good,No,No,No,No,LCD,2000,$30,N/A,retevis.com
+RD-55 Pro,Baofeng,2023,"VHF, UHF",10W,No,Mixed,Yes,Analog,Yes,No,LCD,2500,$50,Radtel RT-490,baofengradio.com
+RT-330,Radtel,2023,Multi-Band,10W,No,Unknown,Yes,No,Yes,No,Color LCD,3300,$90,N/A,radtels.com
+RT-420,Radtel,2023,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,2800,$40,N/A,radtels.com
+RT-463,Radtel,2024,Multi-Band,8W,No,Mixed,No,No,Yes,No,Color LCD,3500,$40,N/A,radtels.com
+RT-470L,Radtel,2023,"VHF, UHF",5W,No,Unknown,No,No,Yes,No,Color LCD,2600,$35,SenHaix 8600,radtels.com
+RT-470X,Radtel,2023,"VHF, UHF",5W,No,Unknown,No,No,Yes,No,Color LCD,2600,$45,SenHaix 8800,radtels.com
+RT-490,Radtel,2020,Multi-Band,5W,No,Mixed,Yes,No,Yes,No,Color LCD,2000,$50,Baofeng/JJCC Generic,radtels.com
+RT-493,Radtel,2024,UHF,10W,No,Mixed,No,No,No,No,Hidden LED,2600,$45,IP68 Waterproof (Variant),radtels.com
+RT-4D,Radtel,2024,"VHF, UHF",5W,No,Unknown,No,No,Yes,Yes,Color LCD,3500,$70,"Bajeton DM-5000, IRadio DM-UV4R",radtels.com
+RT-580G,Radtel,2024,136-600Mhz,10W,No,Mixed,Yes,Yes (Pos.),Yes,No,Color LCD,3800,$60,N/A,radtels.com
+RT-590,Radtel,2022,Tri-Band,5W,No,Mixed,No,No,Yes,No,LCD,1800,$30,N/A,radtels.com
+RT-5R,Retevis,2013,"VHF, UHF",5W,No,Notorious,No,No,No,No,Tri-color,1400,$25,Baofeng UV-5R (Rebadge),retevis.com
+RT-600,Radtel,2022,Full Band RX,5W,No,Unknown,No,No,Yes,No,LCD,2200,$40,N/A,radtels.com
+RT-630,Radtel,2024,136-629Mhz,10W,No,Mixed,No,No,Yes,No,Color LCD,2600,$50,N/A,radtels.com
+RT-660,Radtel,2023,"VHF, UHF",7W,No,Unknown,Yes,Yes (Analog),Yes,No,Color LCD,2600,$165,N/A,radtels.com
+RT-6D,Radtel,2024,"VHF, UHF",10W,No,Unknown,Yes,Analog,Yes,Yes,Color LCD,3500,$90,Bajeton DM-5000,radtels.com
+RT-730,Radtel,2024,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,2500,$30,N/A,radtels.com
+RT-752,Radtel,2024,"VHF, UHF",10W,No,Unknown,No,No,Yes,No,Color LCD,2600,$45,N/A,radtels.com
+RT-7D,Radtel,2024,"VHF, UHF",5W,No,Unknown,No,No,Yes,Yes,Color LCD,1800,$139,N/A,radtels.com
+RT-860,Radtel,2024,"VHF, UHF",5W,No,Mixed,Optional,No,Yes,No,Color LCD,2000,$39,Bajeton BJ-7700 / BinTolk BT7700,radtels.com
+RT-880G,Radtel,2024,"VHF, UHF",10W,No,Mixed,Yes,Analog,Yes,No,Color LCD,2400,$95,N/A,radtels.com
+RT-890,Radtel,2023,"VHF, UHF",5W,No,Unknown,No,No,Yes,No,Color LCD,2500,$40,"Ruyage UV-890, IRadio UV-98",radtels.com
+RT-900,Radtel,2024,"VHF, UHF",8W,No,Mixed,No,No,Yes,No,Color LCD,2200,$35,Bajeton BJ-8200 / BinTolk BT8200,radtels.com
+RT-910B,Radtel,2024,"VHF, UHF, 6M",8W,No,Unknown,No,No,Yes,No,Color LCD,1800,$35,N/A,radtels.com
+RT-920,Radtel,2025,"VHF, UHF",8W,No,Unknown,No,No,Yes,No,Color LCD,2500,$45,Bajeton BJ-8300,radtels.com
+RT-950,Radtel,2024,Multi-Band,10W,No,Mixed,Yes,Analog,Yes,No,Color LCD,2600,$115,Bajeton BJ-9000,radtels.com
+RT-950 PRO,Radtel,2024,Multi-Band,10W,No,Mixed,Yes,Analog,Yes,No,Color LCD,2600,$115,Bajeton BJ-9000,radtels.com
+RT3S,Retevis,2018,"VHF, UHF",5W,No,Good,Yes,No,No,Yes,Color LCD,2000,$110,TYT MD-UV380 (Rebadge),retevis.com
+SHX-8650,Senhaix,2023,"VHF, UHF",8W,No,Unknown,No,No,Yes,No,Color LCD,2500,$90,N/A,senhaix.com
+T290,Midland,2020,GMRS,2W,No,Good (Part 95),No,No,No,No,LCD,700,$80/pair,N/A,midlandusa.com
+T368,Inrico,2022,UHF (DMR) + LTE,2W (RF),No,N/A (Cellular),Yes,No,No,Yes,"2.4"" Touch",6000,$250,N/A,inrico.cn
+TD-H3 Plus,TIDRadio,2024,"VHF, 220, UHF",5W,No,Good,No,No,Yes,No,"1.44"" TFT",2500,$45,Talkpod (Competitor),tidradio.com
+TD-H8,TIDRadio,2023,"VHF, 220, UHF",10W,No,Good,No,No,Yes,No,Color LCD,2500,$65,Rugged Radios (White Label),tidradio.com
+TD-H9,TIDRadio,2025,"VHF, UHF",10W,No,Good,Yes,Analog,Yes,No,"1.77"" TFT",2500,$75,N/A,tidradio.com
+TG-K10AT,Quansheng,2024,"VHF, UHF",10W,No,Unknown,No,No,No,No,Backlit LCD,4000,$50,N/A,qsfj.com
+TG-UV2PLUS,Quansheng,2023,"VHF, UHF",10W,No,Unknown,No,No,No,No,Backlit LCD,4000,$55,N/A,qsfj.com
+TH-D75,Kenwood,2024,Tri-Band (220),5W,Yes (Native),Excellent,Yes,Yes (A/D),Yes,D-STAR,Color TFT,1820,$750,N/A,kenwood.com
+TK-11,Quansheng,2025,Quad-Band,10W,No,Unknown/Risk,No,No,Yes,No,Color LCD,3000,$75,N/A,qsfj.com
+UV-10R,Baofeng,2021,"VHF, UHF",10W,No,Notorious,No,No,No,No,Segmented,2800,$45,N/A,baofengradio.com
+UV-13 Pro,Baofeng,2021,"VHF, UHF",8W,No,Mixed,No,No,No,No,"1.44"" LCD",1800,$35,N/A,baofengradio.com
+UV-17 Pro GPS,Baofeng,2023,"VHF, UHF",5W,No,Mixed,Yes,No,Yes,No,"1.77"" TFT",1800,$40,Retevis RA89 (Similar chassis),baofengradio.com
+UV-21,Baofeng,2024,"VHF, 220, UHF",6W,No,Unknown,No,No,Yes,No,"1.77"" TFT",2800,$30,UV-17 (Variant),baofengradio.com
+UV-21R,Baofeng,2023,"VHF, 220, UHF",6W,No,Unknown,No,No,Yes,No,"1.77"" TFT",2800,$35,UV-17R (Variant),baofengradio.com
+UV-28 Plus,Baofeng,2025,"VHF, 220, UHF",10W,No,Mixed,Yes,No,Yes,No,"1.77"" TFT",2200,$35,N/A,baofengradio.com
+UV-5R (Standard),Baofeng,2012,"VHF, UHF",5W,No,Notorious,No,No,Some,No,Tri-color,1800,$25,"Retevis RT-5R, Pofung UV-5R",baofengradio.com
+UV-5R Mini,Baofeng,2024,"VHF, UHF",5W,No,Unknown,No,No,No,No,Small LCD,1400,$25,N/A,baofengradio.com
+UV-5RA,Baofeng,2013,"VHF, UHF",5W,No,Notorious,No,No,No,No,Tri-color,1800,$25,N/A,baofengradio.com
+UV-5RH,Baofeng,2023,"VHF, UHF",10W,No,Mixed,No,No,Yes,No,"1.77"" TFT",2500,$45,Pofung UV-5RH,baofengradio.com
+UV-5RH Pro,Baofeng,2024,"VHF, 220, UHF",10W,No,Mixed,Yes,Analog,Yes,No,"1.77"" TFT",2500,$40,UV-5RM Plus (Rebadge),baofengradio.com
+UV-5RM,Baofeng,2023,"VHF, 220, UHF",10W,No,Mixed,No,No,Yes,No,"1.77"" TFT",2500,$35,Baofeng AR-5RM,baofengradio.com
+UV-5RM Plus,Baofeng,2024,"VHF, 220, UHF",10W,No,Mixed,Yes,Analog,Yes,No,"1.77"" TFT",2500,$35,UV-5RH Pro (Variant),baofengradio.com
+UV-5RQ,Baofeng,2013,"VHF, UHF",5W,No,Notorious,No,No,No,No,Tri-color,1800,$25,N/A,baofengradio.com
+UV-5X3,Baofeng,2016,Tri-Band (220),5W,No,Mixed,No,No,No,No,Tri-color,1500,$60,N/A,baofengtech.com
+UV-66,PoFung,2018,UHF,5W,No,Mixed,No,No,No,No,None,1800,$25,Baofeng UV-6,baofengradio.com
+UV-68 Pro,Baofeng,2024,"VHF, UHF",10W,No,Unknown,No,No,No,No,LCD,2800,$45,UV-S22 (Variant),baofengradio.com
+UV-8000,KMD / TSSD,2020,"VHF, UHF",10W,No,Mixed,No,No,No,No,LCD,3600,$55,TYT TH-UV8000D (Clone),N/A
+UV-82C,Baofeng,2013,"VHF, UHF",5W,No,Good (Commercial),No,No,No,No,Tri-color,1800,$55,N/A,baofengtech.com
+UV-82HP,Baofeng,2015,"VHF, UHF",7W/8W,No,Mixed,No,No,No,No,Tri-color,1800,$65,Pofung UV-82HP,baofengtech.com
+UV-82X,Baofeng,2014,"VHF, 220",5W,No,Good,No,No,No,No,Tri-color,1800,Discont.,N/A,baofengradio.com
+UV-920,PoFung,2015,"VHF, UHF",8W,No,Mixed,No,No,No,No,LCD,2800,$40,Baofeng UV-82 (Variant),baofengradio.com
+UV-98 Pro,IRadio,2024,Multi-Band,8W,No,Unknown,No,No,Yes,No,Color LCD,2800,$55,Radtel RT-890 / Ruyage UV-98,iradio.com
+UV-B5,Baofeng,2012,"VHF, UHF",5W,No,Good (Old Gen),No,No,No,No,LCD,2000,$30,N/A,baofengradio.com
+UV-K1 (Mini),Quansheng,2024,"VHF, UHF",5W,No,Borderline,No,No,Yes,No,"1.44"" LCD",1400,$35,N/A,qsfj.com
+UV-K5/K6,Quansheng,2023,"VHF, UHF",5W,No,Borderline,No,No,Yes,No,Dot-matrix,1600,$30,"Retevis RA79, Wurui K5",qsfj.com
+UV-PRO,BTECH,2022,"VHF, UHF",7W,Yes (App),Good,Yes,Yes (A/D),Yes,No,Color LCD,2600,$165,VGC VR-N76 (OEM),baofengtech.com
+UV-TEN4,PoFung,2022,"VHF, UHF",5W,No,Notorious,No,No,No,No,"1.5"" LCD",1800,$35,Baofeng UV-5R (Variant),baofengradio.com
+UVA1,AnyTone,2025,"VHF, UHF",5W,No,Excellent,Optional,Optional,Yes,No,Color Screen,2000,$95,N/A,anytone.net
+VR-N75,VGC,2020,"VHF, UHF",5W,Yes (App),Good,Yes,Yes (A/D),No,No,Color LCD,2500,$140,N/A,https://www.google.com/search?q=verotelecom.com
+VR-N76,VGC,2024,"VHF, UHF",5W,Yes (App),Good,Yes,Yes (A/D),No,Yes,Dot-matrix,2500,$160,BTECH UV-PRO (Rebrand),https://www.google.com/search?q=verotelecom.com
+Y23DM-UV4R,IRadio,2024,"VHF, UHF",5W,No,Unknown,No,No,No,Yes,Color LCD,3500,$60,Radtel RT-4D / Bajeton DM-5000,iradio.com

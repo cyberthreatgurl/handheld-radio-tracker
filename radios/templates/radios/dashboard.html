@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Ham Radio Database{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p class="mt-2 text-sm text-gray-600">Overview of your ham radio database</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <dt class="text-sm font-medium text-gray-500 truncate">Total Radios</dt>
+                <dd class="mt-1 text-3xl font-semibold text-indigo-600">{{ total_radios }}</dd>
+            </div>
+        </div>
+        
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <dt class="text-sm font-medium text-gray-500 truncate">Total Brands</dt>
+                <dd class="mt-1 text-3xl font-semibold text-indigo-600">{{ total_brands }}</dd>
+            </div>
+        </div>
+        
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <dt class="text-sm font-medium text-gray-500 truncate">Quick Actions</dt>
+                <dd class="mt-3">
+                    <a href="{% url 'radio_add' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                        Add New Radio
+                    </a>
+                </dd>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Brands -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Top Brands</h3>
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                {% for brand in top_brands %}
+                <a href="{% url 'radio_list' %}?brand={{ brand.brand }}" class="text-center p-4 border rounded-lg hover:bg-gray-50 transition">
+                    <p class="font-semibold text-gray-900">{{ brand.brand }}</p>
+                    <p class="text-sm text-gray-500">{{ brand.count }} models</p>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Radios -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Recently Added</h3>
+            <div class="space-y-3">
+                {% for radio in recent_radios %}
+                <div class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                    <div>
+                        <a href="{% url 'radio_detail' radio.pk %}" class="font-medium text-indigo-600 hover:text-indigo-900">
+                            {{ radio.brand }} {{ radio.model }}
+                        </a>
+                        {% if radio.fcc_id %}
+                        <p class="text-sm text-gray-500">FCC ID: {{ radio.fcc_id }}</p>
+                        {% endif %}
+                    </div>
+                    <span class="text-xs text-gray-400">{{ radio.created_at|date:"M d, Y" }}</span>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 text-center py-4">No radios added yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

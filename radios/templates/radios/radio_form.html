@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Radio - Ham Radio Database{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="space-y-6">
+        <!-- Header -->
+        <div>
+            <a href="{% url 'radio_list' %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
+                ← Back to all radios
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">
+                {% if form.instance.pk %}Edit Radio{% else %}Add New Radio{% endif %}
+            </h1>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white shadow rounded-lg">
+            <form method="post" class="space-y-6 p-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="rounded-md bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                Please correct the following errors:
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                {{ form.non_field_errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Basic Information -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="{{ form.brand.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                Brand <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.brand }}
+                            {% if form.brand.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.brand.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.model.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                Model <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.model }}
+                            {% if form.model.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.model.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FCC Information -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">FCC Information</h3>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="{{ form.fcc_id.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                FCC ID
+                            </label>
+                            {{ form.fcc_id }}
+                            {% if form.fcc_id.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.fcc_id.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.grantee_code.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                Grantee Code
+                            </label>
+                            {{ form.grantee_code }}
+                            {% if form.grantee_code.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.grantee_code.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Specifications -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Technical Specifications</h3>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div>
+                                <label for="{{ form.frequency_range.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                    Frequency Range
+                                </label>
+                                {{ form.frequency_range }}
+                            </div>
+                            <div>
+                                <label for="{{ form.power_output.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                    Power Output
+                                </label>
+                                {{ form.power_output }}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div>
+                                <label for="{{ form.modulation.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                    Modulation
+                                </label>
+                                {{ form.modulation }}
+                            </div>
+                            <div>
+                                <label for="{{ form.bands.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                    Bands
+                                </label>
+                                {{ form.bands }}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div>
+                                <label for="{{ form.digital_modes.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                    Digital Modes
+                                </label>
+                                {{ form.digital_modes }}
+                            </div>
+                            <div>
+                                <label for="{{ form.channels.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                    Channels
+                                </label>
+                                {{ form.channels }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Details -->
+                <div class="pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Details</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                Notes
+                            </label>
+                            {{ form.notes }}
+                        </div>
+                        <div>
+                            <label for="{{ form.review_url.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                Review URL
+                            </label>
+                            {{ form.review_url }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end space-x-3 pt-6 border-t">
+                    <a href="{% url 'radio_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                        {% if form.instance.pk %}Update Radio{% else %}Create Radio{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

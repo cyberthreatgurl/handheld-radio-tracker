@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ham Radio Database{% endblock %}</title>
+    {% load static tailwind_tags %}
+    {% tailwind_css %}
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-indigo-600">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'dashboard' %}" class="text-white text-xl font-bold">
+                        📻 Ham Radio Database
+                    </a>
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="{% url 'dashboard' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Dashboard
+                        </a>
+                        <a href="{% url 'radio_list' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            All Radios
+                        </a>
+                        <a href="{% url 'radio_add' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Add Radio
+                        </a>
+                        <a href="/admin/" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Admin
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="rounded-md {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-800{% else %}bg-blue-50 border-blue-400 text-blue-800{% endif %} p-4 border-l-4 mb-4">
+            <p>{{ message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <p class="text-center text-gray-500 text-sm">
+                Ham Radio Database &copy; 2025
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

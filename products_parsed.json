@@ -1,0 +1,2422 @@
+[
+  {
+    "product_name": "Yaesu FT-60R",
+    "manufacturer": "Yaesu",
+    "model": "FT-60R"
+  },
+  {
+    "product_name": "Yaesu VX-7R",
+    "manufacturer": "Yaesu",
+    "model": "VX-7R"
+  },
+  {
+    "product_name": "Baofeng/Pofung UV-5R",
+    "manufacturer": "Baofeng",
+    "model": "UV-5R"
+  },
+  {
+    "product_name": "Yaesu VX-5R",
+    "manufacturer": "Yaesu",
+    "model": "VX-5R"
+  },
+  {
+    "product_name": "Kenwood TH-F6A",
+    "manufacturer": "Kenwood",
+    "model": "TH-F6A"
+  },
+  {
+    "product_name": "Yaesu VX-150",
+    "manufacturer": "Yaesu",
+    "model": "VX-150"
+  },
+  {
+    "product_name": "WOUXUN KG-UVD1P",
+    "manufacturer": "Wouxun",
+    "model": "KG-UVD1P"
+  },
+  {
+    "product_name": "Yaesu VX-3R",
+    "manufacturer": "Yaesu",
+    "model": "VX-3R"
+  },
+  {
+    "product_name": "Yaesu VX-6R",
+    "manufacturer": "Yaesu",
+    "model": "VX-6R"
+  },
+  {
+    "product_name": "Yaesu VX-2R",
+    "manufacturer": "Yaesu",
+    "model": "VX-2R"
+  },
+  {
+    "product_name": "Baofeng/Pofung UV3R",
+    "manufacturer": "Baofeng",
+    "model": "UV3R"
+  },
+  {
+    "product_name": "Kenwood TH-G71A",
+    "manufacturer": "Kenwood",
+    "model": "TH-G71A"
+  },
+  {
+    "product_name": "Yaesu VX-170",
+    "manufacturer": "Yaesu",
+    "model": "VX-170"
+  },
+  {
+    "product_name": "Radio Shack HTX-202",
+    "manufacturer": "Radio Shack",
+    "model": "HTX-202"
+  },
+  {
+    "product_name": "ICOM IC-W32A",
+    "manufacturer": "Icom",
+    "model": "IC-W32A"
+  },
+  {
+    "product_name": "Icom IC-T90A",
+    "manufacturer": "Icom",
+    "model": "IC-T90A"
+  },
+  {
+    "product_name": "Icom IC-T7A & T7H",
+    "manufacturer": "Icom",
+    "model": "IC-T7A & T7H"
+  },
+  {
+    "product_name": "Alinco DJ-V5T",
+    "manufacturer": "Alinco",
+    "model": "DJ-V5T"
+  },
+  {
+    "product_name": "Yaesu FT-70DR dual band digital HT",
+    "manufacturer": "Yaesu",
+    "model": "FT-70DR"
+  },
+  {
+    "product_name": "Yaesu FT-50R",
+    "manufacturer": "Yaesu",
+    "model": "FT-50R"
+  },
+  {
+    "product_name": "Icom IC-V8",
+    "manufacturer": "Icom",
+    "model": "IC-V8"
+  },
+  {
+    "product_name": "BaoFeng/Pofung UV-5R+",
+    "manufacturer": "Baofeng",
+    "model": "UV-5R+"
+  },
+  {
+    "product_name": "Yaesu VX-8R",
+    "manufacturer": "Yaesu",
+    "model": "VX-8R"
+  },
+  {
+    "product_name": "Icom IC-T2A & T2H",
+    "manufacturer": "Icom",
+    "model": "IC-T2A & T2H"
+  },
+  {
+    "product_name": "Yaesu VX-1R",
+    "manufacturer": "Yaesu",
+    "model": "VX-1R"
+  },
+  {
+    "product_name": "Radio Shack HTX-420",
+    "manufacturer": "Radio Shack",
+    "model": "HTX-420"
+  },
+  {
+    "product_name": "Wouxun KG-UV3D",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV3D"
+  },
+  {
+    "product_name": "Yaesu FT-530",
+    "manufacturer": "Yaesu",
+    "model": "FT-530"
+  },
+  {
+    "product_name": "RFinder B1",
+    "manufacturer": "Rfinder",
+    "model": "B1"
+  },
+  {
+    "product_name": "Baofeng/Pofung UV-82",
+    "manufacturer": "Baofeng",
+    "model": "UV-82"
+  },
+  {
+    "product_name": "Kenwood TH-D7A(G)",
+    "manufacturer": "Kenwood",
+    "model": "TH-D7A"
+  },
+  {
+    "product_name": "Icom ID-51A",
+    "manufacturer": "Icom",
+    "model": "ID-51A"
+  },
+  {
+    "product_name": "Kenwood TH-D72",
+    "manufacturer": "Kenwood",
+    "model": "TH-D72"
+  },
+  {
+    "product_name": "Quansheng TG-UV2",
+    "manufacturer": "Quansheng",
+    "model": "TG-UV2"
+  },
+  {
+    "product_name": "Radio Shack HTX-200",
+    "manufacturer": "Radio Shack",
+    "model": "HTX-200"
+  },
+  {
+    "product_name": "Kenwood TH-D74A/E",
+    "manufacturer": "Kenwood",
+    "model": "TH-D74A/E"
+  },
+  {
+    "product_name": "Wouxun KG-UV2D",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV2D"
+  },
+  {
+    "product_name": "Yaesu FT-65R",
+    "manufacturer": "Yaesu",
+    "model": "FT-65R"
+  },
+  {
+    "product_name": "ICOM IC-91AD",
+    "manufacturer": "Icom",
+    "model": "IC-91AD"
+  },
+  {
+    "product_name": "Radio Shack HTX-245",
+    "manufacturer": "Radio Shack",
+    "model": "HTX-245"
+  },
+  {
+    "product_name": "Icom IC-T81A/E",
+    "manufacturer": "Icom",
+    "model": "IC-T81A/E"
+  },
+  {
+    "product_name": "Icom IC-92AD",
+    "manufacturer": "Icom",
+    "model": "IC-92AD"
+  },
+  {
+    "product_name": "ADI AT-201",
+    "manufacturer": "Adi",
+    "model": "AT-201"
+  },
+  {
+    "product_name": "Yaesu FT3DR/DE",
+    "manufacturer": "Yaesu",
+    "model": "FT3DR/DE"
+  },
+  {
+    "product_name": "Yaesu FT-2DR",
+    "manufacturer": "Yaesu",
+    "model": "FT-2DR"
+  },
+  {
+    "product_name": "Puxing",
+    "manufacturer": "Puxing",
+    "model": ""
+  },
+  {
+    "product_name": "Kenwood TH-K2AT",
+    "manufacturer": "Kenwood",
+    "model": "TH-K2AT"
+  },
+  {
+    "product_name": "Icom IC-2AT",
+    "manufacturer": "Icom",
+    "model": "IC-2AT"
+  },
+  {
+    "product_name": "Yaesu FT-51R",
+    "manufacturer": "Yaesu",
+    "model": "FT-51R"
+  },
+  {
+    "product_name": "Anytone AT-D878UV Dual band DMR Transceiver",
+    "manufacturer": "Anytone",
+    "model": "AT-D878UV"
+  },
+  {
+    "product_name": "Alinco DJ-G7",
+    "manufacturer": "Alinco",
+    "model": "DJ-G7"
+  },
+  {
+    "product_name": "Yaesu FT5DR",
+    "manufacturer": "Yaesu",
+    "model": "FT5DR"
+  },
+  {
+    "product_name": "Wouxun KG-UVD1",
+    "manufacturer": "Wouxun",
+    "model": "KG-UVD1"
+  },
+  {
+    "product_name": "TYT MD380",
+    "manufacturer": "Tyt",
+    "model": "MD380"
+  },
+  {
+    "product_name": "Yaesu FT1D",
+    "manufacturer": "Yaesu",
+    "model": "FT1D"
+  },
+  {
+    "product_name": "ICOM IC-Q7A",
+    "manufacturer": "Icom",
+    "model": "IC-Q7A"
+  },
+  {
+    "product_name": "Yaesu FT-250R",
+    "manufacturer": "Yaesu",
+    "model": "FT-250R"
+  },
+  {
+    "product_name": "Baofeng/Pofung UV-B6",
+    "manufacturer": "Baofeng",
+    "model": "UV-B6"
+  },
+  {
+    "product_name": "Yaesu FT-270R",
+    "manufacturer": "Yaesu",
+    "model": "FT-270R"
+  },
+  {
+    "product_name": "Wouxun KG-UV6D",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV6D"
+  },
+  {
+    "product_name": "Icom IC-T70A",
+    "manufacturer": "Icom",
+    "model": "IC-T70A"
+  },
+  {
+    "product_name": "Icom IC-V82",
+    "manufacturer": "Icom",
+    "model": "IC-V82"
+  },
+  {
+    "product_name": "Kenwood TH-7E",
+    "manufacturer": "Kenwood",
+    "model": "TH-7E"
+  },
+  {
+    "product_name": "Alinco DJ-195T",
+    "manufacturer": "Alinco",
+    "model": "DJ-195T"
+  },
+  {
+    "product_name": "ICOM ID-31",
+    "manufacturer": "Icom",
+    "model": "ID-31"
+  },
+  {
+    "product_name": "FDC  FD-150A/450A",
+    "manufacturer": "Fdc",
+    "model": "FD-150A/450A"
+  },
+  {
+    "product_name": "Kenwood TH-G71",
+    "manufacturer": "Kenwood",
+    "model": "TH-G71"
+  },
+  {
+    "product_name": "Yaesu FT-470",
+    "manufacturer": "Yaesu",
+    "model": "FT-470"
+  },
+  {
+    "product_name": "Wouxun KG UV8D",
+    "manufacturer": "Wouxun",
+    "model": "KG UV8D"
+  },
+  {
+    "product_name": "Baofeng/Pofung BF-F8HP",
+    "manufacturer": "Baofeng",
+    "model": "BF-F8HP"
+  },
+  {
+    "product_name": "Connect Systems CS-700",
+    "manufacturer": "Connect Systems",
+    "model": "CS-700"
+  },
+  {
+    "product_name": "Yaesu VX-8GR",
+    "manufacturer": "Yaesu",
+    "model": "VX-8GR"
+  },
+  {
+    "product_name": "Icom IC-V80",
+    "manufacturer": "Icom",
+    "model": "IC-V80"
+  },
+  {
+    "product_name": "Motorola GP300",
+    "manufacturer": "Motorola",
+    "model": "GP300"
+  },
+  {
+    "product_name": "YAESU FT-4XR – VHF/UHF Dual Band FM Handheld Transceiver",
+    "manufacturer": "Yaesu",
+    "model": "FT-4XR"
+  },
+  {
+    "product_name": "Anytone AT-D868uv dual-band DMR HT",
+    "manufacturer": "Anytone",
+    "model": "AT-D868uv dual-band DMR HT"
+  },
+  {
+    "product_name": "Baofeng/Pofung BF-888",
+    "manufacturer": "Baofeng",
+    "model": "BF-888"
+  },
+  {
+    "product_name": "Alinco DJ-580",
+    "manufacturer": "Alinco",
+    "model": "DJ-580"
+  },
+  {
+    "product_name": "ICOM Q7A",
+    "manufacturer": "Icom",
+    "model": "Q7A"
+  },
+  {
+    "product_name": "ADI AT-600",
+    "manufacturer": "Adi",
+    "model": "AT-600"
+  },
+  {
+    "product_name": "Alinco DJ-G5TH",
+    "manufacturer": "Alinco",
+    "model": "DJ-G5TH"
+  },
+  {
+    "product_name": "Kenwood TH-D7A/E",
+    "manufacturer": "Kenwood",
+    "model": "TH-D7A/E"
+  },
+  {
+    "product_name": "Alinco DJ-MD5T / DJ-MD5TGP",
+    "manufacturer": "Alinco",
+    "model": "DJ-MD5T / DJ-MD5TGP"
+  },
+  {
+    "product_name": "Radioddity GD-77 Dual Band DMR",
+    "manufacturer": "Radioddity",
+    "model": "GD-77"
+  },
+  {
+    "product_name": "BaoFeng/Pofung GT-3",
+    "manufacturer": "Baofeng",
+    "model": "GT-3"
+  },
+  {
+    "product_name": "Yaesu VX-8DR",
+    "manufacturer": "Yaesu",
+    "model": "VX-8DR"
+  },
+  {
+    "product_name": "ICOM T8a",
+    "manufacturer": "Icom",
+    "model": "T8a"
+  },
+  {
+    "product_name": "Alinco DJ-G29T FM Dual Band",
+    "manufacturer": "Alinco",
+    "model": "DJ-G29T FM"
+  },
+  {
+    "product_name": "Alinco DJ-596",
+    "manufacturer": "Alinco",
+    "model": "DJ-596"
+  },
+  {
+    "product_name": "Kenwood TH-78A",
+    "manufacturer": "Kenwood",
+    "model": "TH-78A"
+  },
+  {
+    "product_name": "Kenwood TH-79A",
+    "manufacturer": "Kenwood",
+    "model": "TH-79A"
+  },
+  {
+    "product_name": "Yaesu VX-177",
+    "manufacturer": "Yaesu",
+    "model": "VX-177"
+  },
+  {
+    "product_name": "Yaesu  VX-1R",
+    "manufacturer": "Yaesu",
+    "model": "VX-1R"
+  },
+  {
+    "product_name": "Radio Shack HTX-404",
+    "manufacturer": "Radio Shack",
+    "model": "HTX-404"
+  },
+  {
+    "product_name": "Alinco DJ-500T",
+    "manufacturer": "Alinco",
+    "model": "DJ-500T"
+  },
+  {
+    "product_name": "Motorola HT-1000",
+    "manufacturer": "Motorola",
+    "model": "HT-1000"
+  },
+  {
+    "product_name": "Radio Shack HTX-400",
+    "manufacturer": "Radio Shack",
+    "model": "HTX-400"
+  },
+  {
+    "product_name": "Kenwood TH-22AT",
+    "manufacturer": "Kenwood",
+    "model": "TH-22AT"
+  },
+  {
+    "product_name": "Alinco DJ-S11T",
+    "manufacturer": "Alinco",
+    "model": "DJ-S11T"
+  },
+  {
+    "product_name": "Alinco DJ-580T",
+    "manufacturer": "Alinco",
+    "model": "DJ-580T"
+  },
+  {
+    "product_name": "TYT UVF1 dual band",
+    "manufacturer": "Tyt",
+    "model": "UVF1"
+  },
+  {
+    "product_name": "Yaesu FT-23R",
+    "manufacturer": "Yaesu",
+    "model": "FT-23R"
+  },
+  {
+    "product_name": "Quansheng (and Anysecu) UV-K5",
+    "manufacturer": "Quansheng",
+    "model": "(and Anysecu) UV-K5"
+  },
+  {
+    "product_name": "TYT MD-2017 VHF-UHF DMR Handheld",
+    "manufacturer": "Tyt",
+    "model": "MD-2017"
+  },
+  {
+    "product_name": "Baofeng/Pofung UV3+ plus",
+    "manufacturer": "Baofeng",
+    "model": "UV3+ plus"
+  },
+  {
+    "product_name": "Yaesu VX-8DR -( APRS® / GPS / Bluetooth® Handheld )",
+    "manufacturer": "Yaesu",
+    "model": "VX-8DR -"
+  },
+  {
+    "product_name": "Icom IC-P7A",
+    "manufacturer": "Icom",
+    "model": "IC-P7A"
+  },
+  {
+    "product_name": "Alinco DJ-596T / DJ-596E",
+    "manufacturer": "Alinco",
+    "model": "DJ-596T / DJ-596E"
+  },
+  {
+    "product_name": "Alinco DJ-296T",
+    "manufacturer": "Alinco",
+    "model": "DJ-296T"
+  },
+  {
+    "product_name": "Motorola HT-1250",
+    "manufacturer": "Motorola",
+    "model": "HT-1250"
+  },
+  {
+    "product_name": "ICOM IC-2GXAT",
+    "manufacturer": "Icom",
+    "model": "IC-2GXAT"
+  },
+  {
+    "product_name": "Kenwood TH-K20A",
+    "manufacturer": "Kenwood",
+    "model": "TH-K20A"
+  },
+  {
+    "product_name": "Alinco DJ-C5",
+    "manufacturer": "Alinco",
+    "model": "DJ-C5"
+  },
+  {
+    "product_name": "Yaesu FT-252",
+    "manufacturer": "Yaesu",
+    "model": "FT-252"
+  },
+  {
+    "product_name": "TYT TH-UV3R",
+    "manufacturer": "Tyt",
+    "model": "TH-UV3R"
+  },
+  {
+    "product_name": "Puxing PX-2R",
+    "manufacturer": "Puxing",
+    "model": "PX-2R"
+  },
+  {
+    "product_name": "Icom IC-32AT",
+    "manufacturer": "Icom",
+    "model": "IC-32AT"
+  },
+  {
+    "product_name": "Motorola Saber",
+    "manufacturer": "Motorola",
+    "model": "Saber"
+  },
+  {
+    "product_name": "Alinco DJ-S41",
+    "manufacturer": "Alinco",
+    "model": "DJ-S41"
+  },
+  {
+    "product_name": "Icom IC-02AT",
+    "manufacturer": "Icom",
+    "model": "IC-02AT"
+  },
+  {
+    "product_name": "Standard C508A",
+    "manufacturer": "Standard",
+    "model": "C508A"
+  },
+  {
+    "product_name": "Alinco DJ-S11",
+    "manufacturer": "Alinco",
+    "model": "DJ-S11"
+  },
+  {
+    "product_name": "Yaesu FT-10R",
+    "manufacturer": "Yaesu",
+    "model": "FT-10R"
+  },
+  {
+    "product_name": "Icom IC-V86",
+    "manufacturer": "Icom",
+    "model": "IC-V86"
+  },
+  {
+    "product_name": "Quansheng",
+    "manufacturer": "Quansheng",
+    "model": ""
+  },
+  {
+    "product_name": "Yaesu FT-11R",
+    "manufacturer": "Yaesu",
+    "model": "FT-11R"
+  },
+  {
+    "product_name": "Alinco DJ-280TH",
+    "manufacturer": "Alinco",
+    "model": "DJ-280TH"
+  },
+  {
+    "product_name": "Icom IC-24 AT",
+    "manufacturer": "Icom",
+    "model": "IC-24 AT"
+  },
+  {
+    "product_name": "wouxun KG-689",
+    "manufacturer": "Wouxun",
+    "model": "KG-689"
+  },
+  {
+    "product_name": "Alinco DJ-V17",
+    "manufacturer": "Alinco",
+    "model": "DJ-V17"
+  },
+  {
+    "product_name": "Standard C558A",
+    "manufacturer": "Standard",
+    "model": "C558A"
+  },
+  {
+    "product_name": "Motorola HT600",
+    "manufacturer": "Motorola",
+    "model": "HT600"
+  },
+  {
+    "product_name": "Icom IC-W2A",
+    "manufacturer": "Icom",
+    "model": "IC-W2A"
+  },
+  {
+    "product_name": "Alinco DJ-196T",
+    "manufacturer": "Alinco",
+    "model": "DJ-196T"
+  },
+  {
+    "product_name": "BaoFeng UV-5x3",
+    "manufacturer": "Baofeng",
+    "model": "UV-5x3"
+  },
+  {
+    "product_name": "TYT MD390",
+    "manufacturer": "Tyt",
+    "model": "MD390"
+  },
+  {
+    "product_name": "BridgeCom BCH-220",
+    "manufacturer": "Bridgecom",
+    "model": "BCH-220"
+  },
+  {
+    "product_name": "Baofeng/Pofung BF-F8+",
+    "manufacturer": "Baofeng",
+    "model": "BF-F8+"
+  },
+  {
+    "product_name": "BaoFeng/Pofung UV-82L",
+    "manufacturer": "Baofeng",
+    "model": "UV-82L"
+  },
+  {
+    "product_name": "Alinco DJ-175T",
+    "manufacturer": "Alinco",
+    "model": "DJ-175T"
+  },
+  {
+    "product_name": "Icom IC-2GAT",
+    "manufacturer": "Icom",
+    "model": "IC-2GAT"
+  },
+  {
+    "product_name": "Vertex VXA-700 Spirit",
+    "manufacturer": "Vertex",
+    "model": "VXA-700 Spirit"
+  },
+  {
+    "product_name": "Motorola GP68",
+    "manufacturer": "Motorola",
+    "model": "GP68"
+  },
+  {
+    "product_name": "Alinco DJ-180",
+    "manufacturer": "Alinco",
+    "model": "DJ-180"
+  },
+  {
+    "product_name": "Connect Systems CS580",
+    "manufacturer": "Connect Systems",
+    "model": "CS580"
+  },
+  {
+    "product_name": "Wouxun KG-UV9D",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV9D"
+  },
+  {
+    "product_name": "BaoFeng/Pofung GT-3 Mark II",
+    "manufacturer": "Baofeng",
+    "model": "GT-3 Mark II"
+  },
+  {
+    "product_name": "Anytone AT-3318UV-A",
+    "manufacturer": "Anytone",
+    "model": "AT-3318UV-A"
+  },
+  {
+    "product_name": "Icom IC-80AD D-Star ready 144/440 MHz HT",
+    "manufacturer": "Icom",
+    "model": "IC-80AD D-Star ready 144/440 MHz HT"
+  },
+  {
+    "product_name": "Icom IC-Z1A",
+    "manufacturer": "Icom",
+    "model": "IC-Z1A"
+  },
+  {
+    "product_name": "Tempo S1",
+    "manufacturer": "Tempo",
+    "model": "S1"
+  },
+  {
+    "product_name": "Yaesu FT-411E",
+    "manufacturer": "Yaesu",
+    "model": "FT-411E"
+  },
+  {
+    "product_name": "Kenwood TH-79AKSS",
+    "manufacturer": "Kenwood",
+    "model": "TH-79AKSS"
+  },
+  {
+    "product_name": "Icom  IC-T10",
+    "manufacturer": "Icom",
+    "model": "IC-T10"
+  },
+  {
+    "product_name": "Ailunce HD-1",
+    "manufacturer": "Ailunce",
+    "model": "HD-1"
+  },
+  {
+    "product_name": "Puxing PX-UV973 dual-band HT with crossband repeater",
+    "manufacturer": "Puxing",
+    "model": "PX-UV973 dual-band HT with crossband repeater"
+  },
+  {
+    "product_name": "Alinco DJ V57T",
+    "manufacturer": "Alinco",
+    "model": "DJ V57T"
+  },
+  {
+    "product_name": "PUXING PX-888",
+    "manufacturer": "Puxing",
+    "model": "PX-888"
+  },
+  {
+    "product_name": "Alinco DJ-V27T",
+    "manufacturer": "Alinco",
+    "model": "DJ-V27T"
+  },
+  {
+    "product_name": "ZARES ZLVHF01",
+    "manufacturer": "Zares",
+    "model": "ZLVHF01"
+  },
+  {
+    "product_name": "Motorola XTS 5000",
+    "manufacturer": "Motorola",
+    "model": "XTS 5000"
+  },
+  {
+    "product_name": "Icom IC-T22A",
+    "manufacturer": "Icom",
+    "model": "IC-T22A"
+  },
+  {
+    "product_name": "Wouxun",
+    "manufacturer": "Wouxun",
+    "model": ""
+  },
+  {
+    "product_name": "ICOM IC-V85",
+    "manufacturer": "Icom",
+    "model": "IC-V85"
+  },
+  {
+    "product_name": "Yaesu FT-208R",
+    "manufacturer": "Yaesu",
+    "model": "FT-208R"
+  },
+  {
+    "product_name": "Alinco DJ-190",
+    "manufacturer": "Alinco",
+    "model": "DJ-190"
+  },
+  {
+    "product_name": "Kenwood TH 21AT",
+    "manufacturer": "Kenwood",
+    "model": "TH 21AT"
+  },
+  {
+    "product_name": "Icom ID-52",
+    "manufacturer": "Icom",
+    "model": "ID-52"
+  },
+  {
+    "product_name": "BaoFeng GT-3TP Mark III Tri-Power 1/4/8W",
+    "manufacturer": "Baofeng",
+    "model": "GT-3TP Mark III Tri-Power 1/4/8W"
+  },
+  {
+    "product_name": "Baofeng/Pofung GT-1 UHF 400-470MHz FM Two-way Ham Radio",
+    "manufacturer": "Baofeng",
+    "model": "GT-1 UHF 400-470MHz FM Two-way Ham Radio"
+  },
+  {
+    "product_name": "EF JOHNSON 5100 aka AN/PRC-127EF",
+    "manufacturer": "Ef",
+    "model": "JOHNSON 5100 aka AN/PRC-127EF"
+  },
+  {
+    "product_name": "Alinco DJ-F1",
+    "manufacturer": "Alinco",
+    "model": "DJ-F1"
+  },
+  {
+    "product_name": "Icom IC-E7",
+    "manufacturer": "Icom",
+    "model": "IC-E7"
+  },
+  {
+    "product_name": "Icom IC-91",
+    "manufacturer": "Icom",
+    "model": "IC-91"
+  },
+  {
+    "product_name": "Jingtong JT-208",
+    "manufacturer": "Jingtong",
+    "model": "JT-208"
+  },
+  {
+    "product_name": "Alinco DJ-C7",
+    "manufacturer": "Alinco",
+    "model": "DJ-C7"
+  },
+  {
+    "product_name": "Standard C228A",
+    "manufacturer": "Standard",
+    "model": "C228A"
+  },
+  {
+    "product_name": "Icom µ2AT",
+    "manufacturer": "Icom",
+    "model": "µ2AT"
+  },
+  {
+    "product_name": "Icom IC-3AT",
+    "manufacturer": "Icom",
+    "model": "IC-3AT"
+  },
+  {
+    "product_name": "ICOM IC-2E",
+    "manufacturer": "Icom",
+    "model": "IC-2E"
+  },
+  {
+    "product_name": "Motorola GP-2000",
+    "manufacturer": "Motorola",
+    "model": "GP-2000"
+  },
+  {
+    "product_name": "Kenwood TR-2500",
+    "manufacturer": "Kenwood",
+    "model": "TR-2500"
+  },
+  {
+    "product_name": "Motorola JT-1000",
+    "manufacturer": "Motorola",
+    "model": "JT-1000"
+  },
+  {
+    "product_name": "Motorola HT750",
+    "manufacturer": "Motorola",
+    "model": "HT750"
+  },
+  {
+    "product_name": "Connect Systems CS-750 radio",
+    "manufacturer": "Connect Systems",
+    "model": "CS-750 radio"
+  },
+  {
+    "product_name": "TYT UV8000E",
+    "manufacturer": "Tyt",
+    "model": "UV8000E"
+  },
+  {
+    "product_name": "Kenwood TH-F7E",
+    "manufacturer": "Kenwood",
+    "model": "TH-F7E"
+  },
+  {
+    "product_name": "Motorola XPR 6550",
+    "manufacturer": "Motorola",
+    "model": "XPR 6550"
+  },
+  {
+    "product_name": "ALBRECHT 2990 - DRAGON SS 301 - MAGNUM 1012",
+    "manufacturer": "Albrecht",
+    "model": "2990 - DRAGON SS 301 - MAGNUM 1012"
+  },
+  {
+    "product_name": "NKT-R3 70cm 2w Micro HT",
+    "manufacturer": "Nkt-R3",
+    "model": "70cm 2w Micro HT"
+  },
+  {
+    "product_name": "Kenwood TH-77A",
+    "manufacturer": "Kenwood",
+    "model": "TH-77A"
+  },
+  {
+    "product_name": "Motorola MTS-2000",
+    "manufacturer": "Motorola",
+    "model": "MTS-2000"
+  },
+  {
+    "product_name": "Motorola MT-2000 VHF",
+    "manufacturer": "Motorola",
+    "model": "MT-2000"
+  },
+  {
+    "product_name": "Kenwood TH-75",
+    "manufacturer": "Kenwood",
+    "model": "TH-75"
+  },
+  {
+    "product_name": "Icom ID-50",
+    "manufacturer": "Icom",
+    "model": "ID-50"
+  },
+  {
+    "product_name": "TYT TH-350",
+    "manufacturer": "Tyt",
+    "model": "TH-350"
+  },
+  {
+    "product_name": "TYT TH-UV88",
+    "manufacturer": "Tyt",
+    "model": "TH-UV88"
+  },
+  {
+    "product_name": "LANCHNONLH HG-UV98 dual bander",
+    "manufacturer": "Lanchnonlh",
+    "model": "HG-UV98 dual bander"
+  },
+  {
+    "product_name": "Baofeng UV-6",
+    "manufacturer": "Baofeng",
+    "model": "UV-6"
+  },
+  {
+    "product_name": "WLN KD-C1",
+    "manufacturer": "Wln",
+    "model": "KD-C1"
+  },
+  {
+    "product_name": "Baofeng GT-5TP",
+    "manufacturer": "Baofeng",
+    "model": "GT-5TP"
+  },
+  {
+    "product_name": "hytera pd 782",
+    "manufacturer": "Hytera",
+    "model": "pd 782"
+  },
+  {
+    "product_name": "TYT TH-UVF9",
+    "manufacturer": "Tyt",
+    "model": "TH-UVF9"
+  },
+  {
+    "product_name": "TYT TH-F8 2meter vhf handheld",
+    "manufacturer": "Tyt",
+    "model": "TH-F8 2meter"
+  },
+  {
+    "product_name": "ICOM IC-V80",
+    "manufacturer": "Icom",
+    "model": "IC-V80"
+  },
+  {
+    "product_name": "Motorola XTS 2500",
+    "manufacturer": "Motorola",
+    "model": "XTS 2500"
+  },
+  {
+    "product_name": "Standard C528",
+    "manufacturer": "Standard",
+    "model": "C528"
+  },
+  {
+    "product_name": "Icom IC-H16",
+    "manufacturer": "Icom",
+    "model": "IC-H16"
+  },
+  {
+    "product_name": "Motorola XTS 3000",
+    "manufacturer": "Motorola",
+    "model": "XTS 3000"
+  },
+  {
+    "product_name": "Yaesu FT-209RH",
+    "manufacturer": "Yaesu",
+    "model": "FT-209RH"
+  },
+  {
+    "product_name": "Alinco DJ-191",
+    "manufacturer": "Alinco",
+    "model": "DJ-191"
+  },
+  {
+    "product_name": "Icom IC-2iA",
+    "manufacturer": "Icom",
+    "model": "IC-2iA"
+  },
+  {
+    "product_name": "Alinco DJ-S40T",
+    "manufacturer": "Alinco",
+    "model": "DJ-S40T"
+  },
+  {
+    "product_name": "Midland 73-005 VHF HT",
+    "manufacturer": "Midland",
+    "model": "73-005 VHF HT"
+  },
+  {
+    "product_name": "Pryme (ADI) PR-222",
+    "manufacturer": "Pryme",
+    "model": "(ADI) PR-222"
+  },
+  {
+    "product_name": "Baofeng 5RM Plus",
+    "manufacturer": "Baofeng",
+    "model": "5RM Plus"
+  },
+  {
+    "product_name": "Kenwood TH-D75A/E",
+    "manufacturer": "Kenwood",
+    "model": "TH-D75A/E"
+  },
+  {
+    "product_name": "TIDRADIO TD-H3",
+    "manufacturer": "Tidradio",
+    "model": "TD-H3"
+  },
+  {
+    "product_name": "Tidradio TD-H8",
+    "manufacturer": "Tidradio",
+    "model": "TD-H8"
+  },
+  {
+    "product_name": "Alinco DJ VX-50",
+    "manufacturer": "Alinco",
+    "model": "DJ VX-50"
+  },
+  {
+    "product_name": "Radioddity GA-510 VHF/UHF Handheld",
+    "manufacturer": "Radioddity",
+    "model": "GA-510"
+  },
+  {
+    "product_name": "tyt md-uv380",
+    "manufacturer": "Tyt",
+    "model": "md-uv380"
+  },
+  {
+    "product_name": "Hytera AR482G",
+    "manufacturer": "Hytera",
+    "model": "AR482G"
+  },
+  {
+    "product_name": "Baofeng/Pofung UV-6R",
+    "manufacturer": "Baofeng",
+    "model": "UV-6R"
+  },
+  {
+    "product_name": "AnyTone TERMN-8R",
+    "manufacturer": "Anytone",
+    "model": "TERMN-8R"
+  },
+  {
+    "product_name": "Kenwood TH-D72A around the World.",
+    "manufacturer": "Kenwood",
+    "model": "TH-D72A around the World."
+  },
+  {
+    "product_name": "Feidaxin FD-880",
+    "manufacturer": "Feidaxin",
+    "model": "FD-880"
+  },
+  {
+    "product_name": "Motorola Astro Digital Saber",
+    "manufacturer": "Motorola",
+    "model": "Astro Digital Saber"
+  },
+  {
+    "product_name": "Wouxun KG-UVD2",
+    "manufacturer": "Wouxun",
+    "model": "KG-UVD2"
+  },
+  {
+    "product_name": "Yaesu VX-250",
+    "manufacturer": "Yaesu",
+    "model": "VX-250"
+  },
+  {
+    "product_name": "Standard Horizon HX370S",
+    "manufacturer": "Standard",
+    "model": "Horizon HX370S"
+  },
+  {
+    "product_name": "ICOM IC-U82",
+    "manufacturer": "Icom",
+    "model": "IC-U82"
+  },
+  {
+    "product_name": "Drake TR-22C",
+    "manufacturer": "Drake",
+    "model": "TR-22C"
+  },
+  {
+    "product_name": "GE/Ericsson/Ma-com MPA",
+    "manufacturer": "Ge/Ericsson/Ma-Com",
+    "model": "MPA"
+  },
+  {
+    "product_name": "Motorola GTX Portable",
+    "manufacturer": "Motorola",
+    "model": "GTX Portable"
+  },
+  {
+    "product_name": "Yaesu FT-203R",
+    "manufacturer": "Yaesu",
+    "model": "FT-203R"
+  },
+  {
+    "product_name": "Icom P2AT",
+    "manufacturer": "Icom",
+    "model": "P2AT"
+  },
+  {
+    "product_name": "BK Radio        EPH-5102S",
+    "manufacturer": "Bk",
+    "model": "Radio        EPH-5102S"
+  },
+  {
+    "product_name": "Kenwood TH-28E",
+    "manufacturer": "Kenwood",
+    "model": "TH-28E"
+  },
+  {
+    "product_name": "Standard C156A",
+    "manufacturer": "Standard",
+    "model": "C156A"
+  },
+  {
+    "product_name": "MOTOROLA VISAR",
+    "manufacturer": "Motorola",
+    "model": "VISAR"
+  },
+  {
+    "product_name": "Kenwood TH-25AT",
+    "manufacturer": "Kenwood",
+    "model": "TH-25AT"
+  },
+  {
+    "product_name": "Vertex VX180",
+    "manufacturer": "Vertex",
+    "model": "VX180"
+  },
+  {
+    "product_name": "Mizuho MX-2",
+    "manufacturer": "Mizuho",
+    "model": "MX-2"
+  },
+  {
+    "product_name": "Yaesu FT-41R",
+    "manufacturer": "Yaesu",
+    "model": "FT-41R"
+  },
+  {
+    "product_name": "Icom IC-2SRA,  (4SRA)",
+    "manufacturer": "Icom",
+    "model": "IC-2SRA,"
+  },
+  {
+    "product_name": "Anytone AT-D168UV",
+    "manufacturer": "Anytone",
+    "model": "AT-D168UV"
+  },
+  {
+    "product_name": "Radtel RT-890",
+    "manufacturer": "Radtel",
+    "model": "RT-890"
+  },
+  {
+    "product_name": "Motorola XPR 7550e",
+    "manufacturer": "Motorola",
+    "model": "XPR 7550e"
+  },
+  {
+    "product_name": "Radioddity GD-73",
+    "manufacturer": "Radioddity",
+    "model": "GD-73"
+  },
+  {
+    "product_name": "Radioddity RD-5R VHF/UHF DMR",
+    "manufacturer": "Radioddity",
+    "model": "RD-5R"
+  },
+  {
+    "product_name": "Baofeng BF-A58",
+    "manufacturer": "Baofeng",
+    "model": "BF-A58"
+  },
+  {
+    "product_name": "Kirisun DP-770 DMR HT",
+    "manufacturer": "Kirisun",
+    "model": "DP-770 DMR HT"
+  },
+  {
+    "product_name": "Tonfa TF-Q5",
+    "manufacturer": "Tonfa",
+    "model": "TF-Q5"
+  },
+  {
+    "product_name": "Puxing PX-888K Dual Band HT",
+    "manufacturer": "Puxing",
+    "model": "PX-888K"
+  },
+  {
+    "product_name": "Yaesu FT-277R UHF Transceiver, Handheld",
+    "manufacturer": "Yaesu",
+    "model": "FT-277R UHF Transceiver, Handheld"
+  },
+  {
+    "product_name": "Kenwood TK-2180 /3180",
+    "manufacturer": "Kenwood",
+    "model": "TK-2180 /3180"
+  },
+  {
+    "product_name": "kenwood TH-215A Handy_Talkie",
+    "manufacturer": "Kenwood",
+    "model": "TH-215A Handy_Talkie"
+  },
+  {
+    "product_name": "Icom IC-E90",
+    "manufacturer": "Icom",
+    "model": "IC-E90"
+  },
+  {
+    "product_name": "Icom IC-F3S (F4S) VHF and UHF LMR portables",
+    "manufacturer": "Icom",
+    "model": "IC-F3S (F4S)"
+  },
+  {
+    "product_name": "ICOM IC-DELTA1A",
+    "manufacturer": "Icom",
+    "model": "IC-DELTA1A"
+  },
+  {
+    "product_name": "Kenwood TH-28A",
+    "manufacturer": "Kenwood",
+    "model": "TH-28A"
+  },
+  {
+    "product_name": "Cherokee AH50",
+    "manufacturer": "Cherokee",
+    "model": "AH50"
+  },
+  {
+    "product_name": "Motorola HT1550 XLS",
+    "manufacturer": "Motorola",
+    "model": "HT1550 XLS"
+  },
+  {
+    "product_name": "Standard C168A",
+    "manufacturer": "Standard",
+    "model": "C168A"
+  },
+  {
+    "product_name": "KIRISUN PT-218",
+    "manufacturer": "Kirisun",
+    "model": "PT-218"
+  },
+  {
+    "product_name": "Yaesu VX-300",
+    "manufacturer": "Yaesu",
+    "model": "VX-300"
+  },
+  {
+    "product_name": "Icom IC-V21AT",
+    "manufacturer": "Icom",
+    "model": "IC-V21AT"
+  },
+  {
+    "product_name": "Alinco DJ-G1T",
+    "manufacturer": "Alinco",
+    "model": "DJ-G1T"
+  },
+  {
+    "product_name": "Standard C510A",
+    "manufacturer": "Standard",
+    "model": "C510A"
+  },
+  {
+    "product_name": "Vertex VX-10 VHF-UHF",
+    "manufacturer": "Vertex",
+    "model": "VX-10 VHF-UHF"
+  },
+  {
+    "product_name": "Vertex FTH-2070",
+    "manufacturer": "Vertex",
+    "model": "FTH-2070"
+  },
+  {
+    "product_name": "Vertex VX-800",
+    "manufacturer": "Vertex",
+    "model": "VX-800"
+  },
+  {
+    "product_name": "Icom IC-3SAT",
+    "manufacturer": "Icom",
+    "model": "IC-3SAT"
+  },
+  {
+    "product_name": "Titan RPSY-201 10-meter",
+    "manufacturer": "Titan",
+    "model": "RPSY-201 10-meter"
+  },
+  {
+    "product_name": "Alinco DJ-160T",
+    "manufacturer": "Alinco",
+    "model": "DJ-160T"
+  },
+  {
+    "product_name": "Icom IC-T22H",
+    "manufacturer": "Icom",
+    "model": "IC-T22H"
+  },
+  {
+    "product_name": "Vero VGC VR-N76 FM and APRS dual band HT",
+    "manufacturer": "Vero",
+    "model": "VGC VR-N76 FM and APRS dual band HT"
+  },
+  {
+    "product_name": "Kenwood TK-280",
+    "manufacturer": "Kenwood",
+    "model": "TK-280"
+  },
+  {
+    "product_name": "Retevis RT10",
+    "manufacturer": "Retevis",
+    "model": "RT10"
+  },
+  {
+    "product_name": "Radioddity GD-88 V/UHF DMR/Analog HT",
+    "manufacturer": "Radioddity",
+    "model": "GD-88 V/UHF DMR/Analog HT"
+  },
+  {
+    "product_name": "Baofeng UV-S9 Triband",
+    "manufacturer": "Baofeng",
+    "model": "UV-S9 Triband"
+  },
+  {
+    "product_name": "Wouxun KG-UV9P",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV9P"
+  },
+  {
+    "product_name": "BTECH DMR-6X2",
+    "manufacturer": "Btech",
+    "model": "DMR-6X2"
+  },
+  {
+    "product_name": "Yaesu FT-727R",
+    "manufacturer": "Yaesu",
+    "model": "FT-727R"
+  },
+  {
+    "product_name": "Bridgecom Systems BCH-270 Dual Band",
+    "manufacturer": "Bridgecom",
+    "model": "Systems BCH-270 Dual Band"
+  },
+  {
+    "product_name": "Radioddity TYT GD-55 MD-398 DMR HT",
+    "manufacturer": "Radioddity",
+    "model": "TYT GD-55 MD-398 DMR HT"
+  },
+  {
+    "product_name": "Retevis RT3",
+    "manufacturer": "Retevis",
+    "model": "RT3"
+  },
+  {
+    "product_name": "Baofeng UV-82HX",
+    "manufacturer": "Baofeng",
+    "model": "UV-82HX"
+  },
+  {
+    "product_name": "Sainsonic RST599",
+    "manufacturer": "Sainsonic",
+    "model": "RST599"
+  },
+  {
+    "product_name": "BaoFeng/Pofung GT-5",
+    "manufacturer": "Baofeng",
+    "model": "GT-5"
+  },
+  {
+    "product_name": "KYDERA KYD DM-880 DMR Handheld",
+    "manufacturer": "Kydera",
+    "model": "KYD DM-880 DMR Handheld"
+  },
+  {
+    "product_name": "Baofeng/Pofung UV-5RB",
+    "manufacturer": "Baofeng",
+    "model": "UV-5RB"
+  },
+  {
+    "product_name": "Wouxun KG-UV6X",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV6X"
+  },
+  {
+    "product_name": "Icom IC-04AT",
+    "manufacturer": "Icom",
+    "model": "IC-04AT"
+  },
+  {
+    "product_name": "Yaesu FT-207R HT",
+    "manufacturer": "Yaesu",
+    "model": "FT-207R HT"
+  },
+  {
+    "product_name": "Puxing PX-D03 / P-A-968 CELL PHONE RADIO",
+    "manufacturer": "Puxing",
+    "model": "PX-D03 / P-A-968 CELL PHONE RADIO"
+  },
+  {
+    "product_name": "BAOJIE BJ-UV88  VHF/UHF hand held",
+    "manufacturer": "Baojie",
+    "model": "BJ-UV88  VHF/UHF hand held"
+  },
+  {
+    "product_name": "Kenwood TK-481",
+    "manufacturer": "Kenwood",
+    "model": "TK-481"
+  },
+  {
+    "product_name": "FDC FD-268B",
+    "manufacturer": "Fdc",
+    "model": "FD-268B"
+  },
+  {
+    "product_name": "MaxLog M-UV Dual Band Multifunctional Two-way Radio",
+    "manufacturer": "Maxlog",
+    "model": "M-UV Dual Band Multifunctional Two-way Radio"
+  },
+  {
+    "product_name": "FDC FD-288A",
+    "manufacturer": "Fdc",
+    "model": "FD-288A"
+  },
+  {
+    "product_name": "VX7R   USB programming/cloning cable",
+    "manufacturer": "Vx7R",
+    "model": "USB programming/cloning cable"
+  },
+  {
+    "product_name": "ICOM IC-W31A",
+    "manufacturer": "Icom",
+    "model": "IC-W31A"
+  },
+  {
+    "product_name": "Vertex VXA-300 Pilot III",
+    "manufacturer": "Vertex",
+    "model": "VXA-300 Pilot III"
+  },
+  {
+    "product_name": "Icom E90",
+    "manufacturer": "Icom",
+    "model": "E90"
+  },
+  {
+    "product_name": "ICOM IC-03AT",
+    "manufacturer": "Icom",
+    "model": "IC-03AT"
+  },
+  {
+    "product_name": "Icom IC-T3H",
+    "manufacturer": "Icom",
+    "model": "IC-T3H"
+  },
+  {
+    "product_name": "Standard HX400",
+    "manufacturer": "Standard",
+    "model": "HX400"
+  },
+  {
+    "product_name": "ICOM IC-F21 (Commercial)",
+    "manufacturer": "Icom",
+    "model": "IC-F21"
+  },
+  {
+    "product_name": "Santec LS-202A / Belcom LS-202E",
+    "manufacturer": "Santec",
+    "model": "LS-202A / Belcom LS-202E"
+  },
+  {
+    "product_name": "Yaesu FT-33R",
+    "manufacturer": "Yaesu",
+    "model": "FT-33R"
+  },
+  {
+    "product_name": "Alinco DJ-596     EJ-43 DIGITAL BOARD",
+    "manufacturer": "Alinco",
+    "model": "DJ-596     EJ-43 DIGITAL BOARD"
+  },
+  {
+    "product_name": "Icom P3 AT",
+    "manufacturer": "Icom",
+    "model": "P3 AT"
+  },
+  {
+    "product_name": "Yaesu FTM-150R ASP",
+    "manufacturer": "Yaesu",
+    "model": "FTM-150R ASP"
+  },
+  {
+    "product_name": "BTECH UV PRO",
+    "manufacturer": "Btech",
+    "model": "UV PRO"
+  },
+  {
+    "product_name": "ComJoT CJ-26",
+    "manufacturer": "Comjot",
+    "model": "CJ-26"
+  },
+  {
+    "product_name": "Radtel RT-880",
+    "manufacturer": "Radtel",
+    "model": "RT-880"
+  },
+  {
+    "product_name": "Radioditty GD-168",
+    "manufacturer": "Radioditty",
+    "model": "GD-168"
+  },
+  {
+    "product_name": "Alinco DJ-VX50",
+    "manufacturer": "Alinco",
+    "model": "DJ-VX50"
+  },
+  {
+    "product_name": "HamGeek APX-8000",
+    "manufacturer": "Hamgeek",
+    "model": "APX-8000"
+  },
+  {
+    "product_name": "Radioddity GC-5",
+    "manufacturer": "Radioddity",
+    "model": "GC-5"
+  },
+  {
+    "product_name": "TYT MD-430",
+    "manufacturer": "Tyt",
+    "model": "MD-430"
+  },
+  {
+    "product_name": "Yaesu FT-4VR",
+    "manufacturer": "Yaesu",
+    "model": "FT-4VR"
+  },
+  {
+    "product_name": "Baofeng UV-9R Plus",
+    "manufacturer": "Baofeng",
+    "model": "UV-9R Plus"
+  },
+  {
+    "product_name": "Baofeng UV-5RTP",
+    "manufacturer": "Baofeng",
+    "model": "UV-5RTP"
+  },
+  {
+    "product_name": "ZASTONE/ABBREE 899-G",
+    "manufacturer": "Zastone/Abbree",
+    "model": "899-G"
+  },
+  {
+    "product_name": "Baufeng-UV-5R EX dual band ht",
+    "manufacturer": "Baufeng-Uv-5R",
+    "model": "EX dual band ht"
+  },
+  {
+    "product_name": "Quansheng UV-R50",
+    "manufacturer": "Quansheng",
+    "model": "UV-R50"
+  },
+  {
+    "product_name": "Yaesu FT-25  2 m HT",
+    "manufacturer": "Yaesu",
+    "model": "FT-25  2 m HT"
+  },
+  {
+    "product_name": "Baofeng DM-5r Plus",
+    "manufacturer": "Baofeng",
+    "model": "DM-5r Plus"
+  },
+  {
+    "product_name": "Icom IC-4AT",
+    "manufacturer": "Icom",
+    "model": "IC-4AT"
+  },
+  {
+    "product_name": "Baofeng UV-82X  2 meter/1.25 meter HT",
+    "manufacturer": "Baofeng",
+    "model": "UV-82X  2 meter/1.25 meter HT"
+  },
+  {
+    "product_name": "TID TD-9800",
+    "manufacturer": "Tid",
+    "model": "TD-9800"
+  },
+  {
+    "product_name": "TYT DM UVF10 (Retevis RT2)",
+    "manufacturer": "Tyt",
+    "model": "DM UVF10"
+  },
+  {
+    "product_name": "Baofeng GT-3WP Waterproof Transceiver",
+    "manufacturer": "Baofeng",
+    "model": "GT-3WP Waterproof Transceiver"
+  },
+  {
+    "product_name": "Motorola SL-1600",
+    "manufacturer": "Motorola",
+    "model": "SL-1600"
+  },
+  {
+    "product_name": "TDXone TD-Q8A",
+    "manufacturer": "Tdxone",
+    "model": "TD-Q8A"
+  },
+  {
+    "product_name": "Anytone NSTIG-8R",
+    "manufacturer": "Anytone",
+    "model": "NSTIG-8R"
+  },
+  {
+    "product_name": "Baofeng BF-530 I",
+    "manufacturer": "Baofeng",
+    "model": "BF-530 I"
+  },
+  {
+    "product_name": "Yaesu FT-257",
+    "manufacturer": "Yaesu",
+    "model": "FT-257"
+  },
+  {
+    "product_name": "Puxing PX-358",
+    "manufacturer": "Puxing",
+    "model": "PX-358"
+  },
+  {
+    "product_name": "HYS TC-VY88  Dual Band",
+    "manufacturer": "Hys",
+    "model": "TC-VY88  Dual Band"
+  },
+  {
+    "product_name": "TYT TH-UV9R",
+    "manufacturer": "Tyt",
+    "model": "TH-UV9R"
+  },
+  {
+    "product_name": "Alinco DJV- 47T",
+    "manufacturer": "Alinco",
+    "model": "DJV- 47T"
+  },
+  {
+    "product_name": "TYT TH-2R",
+    "manufacturer": "Tyt",
+    "model": "TH-2R"
+  },
+  {
+    "product_name": "Motorola CP200 UHF 16 CH.",
+    "manufacturer": "Motorola",
+    "model": "CP200 UHF 16 CH."
+  },
+  {
+    "product_name": "Motorola M1225 VHF MOBILE",
+    "manufacturer": "Motorola",
+    "model": "M1225"
+  },
+  {
+    "product_name": "Guylas sma-to-bnc antenna adapter",
+    "manufacturer": "Guylas",
+    "model": "sma-to-bnc antenna adapter"
+  },
+  {
+    "product_name": "Alinco DJ-S45T",
+    "manufacturer": "Alinco",
+    "model": "DJ-S45T"
+  },
+  {
+    "product_name": "ALINCO DJ-496T",
+    "manufacturer": "Alinco",
+    "model": "DJ-496T"
+  },
+  {
+    "product_name": "ADI HT-204",
+    "manufacturer": "Adi",
+    "model": "HT-204"
+  },
+  {
+    "product_name": "Wilson Electronics WE-800 2 Meter FM Transceiver",
+    "manufacturer": "Wilson",
+    "model": "Electronics WE-800 2 Meter FM Transceiver"
+  },
+  {
+    "product_name": "Alinco DJ-480T",
+    "manufacturer": "Alinco",
+    "model": "DJ-480T"
+  },
+  {
+    "product_name": "Kenwood TH-55",
+    "manufacturer": "Kenwood",
+    "model": "TH-55"
+  },
+  {
+    "product_name": "AZDEN AZ-61",
+    "manufacturer": "Azden",
+    "model": "AZ-61"
+  },
+  {
+    "product_name": "VHF Engineering HT-144",
+    "manufacturer": "Vhf",
+    "model": "Engineering HT-144"
+  },
+  {
+    "product_name": "Motorola GP350",
+    "manufacturer": "Motorola",
+    "model": "GP350"
+  },
+  {
+    "product_name": "Icom IC-4SA",
+    "manufacturer": "Icom",
+    "model": "IC-4SA"
+  },
+  {
+    "product_name": "Yaesu FT-709",
+    "manufacturer": "Yaesu",
+    "model": "FT-709"
+  },
+  {
+    "product_name": "Icom F3GS",
+    "manufacturer": "Icom",
+    "model": "F3GS"
+  },
+  {
+    "product_name": "Tokyo Hy-Power HT-7",
+    "manufacturer": "Tokyo",
+    "model": "Hy-Power HT-7"
+  },
+  {
+    "product_name": "Alinco DJ-C4",
+    "manufacturer": "Alinco",
+    "model": "DJ-C4"
+  },
+  {
+    "product_name": "ICOM IC-V68",
+    "manufacturer": "Icom",
+    "model": "IC-V68"
+  },
+  {
+    "product_name": "Motorola PRO9150",
+    "manufacturer": "Motorola",
+    "model": "PRO9150"
+  },
+  {
+    "product_name": "Standard C468A",
+    "manufacturer": "Standard",
+    "model": "C468A"
+  },
+  {
+    "product_name": "Santec HT1200",
+    "manufacturer": "Santec",
+    "model": "HT1200"
+  },
+  {
+    "product_name": "Mizuho MX-6",
+    "manufacturer": "Mizuho",
+    "model": "MX-6"
+  },
+  {
+    "product_name": "Yaesu FT-202R",
+    "manufacturer": "Yaesu",
+    "model": "FT-202R"
+  },
+  {
+    "product_name": "Motorola MTX9000",
+    "manufacturer": "Motorola",
+    "model": "MTX9000"
+  },
+  {
+    "product_name": "Motorola EX500/600 HT",
+    "manufacturer": "Motorola",
+    "model": "EX500/600 HT"
+  },
+  {
+    "product_name": "Pryme (ADI) PR-460",
+    "manufacturer": "Pryme",
+    "model": "(ADI) PR-460"
+  },
+  {
+    "product_name": "Pryme (ADI) PR-52",
+    "manufacturer": "Pryme",
+    "model": "(ADI) PR-52"
+  },
+  {
+    "product_name": "Icom IC-O3AT",
+    "manufacturer": "Icom",
+    "model": "IC-O3AT"
+  },
+  {
+    "product_name": "Wouxun KG-Q10H VHF/UHF handheld",
+    "manufacturer": "Wouxun",
+    "model": "KG-Q10H"
+  },
+  {
+    "product_name": "Baofeng UV-5R Mini",
+    "manufacturer": "Baofeng",
+    "model": "UV-5R Mini"
+  },
+  {
+    "product_name": "BAOFENG BF-F8HP PRO",
+    "manufacturer": "Baofeng",
+    "model": "BF-F8HP PRO"
+  },
+  {
+    "product_name": "TYT UVL-15W",
+    "manufacturer": "Tyt",
+    "model": "UVL-15W"
+  },
+  {
+    "product_name": "Talkpod A36PLUS MAX",
+    "manufacturer": "Talkpod",
+    "model": "A36PLUS MAX"
+  },
+  {
+    "product_name": "Icom ID 52A Plus 60th Anniversary Edition.",
+    "manufacturer": "Icom",
+    "model": "ID 52A Plus 60th Anniversary Edition."
+  },
+  {
+    "product_name": "TYT MD-UV390",
+    "manufacturer": "Tyt",
+    "model": "MD-UV390"
+  },
+  {
+    "product_name": "Leixen UV-25D",
+    "manufacturer": "Leixen",
+    "model": "UV-25D"
+  },
+  {
+    "product_name": "Wouxun KG-UV9PX",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV9PX"
+  },
+  {
+    "product_name": "Retevis RT20",
+    "manufacturer": "Retevis",
+    "model": "RT20"
+  },
+  {
+    "product_name": "Retevis RB24/RB91 70cm Mesh Radio + Repeater",
+    "manufacturer": "Retevis",
+    "model": "RB24/RB91 70cm Mesh Radio + Repeater"
+  },
+  {
+    "product_name": "ComJot CJ-1",
+    "manufacturer": "Comjot",
+    "model": "CJ-1"
+  },
+  {
+    "product_name": "Retevis RT-3S DMR/FM dual band radio with programming cable",
+    "manufacturer": "Retevis",
+    "model": "RT-3S DMR/FM dual band radio with programming cable"
+  },
+  {
+    "product_name": "Heathkit HW-6502 2M handheld",
+    "manufacturer": "Heathkit",
+    "model": "HW-6502 2M handheld"
+  },
+  {
+    "product_name": "Wouxun KG-UV7D",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV7D"
+  },
+  {
+    "product_name": "TYT TH-UV99",
+    "manufacturer": "Tyt",
+    "model": "TH-UV99"
+  },
+  {
+    "product_name": "Baofeng DM-1701 5W Dual Band DMR",
+    "manufacturer": "Baofeng",
+    "model": "DM-1701 5W"
+  },
+  {
+    "product_name": "Baofeng GT-5R",
+    "manufacturer": "Baofeng",
+    "model": "GT-5R"
+  },
+  {
+    "product_name": "Yaesu VX-110",
+    "manufacturer": "Yaesu",
+    "model": "VX-110"
+  },
+  {
+    "product_name": "Retevis RA-89",
+    "manufacturer": "Retevis",
+    "model": "RA-89"
+  },
+  {
+    "product_name": "Baofeng DR-1801UV",
+    "manufacturer": "Baofeng",
+    "model": "DR-1801UV"
+  },
+  {
+    "product_name": "RADTEL RT-470X",
+    "manufacturer": "Radtel",
+    "model": "RT-470X"
+  },
+  {
+    "product_name": "Baofeng UV-10R",
+    "manufacturer": "Baofeng",
+    "model": "UV-10R"
+  },
+  {
+    "product_name": "Wouxun KGUV8H",
+    "manufacturer": "Wouxun",
+    "model": "KGUV8H"
+  },
+  {
+    "product_name": "Radioddity GS-5B",
+    "manufacturer": "Radioddity",
+    "model": "GS-5B"
+  },
+  {
+    "product_name": "Alinco DJ-MD5XTG",
+    "manufacturer": "Alinco",
+    "model": "DJ-MD5XTG"
+  },
+  {
+    "product_name": "Icom IC-2SA",
+    "manufacturer": "Icom",
+    "model": "IC-2SA"
+  },
+  {
+    "product_name": "Baofeng/Radioddity UV-5RX3 tri-band VHF/UHF transceiver",
+    "manufacturer": "Baofeng",
+    "model": "/Radioddity UV-5RX3 tri-band"
+  },
+  {
+    "product_name": "VERO VR N75 UHF programed & controled by Android",
+    "manufacturer": "Vero",
+    "model": "VR N75 UHF programed & controled by Android"
+  },
+  {
+    "product_name": "Hora C-150 2m Hand Held Transceiver",
+    "manufacturer": "Hora",
+    "model": "C-150 2m Hand Held Transceiver"
+  },
+  {
+    "product_name": "Icom IC-2SAT",
+    "manufacturer": "Icom",
+    "model": "IC-2SAT"
+  },
+  {
+    "product_name": "Belcom LS-702",
+    "manufacturer": "Belcom",
+    "model": "LS-702"
+  },
+  {
+    "product_name": "Motorola XPR3500e",
+    "manufacturer": "Motorola",
+    "model": "XPR3500e"
+  },
+  {
+    "product_name": "Retevis RT23",
+    "manufacturer": "Retevis",
+    "model": "RT23"
+  },
+  {
+    "product_name": "Baofeng BFC2",
+    "manufacturer": "Baofeng",
+    "model": "BFC2"
+  },
+  {
+    "product_name": "Baofeng DM-X",
+    "manufacturer": "Baofeng",
+    "model": "DM-X"
+  },
+  {
+    "product_name": "Motorola SL3500e HT",
+    "manufacturer": "Motorola",
+    "model": "SL3500e HT"
+  },
+  {
+    "product_name": "Alinco DJ-MD40",
+    "manufacturer": "Alinco",
+    "model": "DJ-MD40"
+  },
+  {
+    "product_name": "Retevis RT87",
+    "manufacturer": "Retevis",
+    "model": "RT87"
+  },
+  {
+    "product_name": "Retevis RT15",
+    "manufacturer": "Retevis",
+    "model": "RT15"
+  },
+  {
+    "product_name": "M/A-COM P7100ip",
+    "manufacturer": "M/A-Com",
+    "model": "P7100ip"
+  },
+  {
+    "product_name": "Kiriusn TP660",
+    "manufacturer": "Kiriusn",
+    "model": "TP660"
+  },
+  {
+    "product_name": "GD55 Plus",
+    "manufacturer": "Gd55",
+    "model": "Plus"
+  },
+  {
+    "product_name": "Yanton T-650UV 10-watt HT",
+    "manufacturer": "Yanton",
+    "model": "T-650UV 10-watt HT"
+  },
+  {
+    "product_name": "Kanglong KL-H3",
+    "manufacturer": "Kanglong",
+    "model": "KL-H3"
+  },
+  {
+    "product_name": "Kanglong KL-320",
+    "manufacturer": "Kanglong",
+    "model": "KL-320"
+  },
+  {
+    "product_name": "Alinco DJ-560T",
+    "manufacturer": "Alinco",
+    "model": "DJ-560T"
+  },
+  {
+    "product_name": "TYT MD-680 UHF DMR 10Watt",
+    "manufacturer": "Tyt",
+    "model": "MD-680 UHF DMR 10Watt"
+  },
+  {
+    "product_name": "Motorola MT1000/P200 Low band handheld radio",
+    "manufacturer": "Motorola",
+    "model": "MT1000/P200 Low band handheld radio"
+  },
+  {
+    "product_name": "Anytone ANILE-8R (VHF or UHF)",
+    "manufacturer": "Anytone",
+    "model": "ANILE-8R"
+  },
+  {
+    "product_name": "Luiton LT-188H VHF 10watts Handheld Ham Radio",
+    "manufacturer": "Luiton",
+    "model": "LT-188H VHF 10watts Handheld Ham Radio"
+  },
+  {
+    "product_name": "Baofeng BF-A5",
+    "manufacturer": "Baofeng",
+    "model": "BF-A5"
+  },
+  {
+    "product_name": "Baofeng / Pofung / Sainsonic GT-3TP",
+    "manufacturer": "Baofeng",
+    "model": "/ Pofung / Sainsonic GT-3TP"
+  },
+  {
+    "product_name": "Quansheng 1680",
+    "manufacturer": "Quansheng",
+    "model": "1680"
+  },
+  {
+    "product_name": "Holsterguy SSRH-500 Shoulder Strap Radio Holster",
+    "manufacturer": "Holsterguy",
+    "model": "SSRH-500 Shoulder Strap Radio Holster"
+  },
+  {
+    "product_name": "Hora F-50 VU dual-band waterproof",
+    "manufacturer": "Hora",
+    "model": "F-50 VU dual-band waterproof"
+  },
+  {
+    "product_name": "Wouxun KG-816",
+    "manufacturer": "Wouxun",
+    "model": "KG-816"
+  },
+  {
+    "product_name": "Jingtong JT-308",
+    "manufacturer": "Jingtong",
+    "model": "JT-308"
+  },
+  {
+    "product_name": "CHIERDA CD-UV55",
+    "manufacturer": "Chierda",
+    "model": "CD-UV55"
+  },
+  {
+    "product_name": "Hilltop Auctions Hand Strap",
+    "manufacturer": "Hilltop",
+    "model": "Auctions Hand Strap"
+  },
+  {
+    "product_name": "Icom U-16",
+    "manufacturer": "Icom",
+    "model": "U-16"
+  },
+  {
+    "product_name": "Feidaxin FD-58",
+    "manufacturer": "Feidaxin",
+    "model": "FD-58"
+  },
+  {
+    "product_name": "Kenwood TH-K4",
+    "manufacturer": "Kenwood",
+    "model": "TH-K4"
+  },
+  {
+    "product_name": "Wouxun KG-833",
+    "manufacturer": "Wouxun",
+    "model": "KG-833"
+  },
+  {
+    "product_name": "Feidaxin FD-268A",
+    "manufacturer": "Feidaxin",
+    "model": "FD-268A"
+  },
+  {
+    "product_name": "ICOM IC-12N",
+    "manufacturer": "Icom",
+    "model": "IC-12N"
+  },
+  {
+    "product_name": "Anytone AT-288  2 (70cm) meter HT",
+    "manufacturer": "Anytone",
+    "model": "AT-288  2 (70cm) meter HT"
+  },
+  {
+    "product_name": "KYD TK-6188 Handheld Transceiver",
+    "manufacturer": "Kyd",
+    "model": "TK-6188 Handheld Transceiver"
+  },
+  {
+    "product_name": "ICom IC V85",
+    "manufacturer": "Icom",
+    "model": "IC V85"
+  },
+  {
+    "product_name": "Maxpedition 4\\\" Clip on Holster",
+    "manufacturer": "Maxpedition",
+    "model": "4\\\" Clip on Holster"
+  },
+  {
+    "product_name": "FDC FD-460",
+    "manufacturer": "Fdc",
+    "model": "FD-460"
+  },
+  {
+    "product_name": "Icom IC-2SE VHF Tranceiver",
+    "manufacturer": "Icom",
+    "model": "IC-2SE"
+  },
+  {
+    "product_name": "ICOM IC-W21A",
+    "manufacturer": "Icom",
+    "model": "IC-W21A"
+  },
+  {
+    "product_name": "Ten-Tec Model 2591",
+    "manufacturer": "Ten-Tec",
+    "model": "Model 2591"
+  },
+  {
+    "product_name": "Kenwood TH-235",
+    "manufacturer": "Kenwood",
+    "model": "TH-235"
+  },
+  {
+    "product_name": "Midland 73-007",
+    "manufacturer": "Midland",
+    "model": "73-007"
+  },
+  {
+    "product_name": "Icom F24 (commercial)",
+    "manufacturer": "Icom",
+    "model": "F24"
+  },
+  {
+    "product_name": "Palstar KH-6 50MHz H/T",
+    "manufacturer": "Palstar",
+    "model": "KH-6 50MHz H/T"
+  },
+  {
+    "product_name": "AEA DX-Handy MX-6S / Mizuho MX-6S",
+    "manufacturer": "Aea",
+    "model": "DX-Handy MX-6S / Mizuho MX-6S"
+  },
+  {
+    "product_name": "yaesu ft911",
+    "manufacturer": "Yaesu",
+    "model": "ft911"
+  },
+  {
+    "product_name": "Icom A24LI",
+    "manufacturer": "Icom",
+    "model": "A24LI"
+  },
+  {
+    "product_name": "BK Radio DPH-CMD: DPH5102XCMD",
+    "manufacturer": "Bk",
+    "model": "Radio DPH-CMD: DPH5102XCMD"
+  },
+  {
+    "product_name": "ZARES ZLUHF02",
+    "manufacturer": "Zares",
+    "model": "ZLUHF02"
+  },
+  {
+    "product_name": "Icom IC-F30GS",
+    "manufacturer": "Icom",
+    "model": "IC-F30GS"
+  },
+  {
+    "product_name": "Icom T21A",
+    "manufacturer": "Icom",
+    "model": "T21A"
+  },
+  {
+    "product_name": "Motorola MTX838",
+    "manufacturer": "Motorola",
+    "model": "MTX838"
+  },
+  {
+    "product_name": "ADI AT-18",
+    "manufacturer": "Adi",
+    "model": "AT-18"
+  },
+  {
+    "product_name": "Standard c188a",
+    "manufacturer": "Standard",
+    "model": "c188a"
+  },
+  {
+    "product_name": "Icom IC-F4GT UHF Portable (LMR)",
+    "manufacturer": "Icom",
+    "model": "IC-F4GT UHF Portable"
+  },
+  {
+    "product_name": "Motorola GP88",
+    "manufacturer": "Motorola",
+    "model": "GP88"
+  },
+  {
+    "product_name": "KENWOOD 270G",
+    "manufacturer": "Kenwood",
+    "model": "270G"
+  },
+  {
+    "product_name": "Motorola GP 328",
+    "manufacturer": "Motorola",
+    "model": "GP 328"
+  },
+  {
+    "product_name": "Vertex VX-420 Portable",
+    "manufacturer": "Vertex",
+    "model": "VX-420 Portable"
+  },
+  {
+    "product_name": "ICOM IC-M3",
+    "manufacturer": "Icom",
+    "model": "IC-M3"
+  },
+  {
+    "product_name": "Kenwood 2140",
+    "manufacturer": "Kenwood",
+    "model": "2140"
+  },
+  {
+    "product_name": "Icom P4AT",
+    "manufacturer": "Icom",
+    "model": "P4AT"
+  },
+  {
+    "product_name": "Kenwood TK-290",
+    "manufacturer": "Kenwood",
+    "model": "TK-290"
+  },
+  {
+    "product_name": "Vertex VX600",
+    "manufacturer": "Vertex",
+    "model": "VX600"
+  },
+  {
+    "product_name": "Santec ST7",
+    "manufacturer": "Santec",
+    "model": "ST7"
+  },
+  {
+    "product_name": "Motorola MT2100",
+    "manufacturer": "Motorola",
+    "model": "MT2100"
+  },
+  {
+    "product_name": "Mizuho MX-6Z",
+    "manufacturer": "Mizuho",
+    "model": "MX-6Z"
+  },
+  {
+    "product_name": "Alinco DJ-193",
+    "manufacturer": "Alinco",
+    "model": "DJ-193"
+  },
+  {
+    "product_name": "Connect Systems CS-750",
+    "manufacturer": "Connect Systems",
+    "model": "CS-750"
+  },
+  {
+    "product_name": "Wouxun KG-UV8D+",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV8D+"
+  },
+  {
+    "product_name": "Yaesu VX-110",
+    "manufacturer": "Yaesu",
+    "model": "VX-110"
+  },
+  {
+    "product_name": "Wouxun KG-UV9D Plus+",
+    "manufacturer": "Wouxun",
+    "model": "KG-UV9D Plus+"
+  },
+  {
+    "product_name": "Baofeng UV-22",
+    "manufacturer": "Baofeng",
+    "model": "UV-22"
+  },
+  {
+    "product_name": "BAOFENG UV-5G PLUS",
+    "manufacturer": "Baofeng",
+    "model": "UV-5G PLUS"
+  },
+  {
+    "product_name": "Radtel RT-6D and 6D Pro",
+    "manufacturer": "Radtel",
+    "model": "RT-6D and 6D Pro"
+  },
+  {
+    "product_name": "Baofeng UV25",
+    "manufacturer": "Baofeng",
+    "model": "UV25"
+  }
+]
