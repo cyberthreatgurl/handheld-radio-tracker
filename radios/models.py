@@ -5,7 +5,7 @@ class Brand(models.Model):
     """Model representing a radio manufacturer with FCC Grantee Code"""
     
     name = models.CharField(max_length=200, unique=True, help_text="Official manufacturer/brand name")
-    grantee_code = models.CharField(max_length=20, unique=True, help_text="FCC Grantee Code (e.g., 2AJGM, 2AZSA)")
+    grantee_code = models.CharField(max_length=20, unique=True, blank=True, null=True, help_text="FCC Grantee Code (e.g., 2AJGM, 2AZSA)")
     full_name = models.CharField(max_length=500, blank=True, help_text="Full legal company name")
     website = models.URLField(max_length=500, blank=True, help_text="Official website")
     country = models.CharField(max_length=100, blank=True, help_text="Country of origin")

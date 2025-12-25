@@ -43,11 +43,24 @@ class RadioListView(ListView):
         return context
 
 
+
 class RadioDetailView(DetailView):
     """View for displaying a single radio's details"""
     model = Radio
     template_name = 'radios/radio_detail.html'
     context_object_name = 'radio'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        radio = context.get('radio')
+        fcc_id = getattr(radio, 'fcc_id', None)
+        fcc_grantee = ''
+        fcc_product = ''
+        if fcc_id and '-' in fcc_id:
+            fcc_grantee, fcc_product = fcc_id.split('-', 1)
+        context['fcc_grantee'] = fcc_grantee
+        context['fcc_product'] = fcc_product
+        return context
 
 
 class RadioCreateView(CreateView):

@@ -42,9 +42,13 @@
                     <dt class="text-sm font-medium text-gray-500">FCC ID</dt>
                     <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                         {% if radio.fcc_id %}
-                            <a href="https://fcc.report/FCC-ID/{{ radio.fcc_id }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
-                                {{ radio.fcc_id }} ↗
-                            </a>
+                            {% if fcc_grantee and fcc_product %}
+                                <a href="https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm?fcc_id={{ fcc_grantee }}{{ fcc_product }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ radio.fcc_id }} ↗
+                                </a>
+                            {% else %}
+                                <span>{{ radio.fcc_id }}</span>
+                            {% endif %}
                         {% else %}
                             <span class="text-gray-400">Not specified</span>
                         {% endif %}

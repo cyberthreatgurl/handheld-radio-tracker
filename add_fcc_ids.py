@@ -17,7 +17,6 @@ KNOWN_GRANTEE_CODES = {
     'Wouxun': 'U4Z',     # WOUXUN ELECTRONICS CO LTD
     'Alinco': 'C4Z',     # ALINCO INCORPORATED
     'Radtel': '2AO8L',   # QUANZHOU RADTEL ELECTRONICS TECHNOLOGY CO
-    # Additional verified codes
     'Btech': '2AJGM',    # BTech is Baofeng's US brand
     'Puxing': 'W7PPX',   # PUXING ELECTRONICS SCIENCE & TECHNOLOGY
     'Tyt': '2AMJR',      # QUANZHOU WOTONG ELECTRONICS CO
@@ -55,121 +54,110 @@ KNOWN_GRANTEE_CODES = {
 
 def clean_model_for_fcc(model):
     """Clean model name for FCC ID format"""
-    # Remove parentheses content
     model = re.sub(r'\([^)]*\)', '', model).strip()
-    # Remove spaces and special chars, keep alphanumeric and hyphens
     model = re.sub(r'\s+', '', model)
     model = re.sub(r'[^A-Za-z0-9\-]', '', model)
     return model.upper()
 
-def search_fcc_id_web(brand, model):
-    """Search FCC database via web scraping"""
+def search_fcc_id_official(grantee_code, product_code):
+    """
+    Search the official FCC API for a given grantee code and product code.
+    Returns True if the FCC ID exists, False otherwise.
+    """
+    url = f"https://data.fcc.gov/api/oet/ea/fccid/format/json?fcc_id={grantee_code}-{product_code}"
     try:
-        clean_model = clean_model_for_fcc(model)
-        
-        # Use the official FCC database search
-        url = f"https://fcc.report/FCC-ID/{quote(clean_model)}"
-        
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-        }
-        
-        response = requests.get(url, headers=headers, timeout=10)
-        
+        response = requests.get(url, timeout=10)
         if response.status_code == 200:
-            # If we can access the page, the FCC ID likely exists
-            # Extract any info from the page if needed
-            return True
-        
+            data = response.json()
+            return bool(data.get('Results'))
         return False
-        
-    except Exception as e:
+    except Exception:
         return False
 
 def generate_fcc_id(brand, model):
     """Generate FCC ID using known grantee codes"""
-    # Check if we have a known grantee code
     grantee_code = KNOWN_GRANTEE_CODES.get(brand, '')
-    
     if not grantee_code:
         return None
-    
     clean_model = clean_model_for_fcc(model)
-    
     if not clean_model:
         return None
-    
-    # Generate the FCC ID
     fcc_id = f"{grantee_code}-{clean_model}"
-    
     return {
         'fcc_id': fcc_id,
         'grantee_code': grantee_code,
         'method': 'generated'
     }
 
+import sys
+
+def import_merged_master_with_fcc():
+    """Import and display summary of merged_master_with_fcc.csv"""
+    input_file = 'data/merged_master_with_fcc.csv'
+    print(f"Importing {input_file}...")
+    with open(input_file, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+        print(f"Imported {len(rows)} rows.")
+        # Show a preview of the first 5 rows
+        for i, row in enumerate(rows[:5], 1):
+            print(f"Row {i}: {row}")
+    print("\nImport complete.")
+
 def main():
-    input_file = 'merged_master.csv'
-    output_file = 'merged_master_with_fcc.csv'
-    
+    if len(sys.argv) > 1 and sys.argv[1] == '--import':
+        import_merged_master_with_fcc()
+        return
+    input_file = 'data/merged_master.csv'
+    output_file = 'data/merged_master_with_fcc.csv'
     print(f"Reading {input_file}...")
     models = []
     with open(input_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         fieldnames = reader.fieldnames
         models = list(reader)
-    
     print(f"Found {len(models)} models to process\n")
     print("Known Grantee Codes:")
     for brand, code in sorted(KNOWN_GRANTEE_CODES.items()):
         print(f"  {brand}: {code}")
     print()
-    
-    # Add new columns
-    new_fieldnames = list(fieldnames) + ['FCC_ID', 'Grantee_Code']
-    
-    # Process each model
+    new_fieldnames = list(fieldnames) + ['FCC_ID', 'Grantee_Code', 'FCC_ID_Exists']
     processed = 0
     generated = 0
     unknown_brands = set()
-    
     for i, model in enumerate(models, 1):
         brand = model['Brand']
         model_name = model['Model']
-        
         fcc_info = generate_fcc_id(brand, model_name)
-        
         if fcc_info:
             model['FCC_ID'] = fcc_info['fcc_id']
             model['Grantee_Code'] = fcc_info['grantee_code']
+            exists = search_fcc_id_official(fcc_info['grantee_code'], clean_model_for_fcc(model_name))
+            model['FCC_ID_Exists'] = 'Yes' if exists else 'No'
             generated += 1
-            if i <= 20 or i % 100 == 0:  # Show first 20 and every 100th
-                print(f"[{i}/{len(models)}] {brand} {model_name} → {fcc_info['fcc_id']}")
+            if i <= 20 or i % 100 == 0:
+                print(f"[{i}/{len(models)}] {brand} {model_name} → {fcc_info['fcc_id']} (Exists: {model['FCC_ID_Exists']})")
+            time.sleep(0.2)
         else:
             model['FCC_ID'] = ''
             model['Grantee_Code'] = ''
+            model['FCC_ID_Exists'] = ''
             unknown_brands.add(brand)
-        
         processed += 1
-    
-    # Write results
     print(f"\nWriting results to {output_file}...")
     with open(output_file, 'w', encoding='utf-8', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=new_fieldnames)
         writer.writeheader()
         writer.writerows(models)
-    
     print(f"\n✓ Complete!")
     print(f"  Processed: {processed} models")
     print(f"  FCC IDs generated: {generated}")
     print(f"  No grantee code: {processed - generated}")
-    
     if unknown_brands:
         print(f"\nBrands without grantee codes ({len(unknown_brands)}):")
         for brand in sorted(unknown_brands):
             count = sum(1 for m in models if m['Brand'] == brand)
             print(f"  {brand}: {count} models")
-    
     print(f"\nOutput saved to: {output_file}")
 
 if __name__ == '__main__':

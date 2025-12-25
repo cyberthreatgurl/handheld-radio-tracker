@@ -60,79 +60,77 @@
                     </div>
                 </div>
 
-                <!-- FCC Information -->
+                <!-- FCC and Technical Information -->
                 <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">FCC Information</h3>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">FCC & Technical Information</h3>
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
-                            <label for="{{ form.fcc_id.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                FCC ID
-                            </label>
+                            <label for="{{ form.fcc_id.id_for_label }}" class="block text-sm font-medium text-gray-700">FCC ID</label>
                             {{ form.fcc_id }}
-                            {% if form.fcc_id.errors %}
-                            <p class="mt-2 text-sm text-red-600">{{ form.fcc_id.errors.0 }}</p>
-                            {% endif %}
+                            {% if form.fcc_id.errors %}<p class="mt-2 text-sm text-red-600">{{ form.fcc_id.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
-                            <label for="{{ form.grantee_code.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                Grantee Code
-                            </label>
-                            {{ form.grantee_code }}
-                            {% if form.grantee_code.errors %}
-                            <p class="mt-2 text-sm text-red-600">{{ form.grantee_code.errors.0 }}</p>
-                            {% endif %}
+                            <label for="{{ form.intro_year.id_for_label }}" class="block text-sm font-medium text-gray-700">Intro Year</label>
+                            {{ form.intro_year }}
+                            {% if form.intro_year.errors %}<p class="mt-2 text-sm text-red-600">{{ form.intro_year.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.freq_bands_tx.id_for_label }}" class="block text-sm font-medium text-gray-700">Frequency Bands (TX)</label>
+                            {{ form.freq_bands_tx }}
+                            {% if form.freq_bands_tx.errors %}<p class="mt-2 text-sm text-red-600">{{ form.freq_bands_tx.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.power_watts.id_for_label }}" class="block text-sm font-medium text-gray-700">Power (W)</label>
+                            {{ form.power_watts }}
+                            {% if form.power_watts.errors %}<p class="mt-2 text-sm text-red-600">{{ form.power_watts.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.satellite_tracking.id_for_label }}" class="block text-sm font-medium text-gray-700">Satellite Tracking</label>
+                            {{ form.satellite_tracking }}
+                        </div>
+                        <div>
+                            <label for="{{ form.harmonic_suppression.id_for_label }}" class="block text-sm font-medium text-gray-700">Harmonic Suppression</label>
+                            {{ form.harmonic_suppression }}
+                        </div>
+                        <div>
+                            <label for="{{ form.gps.id_for_label }}" class="block text-sm font-medium text-gray-700">GPS</label>
+                            {{ form.gps }}
+                        </div>
+                        <div>
+                            <label for="{{ form.aprs.id_for_label }}" class="block text-sm font-medium text-gray-700">APRS</label>
+                            {{ form.aprs }}
+                        </div>
+                        <div>
+                            <label for="{{ form.air_band.id_for_label }}" class="block text-sm font-medium text-gray-700">Air Band</label>
+                            {{ form.air_band }}
+                        </div>
+                        <div>
+                            <label for="{{ form.dmr.id_for_label }}" class="block text-sm font-medium text-gray-700">DMR</label>
+                            {{ form.dmr }}
+                        </div>
+                        <div>
+                            <label for="{{ form.display.id_for_label }}" class="block text-sm font-medium text-gray-700">Display</label>
+                            {{ form.display }}
+                        </div>
+                        <div>
+                            <label for="{{ form.battery_mah.id_for_label }}" class="block text-sm font-medium text-gray-700">Battery (mAh)</label>
+                            {{ form.battery_mah }}
+                        </div>
+                        <div>
+                            <label for="{{ form.cost_approx.id_for_label }}" class="block text-sm font-medium text-gray-700">Cost (Approx)</label>
+                            {{ form.cost_approx }}
+                        </div>
+                        <div>
+                            <label for="{{ form.rebadges_clones.id_for_label }}" class="block text-sm font-medium text-gray-700">Known Rebadges / Clones</label>
+                            {{ form.rebadges_clones }}
+                        </div>
+                        <div>
+                            <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700">Website</label>
+                            {{ form.website }}
                         </div>
                     </div>
                 </div>
 
-                <!-- Technical Specifications -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Technical Specifications</h3>
-                    <div class="space-y-6">
-                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            <div>
-                                <label for="{{ form.frequency_range.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                    Frequency Range
-                                </label>
-                                {{ form.frequency_range }}
-                            </div>
-                            <div>
-                                <label for="{{ form.power_output.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                    Power Output
-                                </label>
-                                {{ form.power_output }}
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            <div>
-                                <label for="{{ form.modulation.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                    Modulation
-                                </label>
-                                {{ form.modulation }}
-                            </div>
-                            <div>
-                                <label for="{{ form.bands.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                    Bands
-                                </label>
-                                {{ form.bands }}
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            <div>
-                                <label for="{{ form.digital_modes.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                    Digital Modes
-                                </label>
-                                {{ form.digital_modes }}
-                            </div>
-                            <div>
-                                <label for="{{ form.channels.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                    Channels
-                                </label>
-                                {{ form.channels }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Additional Details -->
                 <div class="pb-6">

@@ -1,723 +1,713 @@
-Brand,Model,APRS,Air Band,Battery (mAh),Cost (Approx),DMR,Display,Freq. Bands (TX),GPS,Harmonic Suppression Status,Intro Year,Known Rebadges / Clones,Power (W),Satellite Tracking,Website,FCC_ID,Grantee_Code
-Adi,AT-18,,,,,,,,,,,,,,,,
-Adi,AT-201,,,,,,,,,,,,,,,,
-Adi,AT-600,,,,,,,,,,,,,,,,
-Adi,HT-204,,,,,,,,,,,,,,,,
-Aea,DX-Handy MX-6S / Mizuho MX-6S,,,,,,,,,,,,,,,,
-Retevis, Ailunce HD-1,,,,,,,,,,,,,,,2AO3E-HD-1,2AO3E
-Retevis, Ailunce H1,,,,,,,,,,,,,,,,
-Retevis, Ailunce HA2,,,,,,,,,,,,,,,,
-Retevis, Ailunce HA1UV,,,,,,,,,,,,,,,,
-Retevis, Ailunce HA1G,,,,,,,,,,,,,,,,
-Albrecht,2990 - DRAGON SS 301 - MAGNUM 1012,,,,,,,,,,,,,,,,
-Alinco,DJ V57T,,,,,,,,,,,,,,,C4Z-DJV57T,C4Z
-Alinco,DJ VX-50,,,,,,,,,,,,,,,C4Z-DJVX-50,C4Z
-Alinco,DJ-160T,,,,,,,,,,,,,,,C4Z-DJ-160T,C4Z
-Alinco,DJ-175T,,,,,,,,,,,,,,,C4Z-DJ-175T,C4Z
-Alinco,DJ-180,,,,,,,,,,,,,,,C4Z-DJ-180,C4Z
-Alinco,DJ-190,,,,,,,,,,,,,,,C4Z-DJ-190,C4Z
-Alinco,DJ-191,,,,,,,,,,,,,,,C4Z-DJ-191,C4Z
-Alinco,DJ-193,,,,,,,,,,,,,,,C4Z-DJ-193,C4Z
-Alinco,DJ-195T,,,,,,,,,,,,,,,C4Z-DJ-195T,C4Z
-Alinco,DJ-196T,,,,,,,,,,,,,,,C4Z-DJ-196T,C4Z
-Alinco,DJ-280TH,,,,,,,,,,,,,,,C4Z-DJ-280TH,C4Z
-Alinco,DJ-296T,,,,,,,,,,,,,,,C4Z-DJ-296T,C4Z
-Alinco,DJ-480T,,,,,,,,,,,,,,,C4Z-DJ-480T,C4Z
-Alinco,DJ-496T,,,,,,,,,,,,,,,C4Z-DJ-496T,C4Z
-Alinco,DJ-500,No,No,1500,$130,No,LCD,"VHF, UHF",No,Excellent,2014,N/A,5W,No,alinco.com,C4Z-DJ-500,C4Z
-Alinco,DJ-500E,No,No,1500,$130,No,LCD,"VHF, UHF",No,Excellent,2014,N/A,5W,No,alinco.com,C4Z-DJ-500E,C4Z
-Alinco,DJ-500T,,,,,,,,,,,,,,,C4Z-DJ-500T,C4Z
-Alinco,DJ-560T,,,,,,,,,,,,,,,C4Z-DJ-560T,C4Z
-Alinco,DJ-580,,,,,,,,,,,,,,,C4Z-DJ-580,C4Z
-Alinco,DJ-580T,,,,,,,,,,,,,,,C4Z-DJ-580T,C4Z
-Alinco,DJ-596,,,,,,,,,,,,,,,C4Z-DJ-596,C4Z
-Alinco,DJ-596 EJ-43 DIGITAL BOARD,,,,,,,,,,,,,,,C4Z-DJ-596EJ-43DIGITALBOARD,C4Z
-Alinco,DJ-596T / DJ-596E,,,,,,,,,,,,,,,C4Z-DJ-596TDJ-596E,C4Z
-Alinco,DJ-C4,,,,,,,,,,,,,,,C4Z-DJ-C4,C4Z
-Alinco,DJ-C5,,,,,,,,,,,,,,,C4Z-DJ-C5,C4Z
-Alinco,DJ-C7,,,,,,,,,,,,,,,C4Z-DJ-C7,C4Z
-Alinco,DJ-CRX7,No,No,1800,$80,No,Dot-matrix,"VHF, UHF",No,Excellent,2023,N/A,5W,No,alinco.com,C4Z-DJ-CRX7,C4Z
-Alinco,DJ-F1,,,,,,,,,,,,,,,C4Z-DJ-F1,C4Z
-Alinco,DJ-G1T,,,,,,,,,,,,,,,C4Z-DJ-G1T,C4Z
-Alinco,DJ-G29T FM,,,,,,,,,,,,,,,C4Z-DJ-G29TFM,C4Z
-Alinco,DJ-G5TH,,,,,,,,,,,,,,,C4Z-DJ-G5TH,C4Z
-Alinco,DJ-G7,,,,,,,,,,,,,,,C4Z-DJ-G7,C4Z
-Alinco,DJ-MD40,,,,,,,,,,,,,,,C4Z-DJ-MD40,C4Z
-Alinco,DJ-MD5,No,No,1700,$140,Yes,Color LCD,"VHF, UHF",Yes,Excellent (Part 90),2018,AnyTone AT-D868/878 (Base),5W,No,alinco.com,C4Z-DJ-MD5,C4Z
-Alinco,DJ-MD5T / DJ-MD5TGP,,,,,,,,,,,,,,,C4Z-DJ-MD5TDJ-MD5TGP,C4Z
-Alinco,DJ-MD5XEG,Yes (Digital),No,1700,$180,Yes,Color LCD,"VHF, UHF",Yes,Excellent,2021,AnyTone AT-D878 (Variant),5W,No,alinco.com,C4Z-DJ-MD5XEG,C4Z
-Alinco,DJ-MD5XTG,,,,,,,,,,,,,,,C4Z-DJ-MD5XTG,C4Z
-Alinco,DJ-S11,,,,,,,,,,,,,,,C4Z-DJ-S11,C4Z
-Alinco,DJ-S11T,,,,,,,,,,,,,,,C4Z-DJ-S11T,C4Z
-Alinco,DJ-S40T,,,,,,,,,,,,,,,C4Z-DJ-S40T,C4Z
-Alinco,DJ-S41,,,,,,,,,,,,,,,C4Z-DJ-S41,C4Z
-Alinco,DJ-S45T,,,,,,,,,,,,,,,C4Z-DJ-S45T,C4Z
-Alinco,DJ-V17,,,,,,,,,,,,,,,C4Z-DJ-V17,C4Z
-Alinco,DJ-V27T,,,,,,,,,,,,,,,C4Z-DJ-V27T,C4Z
-Alinco,DJ-V5T,,,,,,,,,,,,,,,C4Z-DJ-V5T,C4Z
-Alinco,DJ-VX50,,,,,,,,,,,,,,,C4Z-DJ-VX50,C4Z
-Alinco,DJ-VX50HT,No,Yes,1800,$90,No,LCD,"VHF, UHF",No,Excellent,2019,DJ-VX50 (Global),5W,No,alinco.com,C4Z-DJ-VX50HT,C4Z
-Alinco,DJ-W70HE,No,Yes,2000,$150,No,LCD,"VHF, UHF",No,Excellent,2020,N/A,5W,No,alinco.com,C4Z-DJ-W70HE,C4Z
-Alinco,DJ-W70HT,No,Yes,2600,$160,No,Color LCD,"VHF, UHF",No,Excellent,2024,N/A,8W,No,alinco.com,C4Z-DJ-W70HT,C4Z
-Alinco,DJV- 47T,,,,,,,,,,,,,,,C4Z-DJV-47T,C4Z
-Anytone,ANILE-8R,,,,,,,,,,,,,,,2AJDM-ANILE-8R,2AJDM
-Anytone,AT-288 2 (70cm) meter HT,,,,,,,,,,,,,,,2AJDM-AT-2882METERHT,2AJDM
-Anytone,AT-318UV,No,No,1300,$85,No,LCD,"VHF, UHF",No,Good (Part 90),2016,N/A,6W,No,anytone.net,2AJDM-AT-318UV,2AJDM
-Anytone,AT-3208UVII,No,No,1350,$75,No,LCD,"VHF, UHF",No,Good (Part 90),2015,N/A,5W,No,anytone.net,2AJDM-AT-3208UVII,2AJDM
-Anytone,AT-3318UV-A,,,,,,,,,,,,,,,2AJDM-AT-3318UV-A,2AJDM
-Anytone,AT-398UV,No,Yes,2200,$90,No,LCD,"VHF, UHF",No,Good (Part 90),2018,N/A,5W,No,anytone.net,2AJDM-AT-398UV,2AJDM
-Anytone,AT-D168UV,Beacon,No,2500,$150,Yes,"1.77"" TFT","VHF, UHF",No,Excellent (Part 90),2023,Alinco DJ-MD5X,5W,No,anytone.net,2AJDM-AT-D168UV,2AJDM
-Anytone,AT-D868uv dual-band DMR HT,,,,,,,,,,,,,,,2AJDM-AT-D868UVDUAL-BANDDMRHT,2AJDM
-Anytone,AT-D878UV,,,,,,,,,,,,,,,2AJDM-AT-D878UV,2AJDM
-Anytone,AT-D878UVII Plus,Yes (A/D),No,3100,$250,Yes,"1.77"" TFT","VHF, UHF",Yes,Excellent (Part 90),2021,Alinco DJ-MD5,7W,No,anytone.net,2AJDM-AT-D878UVIIPLUS,2AJDM
-Anytone,AT-D890UV,Yes (A/D),Yes,3100,~$299,Yes,"1.77"" TFT","VHF, UHF",Yes,Excellent,2025,BridgeCom Maverick,7W,Yes (Native),anytone.net,2AJDM-AT-D890UV,2AJDM
-Anytone,NSTIG-8R,,,,,,,,,,,,,,,2AJDM-NSTIG-8R,2AJDM
-Anytone,OBLTR-8R,,,,,,,,,,,,,,,2AJDM-OBLTR-8R,2AJDM
-Anytone,TERMN-8R,,,,,,,,,,,,,,,2AJDM-TERMN-8R,2AJDM
-Anytone,UVA1,Optional,Yes,2000,$95,No,Color Screen,"VHF, UHF",Optional,Excellent,2025,N/A,5W,No,anytone.net,2AJDM-UVA1,2AJDM
-Azden,800,,,,,,,,,,,,,,,FRH-800,FRH
-Azden,AZ-21A,,,,,,,,,,,,,,,FRH-AZ-21A,FRH
-Azden,AZ-61,,,,,,,,,,,,,,,FRH-AZ-61,FRH
-Bajeton,BJ-7700,No,Yes,2500,$40,No,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-860 / BinTolk BT7700,5W,No,bajeton (AliExpress),,
-Bajeton,BJ-7800,No,Yes,2500,$45,No,Color LCD,"VHF, UHF",No,Unknown,2025,Radtel RT-920 (Variant),10W,No,bajeton (AliExpress),,
-Bajeton,BJ-8200,No,Yes,2800,$55,No,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-900 / BinTolk BT8200,10W,No,bajeton (AliExpress),,
-Bajeton,BJ-8300,No,Yes,2500,$50,No,Color LCD,"VHF, UHF",No,Unknown,2025,Radtel RT-920,10W,No,bajeton (AliExpress),,
-Bajeton,BJ-9000,Yes (Analog),Yes,2600,$80,No,Color LCD,Multi-Band,Yes,Unknown,2025,Radtel RT-950 PRO,10W,No,bajeton (AliExpress),,
-Bajeton,DM-5000,No,No,3500,$60,Yes,Color Screen,"VHF, UHF",No,Unknown,2025,Radtel RT-4D / IRadio DM-UV4R,5W,No,bajeton (AliExpress),,
-Baofeng,5RH PRO,No,Yes,2500,$50,No,"1.77"" TFT","VHF, UHF",No,Mixed,2024,Baofeng UV-5RM Plus,10W,No,baofengradio.com,2AJGM-5RHPRO,2AJGM
-Baofeng,AR-152,No,No,12000 (Claimed),$45,No,LCD,"VHF, UHF",No,Unknown,2022.0,baofengradio.com,10W,No,,2AJGM-AR-152,2AJGM
-Baofeng,AR-26,Yes (Analog),Yes,2500,$55,No,"1.77"" TFT","VHF, 220, UHF",Yes,Mixed,2024,Baofeng UV-5RH Pro (Variant),10W,No,baofengradio.com,2AJGM-AR-26,2AJGM
-Baofeng,BF-1904,No,No,4200 (Adv),$50,No,None,UHF,No,Unknown,2019,Retevis RT29 (Similar),10W,No,baofengradio.com,2AJGM-BF-1904,2AJGM
-Baofeng,BF-33C,No,No,1400,$25/3pk,No,LCD,FRS,No,Good,2023,N/A,2W,No,baofengradio.com,2AJGM-BF-33C,2AJGM
-Baofeng,BF-528,No,No,1800,$35,No,None,"VHF, UHF",No,Unknown,2020,N/A,10W,No,baofengradio.com,2AJGM-BF-528,2AJGM
-Baofeng,BF-888S,No,No,1500,$12,No,None,UHF,No,Notorious,2013,"Retevis H777, Arcshell AR-5",5W,No,baofengradio.com,2AJGM-BF-888S,2AJGM
-Baofeng,BF-88ST,No,No,1500,$25/pair,No,None,FRS,No,Good,2021,N/A,2W,No,baofengradio.com,2AJGM-BF-88ST,2AJGM
-Baofeng,BF-F8+,No,No,1800,$35,No,LCD,"VHF, UHF",No,Mixed,2013.0,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-BF-F8,2AJGM
-Baofeng,BF-F8HP,No,No,2000,$65,No,Tri-color,"VHF, UHF",No,Poor,2014,N/A,8W,No,baofengtech.com,2AJGM-BF-F8HP,2AJGM
-Baofeng,BF-F8HP PRO,No,Yes,2500,$65,No,Color LCD,"VHF, 220, UHF",No,Mixed,2024,N/A,10W,No,baofengtech.com,2AJGM-BF-F8HPPRO,2AJGM
-Baofeng,BF-H6,No,No,2200,$40,No,LCD,"VHF, UHF",No,Mixed,2020,N/A,10W,No,baofengradio.com,2AJGM-BF-H6,2AJGM
-Baofeng,BF-T1 Mini,,,,,,,,,,,,,,,2AJGM-BF-T1MINI,2AJGM
-Baofeng,DM-1701,No,No,2200,$80,Yes,Color LCD,"VHF, UHF",No,Good,2018.0,Retevis RT-3S,5W,No,baofengradio.com,2AJGM-DM-1701,2AJGM
-Baofeng,DM-1801,No,No,2000,$70,Yes,LCD,"VHF, UHF",No,Mixed,2018.0,baofengradio.com,5W,No,,2AJGM-DM-1801,2AJGM
-Baofeng,DM-5R,No,No,2000,$50,Yes,LCD,"VHF, UHF",No,Poor (Tier I),2016.0,baofengradio.com,5W,No,,2AJGM-DM-5R,2AJGM
-Baofeng,DM-V1,No,No,2000,$40,Yes,None,UHF,No,Good,2019,Retevis RT22 (Similar),2W,No,baofengradio.com,2AJGM-DM-V1,2AJGM
-Baofeng,DR-1801UV,No,No,2200,$70,Yes,LCD,"VHF, UHF",No,Good,2020.0,Baofeng DM-1801 (Updated),5W,No,baofengradio.com,2AJGM-DR-1801UV,2AJGM
-Baofeng,FRS-A1,No,No,1500,$25,No,LCD,FRS,No,Good (Part 95B),2019,BTECH FRS-A1,2W,No,baofengradio.com,2AJGM-FRS-A1,2AJGM
-Baofeng,G11S,No,No,1500,$25,No,None,GMRS,No,N/A,2023.0,baofengradio.com,5W,No,,2AJGM-G11S,2AJGM
-Baofeng,GM-15 Pro,No,No,1800,$40,No,LCD,GMRS,No,N/A,2022.0,baofengradio.com,5W,No,,2AJGM-GM-15PRO,2AJGM
-Baofeng,GT-22,No,No,1500,$25/pair,No,None,FRS,No,Good,2020,N/A,2W,No,baofengradio.com,2AJGM-GT-22,2AJGM
-Baofeng,GT-3,No,No,1800,$40,No,LCD,"VHF, UHF",No,Mixed,2014.0,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-GT-3,2AJGM
-Baofeng,GT-3 Mark II,,,,,,,,,,,,,,,2AJGM-GT-3MARKII,2AJGM
-Baofeng,GT-3TP,No,No,1800,$50,No,LCD,"VHF, UHF",No,Mixed,2015.0,Baofeng UV-5R (High Power),8W,No,baofengradio.com,2AJGM-GT-3TP,2AJGM
-Baofeng,GT-5R,No,No,1800,$30,No,LCD,"VHF, UHF",No,Good (Spurious Fix),2021.0,Baofeng UV-5R (Clean TX),5W,No,baofengradio.com,2AJGM-GT-5R,2AJGM
-Baofeng,K61 PRO,No,Yes,2600,$35,No,"1.54"" TFT",Multi-Band,No,Unknown,2024,N/A,5W,No,baofengradio.com,2AJGM-K61PRO,2AJGM
-Baofeng,M-5R,No,No,1800,$30,No,LCD,"VHF, UHF",No,Mixed,2023.0,Baofeng UV-5R (Rugged),5W,No,baofengradio.com,2AJGM-M-5R,2AJGM
-Baofeng,RD-55 Pro,Analog,Yes,2500,$50,No,LCD,"VHF, UHF",Yes,Mixed,2023,Radtel RT-490,10W,No,baofengradio.com,2AJGM-RD-55PRO,2AJGM
-Baofeng,UV-10R,No,No,2800,$45,No,Segmented,"VHF, UHF",No,Notorious,2021,N/A,10W,No,baofengradio.com,2AJGM-UV-10R,2AJGM
-Baofeng,UV-13 Pro,No,No,1800,$35,No,"1.44"" LCD","VHF, UHF",No,Mixed,2021,N/A,8W,No,baofengradio.com,2AJGM-UV-13PRO,2AJGM
-Baofeng,UV-17 Pro GPS,No,Yes,1800,$40,No,"1.77"" TFT","VHF, UHF",Yes,Mixed,2023,Retevis RA89 (Similar chassis),5W,No,baofengradio.com,2AJGM-UV-17PROGPS,2AJGM
-Baofeng,UV-21,No,Yes,2800,$30,No,"1.77"" TFT","VHF, 220, UHF",No,Unknown,2024,UV-17 (Variant),6W,No,baofengradio.com,2AJGM-UV-21,2AJGM
-Baofeng,UV-21 Pro,No,Yes,2800,$50,No,Color LCD,"VHF, UHF",No,Unknown,2023.0,baofengradio.com,10W,No,,2AJGM-UV-21PRO,2AJGM
-Baofeng,UV-21R,No,Yes,2800,$35,No,"1.77"" TFT","VHF, 220, UHF",No,Unknown,2023,UV-17R (Variant),6W,No,baofengradio.com,2AJGM-UV-21R,2AJGM
-Baofeng,UV-28 Plus,No,Yes,2200,$35,No,"1.77"" TFT","VHF, 220, UHF",Yes,Mixed,2025,N/A,10W,No,baofengradio.com,2AJGM-UV-28PLUS,2AJGM
-Baofeng,UV-3R,No,No,1500,$25,No,LCD,"VHF, UHF",No,Poor,2011.0,baofengradio.com,2W,No,,2AJGM-UV-3R,2AJGM
-Baofeng,UV-3R Mark II,,,,,,,,,,,,,,,2AJGM-UV-3RMARKII,2AJGM
-Baofeng,UV-3R+,No,No,1500,$30,No,LCD,"VHF, UHF",No,Mixed,2012.0,baofengradio.com,2W,No,,2AJGM-UV-3R,2AJGM
-Baofeng,UV-5G (UV-5X),No,No,1800,$40,No,LCD,GMRS,No,N/A,2021.0,Baofeng UV-5R (GMRS Locked),5W,No,baofengradio.com,2AJGM-UV-5G,2AJGM
-Baofeng,UV-5R,No,No,1800,$25,No,LCD,"VHF, UHF",No,Mixed,2012.0,baofengradio.com,5W,No,,2AJGM-UV-5R,2AJGM
-Baofeng,UV-5R (Standard),No,Some,1800,$25,No,Tri-color,"VHF, UHF",No,Notorious,2012,"Retevis RT-5R, Pofung UV-5R",5W,No,baofengradio.com,2AJGM-UV-5R,2AJGM
-Baofeng,UV-5R Mini,No,No,1400,$25,No,Small LCD,"VHF, UHF",No,Unknown,2024,N/A,5W,No,baofengradio.com,2AJGM-UV-5RMINI,2AJGM
-Baofeng,UV-5R Plus,No,No,1800,$30,No,LCD,"VHF, UHF",No,Mixed,2013.0,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-UV-5RPLUS,2AJGM
-Baofeng,UV-5R V2+,No,No,1800,$30,No,LCD,"VHF, UHF",No,Mixed,2014.0,Baofeng UV-5R (Firmware Upd),5W,No,baofengradio.com,2AJGM-UV-5RV2,2AJGM
-Baofeng,UV-5R3,,,,,,,,,,,,,,,2AJGM-UV-5R3,2AJGM
-Baofeng,UV-5RA,No,No,1800,$25,No,Tri-color,"VHF, UHF",No,Notorious,2013,N/A,5W,No,baofengradio.com,2AJGM-UV-5RA,2AJGM
-Baofeng,UV-5RE,No,No,1800,$30,No,LCD,"VHF, UHF",No,Mixed,2013.0,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-UV-5RE,2AJGM
-Baofeng,UV-5RH,No,Yes,2500,$45,No,"1.77"" TFT","VHF, UHF",No,Mixed,2023,Pofung UV-5RH,10W,No,baofengradio.com,2AJGM-UV-5RH,2AJGM
-Baofeng,UV-5RH Pro,Analog,Yes,2500,$40,No,"1.77"" TFT","VHF, 220, UHF",Yes,Mixed,2024,UV-5RM Plus (Rebadge),10W,No,baofengradio.com,2AJGM-UV-5RHPRO,2AJGM
-Baofeng,UV-5RM,No,Yes,2500,$35,No,"1.77"" TFT","VHF, 220, UHF",No,Mixed,2023,Baofeng AR-5RM,10W,No,baofengradio.com,2AJGM-UV-5RM,2AJGM
-Baofeng,UV-5RM Plus,Analog,Yes,2500,$35,No,"1.77"" TFT","VHF, 220, UHF",Yes,Mixed,2024,UV-5RH Pro (Variant),10W,No,baofengradio.com,2AJGM-UV-5RMPLUS,2AJGM
-Baofeng,UV-5RQ,No,No,1800,$25,No,Tri-color,"VHF, UHF",No,Notorious,2013,N/A,5W,No,baofengradio.com,2AJGM-UV-5RQ,2AJGM
-Baofeng,UV-5X3,No,No,1500,$60,No,Tri-color,Tri-Band (220),No,Mixed,2016,N/A,5W,No,baofengtech.com,2AJGM-UV-5X3,2AJGM
-Baofeng,UV-6,,,,,,,,,,,,,,,2AJGM-UV-6,2AJGM
-Baofeng,UV-68 Pro,No,No,2800,$45,No,LCD,"VHF, UHF",No,Unknown,2024,UV-S22 (Variant),10W,No,baofengradio.com,2AJGM-UV-68PRO,2AJGM
-Baofeng,UV-82,No,No,1800,$35,No,LCD,"VHF, UHF",No,Mixed,2013.0,baofengradio.com,5W,No,,2AJGM-UV-82,2AJGM
-Baofeng,UV-82C,No,No,1800,$55,No,Tri-color,"VHF, UHF",No,Good (Commercial),2013,N/A,5W,No,baofengtech.com,2AJGM-UV-82C,2AJGM
-Baofeng,UV-82HP,No,No,1800,$65,No,Tri-color,"VHF, UHF",No,Mixed,2015,Pofung UV-82HP,7W/8W,No,baofengtech.com,2AJGM-UV-82HP,2AJGM
-Baofeng,UV-82L,,,,,,,,,,,,,,,2AJGM-UV-82L,2AJGM
-Baofeng,UV-82X,No,No,1800,Discont.,No,Tri-color,"VHF, 220",No,Good,2014,N/A,5W,No,baofengradio.com,2AJGM-UV-82X,2AJGM
-Baofeng,UV-B5,No,No,2000,$30,No,LCD,"VHF, UHF",No,Good (Old Gen),2012,N/A,5W,No,baofengradio.com,2AJGM-UV-B5,2AJGM
-Baofeng,UV-B6,,,,,,,,,,,,,,,2AJGM-UV-B6,2AJGM
-Baojie,BF-UV88,,,,,,,,,,,,,,,2AFPR-BF-UV88,2AFPR
-Baojie,HG-UV2,,,,,,,,,,,,,,,2AFPR-HG-UV2,2AFPR
-Baojie,UV-55,,,,,,,,,,,,,,,2AFPR-UV-55,2AFPR
-Baojie,UV-88,,,,,,,,,,,,,,,2AFPR-UV-88,2AFPR
-Baojie,UV-99,,,,,,,,,,,,,,,2AFPR-UV-99,2AFPR
-Benjamin,Tech 1200,,,,,,,,,,,,,,,,
-Bintolk,BT7700,No,Yes,2500,$35,No,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-860 / Bajeton BJ-7700,5W,No,bintolk (AliExpress),2AJGM-BT7700,2AJGM
-Bintolk,BT8200,No,Yes,2800,$50,No,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-900 / Bajeton BJ-8200,10W,No,bintolk (AliExpress),2AJGM-BT8200,2AJGM
-Blackbox,BR-188,,,,,,,,,,,,,,,,
-Bridgecom,Maverick,Yes (A/D),Yes,3100,$299,Yes,Color TFT,"VHF, UHF",Yes,Excellent,2025,AnyTone AT-D890UV,7W,Yes (Native),bridgecomsystems.com,,
-Btech,DMR-6X2 PRO,Yes (A/D),Yes,3100,$180,Yes,Color TFT,"VHF, UHF",Yes,Good (Filtered),2022,AnyTone AT-D878 (Custom FW),7W,Yes (FW Update),baofengtech.com,2AJGM-DMR-6X2PRO,2AJGM
-Btech,FRS-A1,No,No,1500,$35/pair,No,LCD,FRS,No,Good (Part 95B),2019,Baofeng BF-888S (Internals),2W,No,baofengtech.com,2AJGM-FRS-A1,2AJGM
-Btech,FRS-B1,No,No,1500,$35/pair,No,LCD,FRS,No,Good (Part 95B),2019,Baofeng BF-88E,2W,No,baofengtech.com,2AJGM-FRS-B1,2AJGM
-Btech,GMRS-PRO,No,No,2600,$135,No,Color LCD,GMRS,Yes,Good (Part 95E),2022,VR-N7500 (Mobile relative),5W,No,baofengtech.com,2AJGM-GMRS-PRO,2AJGM
-Btech,GMRS-V1,,,,,,,,,,,,,,,2AJGM-GMRS-V1,2AJGM
-Btech,GMRS-V2,No,No,1800,$55,No,Tri-color,GMRS,No,Good (Part 95E),2022,Baofeng UV-5G (Variant),5W,No,baofengtech.com,2AJGM-GMRS-V2,2AJGM
-Btech,MURS-V1,,,,,,,,,,,,,,,2AJGM-MURS-V1,2AJGM
-Btech,UV-5R,,,,,,,,,,,,,,,2AJGM-UV-5R,2AJGM
-Btech,UV-5X3,,,,,,,,,,,,,,,2AJGM-UV-5X3,2AJGM
-Btech,UV-PRO,Yes (A/D),Yes,2600,$165,No,Color LCD,"VHF, UHF",Yes,Good,2022,VGC VR-N76 (OEM),7W,Yes (App),baofengtech.com,2AJGM-UV-PRO,2AJGM
-C-Standard,C112,,,,,,,,,,,,,,,,
-C-Standard,C508A,,,,,,,,,,,,,,,,
-C-Standard,C510,,,,,,,,,,,,,,,,
-C-Standard,C520,,,,,,,,,,,,,,,,
-C-Standard,C528,,,,,,,,,,,,,,,,
-C-Standard,C558,,,,,,,,,,,,,,,,
-C-Standard,HX-240,,,,,,,,,,,,,,,,
-C-Standard,HX-290,,,,,,,,,,,,,,,,
-C-Standard,HX-370S,,,,,,,,,,,,,,,,
-C-Standard,HX-460S,,,,,,,,,,,,,,,,
-C-Standard,HX471S,,,,,,,,,,,,,,,,
-C-Standard,HX580,,,,,,,,,,,,,,,,
-Cleartone,ClearSpeach,,,,,,,,,,,,,,,,
-Connect Systems,CS-600,,,,,,,,,,,,,,,XH8-CS-600,XH8
-Connect Systems,CS-700,,,,,,,,,,,,,,,XH8-CS-700,XH8
-Connect Systems,CS-750,,,,,,,,,,,,,,,XH8-CS-750,XH8
-Connect Systems,CS-800,,,,,,,,,,,,,,,XH8-CS-800,XH8
-Cybercom,ATP-100,,,,,,,,,,,,,,,,
-Cybercom,ATP-200,,,,,,,,,,,,,,,,
-Cybercom,ATP-400,,,,,,,,,,,,,,,,
-Daiwa,Com 1080 / 1090,,,,,,,,,,,,,,,,
-Dra,BR-2020,,,,,,,,,,,,,,,,
-Drag,TC-1085,,,,,,,,,,,,,,,,
-Drag,TC-2085,,,,,,,,,,,,,,,,
-Drag,TC-4085,,,,,,,,,,,,,,,,
-Drake,2213,,,,,,,,,,,,,,,,
-Eagle,DMR-6X2,,,,,,,,,,,,,,,2AJGM-DMR-6X2,2AJGM
-Eagle,DMR-6X2 Pro,,,,,,,,,,,,,,,2AJGM-DMR-6X2PRO,2AJGM
-Hongxun,DP4801,No,No,2000,$40,No,Color LCD,"VHF, UHF",No,Unknown,2023,Motorola DP4801 (Cosmetic Clone),5W,No,N/A,2AL5L-DP4801,2AL5L
-Hongxun,HP-788,No,No,2500,$50,No,Color LCD,"VHF, UHF",No,Unknown,2024,Hytera HP788 (Clone),5W,No,N/A,2AL5L-HP-788,2AL5L
-Hongxun,R8,No,No,6800 (Adv),$45,No,Color LCD,"VHF, UHF",No,Unknown,2024,Motorola R8 (Clone),10W,No,N/A,2AL5L-R8,2AL5L
-Icom,A-14,,,,,,,,,,,,,,,AFJ-A-14,AFJ
-Icom,A-4,,,,,,,,,,,,,,,AFJ-A-4,AFJ
-Icom,A-6,,,,,,,,,,,,,,,AFJ-A-6,AFJ
-Icom,AT-55,,,,,,,,,,,,,,,AFJ-AT-55,AFJ
-Icom,IC-02AT,,,,,,,,,,,,,,,AFJ-IC-02AT,AFJ
-Icom,IC-03AT,,,,,,,,,,,,,,,AFJ-IC-03AT,AFJ
-Icom,IC-04AT,,,,,,,,,,,,,,,AFJ-IC-04AT,AFJ
-Icom,IC-12,,,,,,,,,,,,,,,AFJ-IC-12,AFJ
-Icom,IC-12AT,,,,,,,,,,,,,,,AFJ-IC-12AT,AFJ
-Icom,IC-12GAT,,,,,,,,,,,,,,,AFJ-IC-12GAT,AFJ
-Icom,IC-215,,,,,,,,,,,,,,,AFJ-IC-215,AFJ
-Icom,IC-24AT,,,,,,,,,,,,,,,AFJ-IC-24AT,AFJ
-Icom,IC-281,,,,,,,,,,,,,,,AFJ-IC-281,AFJ
-Icom,IC-2A / 2AT / 2E,,,,,,,,,,,,,,,AFJ-IC-2A2AT2E,AFJ
-Icom,IC-2GAT,,,,,,,,,,,,,,,AFJ-IC-2GAT,AFJ
-Icom,IC-2GXAT,,,,,,,,,,,,,,,AFJ-IC-2GXAT,AFJ
-Icom,IC-2iA,,,,,,,,,,,,,,,AFJ-IC-2IA,AFJ
-Icom,IC-2N,,,,,,,,,,,,,,,AFJ-IC-2N,AFJ
-Icom,IC-2SRA,,,,,,,,,,,,,,,AFJ-IC-2SRA,AFJ
-Icom,IC-32AT,,,,,,,,,,,,,,,AFJ-IC-32AT,AFJ
-Icom,IC-3A / 3AT,,,,,,,,,,,,,,,AFJ-IC-3A3AT,AFJ
-Icom,IC-3FGX,,,,,,,,,,,,,,,AFJ-IC-3FGX,AFJ
-Icom,IC-3SAT,,,,,,,,,,,,,,,AFJ-IC-3SAT,AFJ
-Icom,IC-40,,,,,,,,,,,,,,,AFJ-IC-40,AFJ
-Icom,IC-4008A,,,,,,,,,,,,,,,AFJ-IC-4008A,AFJ
-Icom,IC-4088A,,,,,,,,,,,,,,,AFJ-IC-4088A,AFJ
-Icom,IC-40GX,,,,,,,,,,,,,,,AFJ-IC-40GX,AFJ
-Icom,IC-449,,,,,,,,,,,,,,,AFJ-IC-449,AFJ
-Icom,IC-47A/E,,,,,,,,,,,,,,,AFJ-IC-47AE,AFJ
-Icom,IC-4GAT,,,,,,,,,,,,,,,AFJ-IC-4GAT,AFJ
-Icom,IC-4GXAT,,,,,,,,,,,,,,,AFJ-IC-4GXAT,AFJ
-Icom,IC-4iA,,,,,,,,,,,,,,,AFJ-IC-4IA,AFJ
-Icom,IC-4SRA,,,,,,,,,,,,,,,AFJ-IC-4SRA,AFJ
-Icom,IC-80AD,,,,,,,,,,,,,,,AFJ-IC-80AD,AFJ
-Icom,IC-91A/AD,,,,,,,,,,,,,,,AFJ-IC-91AAD,AFJ
-Icom,IC-92AD,,,,,,,,,,,,,,,AFJ-IC-92AD,AFJ
-Icom,IC-A14,,,,,,,,,,,,,,,AFJ-IC-A14,AFJ
-Icom,IC-A2,,,,,,,,,,,,,,,AFJ-IC-A2,AFJ
-Icom,IC-A20,,,,,,,,,,,,,,,AFJ-IC-A20,AFJ
-Icom,IC-A21,,,,,,,,,,,,,,,AFJ-IC-A21,AFJ
-Icom,IC-A22,,,,,,,,,,,,,,,AFJ-IC-A22,AFJ
-Icom,IC-A23,,,,,,,,,,,,,,,AFJ-IC-A23,AFJ
-Icom,IC-A24,,,,,,,,,,,,,,,AFJ-IC-A24,AFJ
-Icom,IC-A3,,,,,,,,,,,,,,,AFJ-IC-A3,AFJ
-Icom,IC-A4,,,,,,,,,,,,,,,AFJ-IC-A4,AFJ
-Icom,IC-A5,,,,,,,,,,,,,,,AFJ-IC-A5,AFJ
-Icom,IC-A6,,,,,,,,,,,,,,,AFJ-IC-A6,AFJ
-Icom,IC-Delta 1A,,,,,,,,,,,,,,,AFJ-IC-DELTA1A,AFJ
-Icom,IC-F10,,,,,,,,,,,,,,,AFJ-IC-F10,AFJ
-Icom,IC-F11,,,,,,,,,,,,,,,AFJ-IC-F11,AFJ
-Icom,IC-F11S,,,,,,,,,,,,,,,AFJ-IC-F11S,AFJ
-Icom,IC-F21,,,,,,,,,,,,,,,AFJ-IC-F21,AFJ
-Icom,IC-F21S,,,,,,,,,,,,,,,AFJ-IC-F21S,AFJ
-Icom,IC-F3,,,,,,,,,,,,,,,AFJ-IC-F3,AFJ
-Icom,IC-F30 LT,,,,,,,,,,,,,,,AFJ-IC-F30LT,AFJ
-Icom,IC-F33,,,,,,,,,,,,,,,AFJ-IC-F33,AFJ
-Icom,IC-F3S,,,,,,,,,,,,,,,AFJ-IC-F3S,AFJ
-Icom,IC-F4,,,,,,,,,,,,,,,AFJ-IC-F4,AFJ
-Icom,IC-F40LT,,,,,,,,,,,,,,,AFJ-IC-F40LT,AFJ
-Icom,IC-F43,,,,,,,,,,,,,,,AFJ-IC-F43,AFJ
-Icom,IC-F4S,,,,,,,,,,,,,,,AFJ-IC-F4S,AFJ
-Icom,IC-F4TR,,,,,,,,,,,,,,,AFJ-IC-F4TR,AFJ
-Icom,IC-H16,,,,,,,,,,,,,,,AFJ-IC-H16,AFJ
-Icom,IC-M1,,,,,,,,,,,,,,,AFJ-IC-M1,AFJ
-Icom,IC-M10A,,,,,,,,,,,,,,,AFJ-IC-M10A,AFJ
-Icom,IC-M11,,,,,,,,,,,,,,,AFJ-IC-M11,AFJ
-Icom,IC-M127,,,,,,,,,,,,,,,AFJ-IC-M127,AFJ
-Icom,IC-M15,,,,,,,,,,,,,,,AFJ-IC-M15,AFJ
-Icom,IC-M1V,,,,,,,,,,,,,,,AFJ-IC-M1V,AFJ
-Icom,IC-M2,,,,,,,,,,,,,,,AFJ-IC-M2,AFJ
-Icom,IC-M24,,,,,,,,,,,,,,,AFJ-IC-M24,AFJ
-Icom,IC-M34,,,,,,,,,,,,,,,AFJ-IC-M34,AFJ
-Icom,IC-M36,,,,,,,,,,,,,,,AFJ-IC-M36,AFJ
-Icom,IC-M5,,,,,,,,,,,,,,,AFJ-IC-M5,AFJ
-Icom,IC-M7,,,,,,,,,,,,,,,AFJ-IC-M7,AFJ
-Icom,IC-M72,,,,,,,,,,,,,,,AFJ-IC-M72,AFJ
-Icom,IC-M8,,,,,,,,,,,,,,,AFJ-IC-M8,AFJ
-Icom,IC-M88,,,,,,,,,,,,,,,AFJ-IC-M88,AFJ
-Icom,IC-M9,,,,,,,,,,,,,,,AFJ-IC-M9,AFJ
-Icom,IC-P2A / P2AT / P2E / P2ET,,,,,,,,,,,,,,,AFJ-IC-P2AP2ATP2EP2ET,AFJ
-Icom,IC-P3AT,,,,,,,,,,,,,,,AFJ-IC-P3AT,AFJ
-Icom,IC-P4AT,,,,,,,,,,,,,,,AFJ-IC-P4AT,AFJ
-Icom,IC-P7A,,,,,,,,,,,,,,,AFJ-IC-P7A,AFJ
-Icom,IC-Q7A,,,,,,,,,,,,,,,AFJ-IC-Q7A,AFJ
-Icom,IC-R1,,,,,,,,,,,,,,,AFJ-IC-R1,AFJ
-Icom,IC-R10,,,,,,,,,,,,,,,AFJ-IC-R10,AFJ
-Icom,IC-R100,,,,,,,,,,,,,,,AFJ-IC-R100,AFJ
-Icom,IC-R2,,,,,,,,,,,,,,,AFJ-IC-R2,AFJ
-Icom,IC-R20,,,,,,,,,,,,,,,AFJ-IC-R20,AFJ
-Icom,IC-R3,,,,,,,,,,,,,,,AFJ-IC-R3,AFJ
-Icom,IC-R5,,,,,,,,,,,,,,,AFJ-IC-R5,AFJ
-Icom,IC-R6,,,,,,,,,,,,,,,AFJ-IC-R6,AFJ
-Icom,IC-RX7,,,,,,,,,,,,,,,AFJ-IC-RX7,AFJ
-Icom,IC-S25,,,,,,,,,,,,,,,AFJ-IC-S25,AFJ
-Icom,IC-T10,No,Yes,2400,$230,No,LCD,"VHF, UHF",No,Excellent,2022,N/A,5W,No,https://www.google.com/search?q=icomjapan.com,AFJ-IC-T10,AFJ
-Icom,IC-T21A,,,,,,,,,,,,,,,AFJ-IC-T21A,AFJ
-Icom,IC-T22A,,,,,,,,,,,,,,,AFJ-IC-T22A,AFJ
-Icom,IC-T2A / T2H,,,,,,,,,,,,,,,AFJ-IC-T2AT2H,AFJ
-Icom,IC-T3H,,,,,,,,,,,,,,,AFJ-IC-T3H,AFJ
-Icom,IC-T42A,,,,,,,,,,,,,,,AFJ-IC-T42A,AFJ
-Icom,IC-T70,,,,,,,,,,,,,,,AFJ-IC-T70,AFJ
-Icom,IC-T7A / T7H,,,,,,,,,,,,,,,AFJ-IC-T7AT7H,AFJ
-Icom,IC-T81A,,,,,,,,,,,,,,,AFJ-IC-T81A,AFJ
-Icom,IC-T8A,,,,,,,,,,,,,,,AFJ-IC-T8A,AFJ
-Icom,IC-T90A,,,,,,,,,,,,,,,AFJ-IC-T90A,AFJ
-Icom,IC-U12,,,,,,,,,,,,,,,AFJ-IC-U12,AFJ
-Icom,IC-U16,,,,,,,,,,,,,,,AFJ-IC-U16,AFJ
-Icom,IC-U82,,,,,,,,,,,,,,,AFJ-IC-U82,AFJ
-Icom,IC-V21AT,,,,,,,,,,,,,,,AFJ-IC-V21AT,AFJ
-Icom,IC-V8,,,,,,,,,,,,,,,AFJ-IC-V8,AFJ
-Icom,IC-V80,,,,,,,,,,,,,,,AFJ-IC-V80,AFJ
-Icom,IC-V82,,,,,,,,,,,,,,,AFJ-IC-V82,AFJ
-Icom,IC-V85,,,,,,,,,,,,,,,AFJ-IC-V85,AFJ
-Icom,IC-W2A,,,,,,,,,,,,,,,AFJ-IC-W2A,AFJ
-Icom,IC-W31A,,,,,,,,,,,,,,,AFJ-IC-W31A,AFJ
-Icom,IC-W32A,,,,,,,,,,,,,,,AFJ-IC-W32A,AFJ
-Icom,IC-X2A,,,,,,,,,,,,,,,AFJ-IC-X2A,AFJ
-Icom,IC-Z1A,,,,,,,,,,,,,,,AFJ-IC-Z1A,AFJ
-Icom,ID-31A,,,,,,,,,,,,,,,AFJ-ID-31A,AFJ
-Icom,ID-50,No,Yes,2350,$230,Yes (D-STAR),LCD (Mono),"VHF, UHF",Yes,Good,2023.0,icomamerica.com,5W,No,,AFJ-ID-50,AFJ
-Icom,ID-51A,No,Yes,1150,$300,Yes (D-STAR),LCD,"VHF, UHF",Yes,Good,2013.0,icomamerica.com,5W,No,,AFJ-ID-51A,AFJ
-Icom,ID-51A Plus,No,Yes,1150,$320,Yes (D-STAR),LCD,"VHF, UHF",Yes,Good,2014.0,icomamerica.com,5W,No,,AFJ-ID-51APLUS,AFJ
-Icom,ID-51A Plus2,No,Yes,1150,$330,Yes (D-STAR),LCD,"VHF, UHF",Yes,Good,2016.0,icomamerica.com,5W,No,,AFJ-ID-51APLUS2,AFJ
-Icom,ID-52A,No,Yes,2200,$450,Yes (D-STAR),Color LCD,"VHF, UHF",Yes,Good,2021.0,icomamerica.com,5W,No,,AFJ-ID-52A,AFJ
-Icom,M-71,,,,,,,,,,,,,,,AFJ-M-71,AFJ
-Icom,S-21,,,,,,,,,,,,,,,AFJ-S-21,AFJ
-Inrico,T368,No,No,6000,$250,Yes,"2.4"" Touch",UHF (DMR) + LTE,Yes,N/A (Cellular),2022,N/A,2W (RF),No,inrico.cn,,
-Iradio,CP-268,No,No,1800,$25,No,None,UHF,No,Good,2018,Baofeng BF-888S (Likely),2W,No,iradio.com,2AO8L-CP-268,2AO8L
-Iradio,UV-98 Pro,No,Yes,2800,$55,No,Color LCD,Multi-Band,No,Unknown,2024,Radtel RT-890 / Ruyage UV-98,8W,No,iradio.com,2AO8L-UV-98PRO,2AO8L
-Iradio,Y23DM-UV4R,No,No,3500,$60,Yes,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-4D / Bajeton DM-5000,5W,No,iradio.com,2AO8L-Y23DM-UV4R,2AO8L
-Jingtong,DB-20,,,,,,,,,,,,,,,2AJGM-DB-20,2AJGM
-Jingtong,JT-208,,,,,,,,,,,,,,,2AJGM-JT-208,2AJGM
-Jingtong,JT-308,,,,,,,,,,,,,,,2AJGM-JT-308,2AJGM
-K-Po,TH-UV8000D,,,,,,,,,,,,,,,,
-K-Po,TH-UVF1,,,,,,,,,,,,,,,,
-Kenwood,D200,,,,,,,,,,,,,,,ALH-D200,ALH
-Kenwood,D75,,,,,,,,,,,,,,,ALH-D75,ALH
-Kenwood,TH-205,,,,,,,,,,,,,,,ALH-TH-205,ALH
-Kenwood,TH-21,,,,,,,,,,,,,,,ALH-TH-21,ALH
-Kenwood,TH-215,,,,,,,,,,,,,,,ALH-TH-215,ALH
-Kenwood,TH-22,,,,,,,,,,,,,,,ALH-TH-22,ALH
-Kenwood,TH-225,,,,,,,,,,,,,,,ALH-TH-225,ALH
-Kenwood,TH-235,,,,,,,,,,,,,,,ALH-TH-235,ALH
-Kenwood,TH-25,,,,,,,,,,,,,,,ALH-TH-25,ALH
-Kenwood,TH-26,,,,,,,,,,,,,,,ALH-TH-26,ALH
-Kenwood,TH-27,,,,,,,,,,,,,,,ALH-TH-27,ALH
-Kenwood,TH-28,,,,,,,,,,,,,,,ALH-TH-28,ALH
-Kenwood,TH-31,,,,,,,,,,,,,,,ALH-TH-31,ALH
-Kenwood,TH-315,,,,,,,,,,,,,,,ALH-TH-315,ALH
-Kenwood,TH-405,,,,,,,,,,,,,,,ALH-TH-405,ALH
-Kenwood,TH-41,,,,,,,,,,,,,,,ALH-TH-41,ALH
-Kenwood,TH-415,,,,,,,,,,,,,,,ALH-TH-415,ALH
-Kenwood,TH-42,,,,,,,,,,,,,,,ALH-TH-42,ALH
-Kenwood,TH-42A/E,,,,,,,,,,,,,,,ALH-TH-42AE,ALH
-Kenwood,TH-45,,,,,,,,,,,,,,,ALH-TH-45,ALH
-Kenwood,TH-46,,,,,,,,,,,,,,,ALH-TH-46,ALH
-Kenwood,TH-47,,,,,,,,,,,,,,,ALH-TH-47,ALH
-Kenwood,TH-48,,,,,,,,,,,,,,,ALH-TH-48,ALH
-Kenwood,TH-55,,,,,,,,,,,,,,,ALH-TH-55,ALH
-Kenwood,TH-75,,,,,,,,,,,,,,,ALH-TH-75,ALH
-Kenwood,TH-77,,,,,,,,,,,,,,,ALH-TH-77,ALH
-Kenwood,TH-78,,,,,,,,,,,,,,,ALH-TH-78,ALH
-Kenwood,TH-79,,,,,,,,,,,,,,,ALH-TH-79,ALH
-Kenwood,TH-D7,,,,,,,,,,,,,,,ALH-TH-D7,ALH
-Kenwood,TH-D72A,Yes,Yes,1800,Discont.,No,Dot Matrix,"VHF, UHF",Yes,Good,2010.0,kenwood.com,5W,Yes,,ALH-TH-D72A,ALH
-Kenwood,TH-D74A,Yes,Yes,1800,Discont.,Yes (D-STAR),Color LCD,"VHF, UHF, 220",Yes,Good,2016.0,kenwood.com,5W,No,,ALH-TH-D74A,ALH
-Kenwood,TH-D75,Yes (A/D),Yes,1820,$750,D-STAR,Color TFT,Tri-Band (220),Yes,Excellent,2024,N/A,5W,Yes (Native),kenwood.com,ALH-TH-D75,ALH
-Kenwood,TH-D75A,Yes,Yes,1800,$750,Yes (D-STAR),Color LCD,"VHF, UHF, 220",Yes,Good,2024.0,kenwood.com,5W,No,,ALH-TH-D75A,ALH
-Kenwood,TH-F6,,,,,,,,,,,,,,,ALH-TH-F6,ALH
-Kenwood,TH-F6A,No,Yes,2000,$300,No,LCD,"VHF, UHF, 220",No,Good,2001.0,kenwood.com,5W,No,,ALH-TH-F6A,ALH
-Kenwood,TH-G71,,,,,,,,,,,,,,,ALH-TH-G71,ALH
-Kenwood,TH-K2,,,,,,,,,,,,,,,ALH-TH-K2,ALH
-Kenwood,TH-K20A,,,,,,,,,,,,,,,ALH-TH-K20A,ALH
-Kenwood,TH-K4,,,,,,,,,,,,,,,ALH-TH-K4,ALH
-Kenwood,TK-2100,,,,,,,,,,,,,,,ALH-TK-2100,ALH
-Kenwood,TK-2102,,,,,,,,,,,,,,,ALH-TK-2102,ALH
-Kenwood,TK-220,,,,,,,,,,,,,,,ALH-TK-220,ALH
-Kenwood,TK-2200,,,,,,,,,,,,,,,ALH-TK-2200,ALH
-Kenwood,TK-2302,,,,,,,,,,,,,,,ALH-TK-2302,ALH
-Kenwood,TK-240,,,,,,,,,,,,,,,ALH-TK-240,ALH
-Kenwood,TK-2400,,,,,,,,,,,,,,,ALH-TK-2400,ALH
-Kenwood,TK-2402,,,,,,,,,,,,,,,ALH-TK-2402,ALH
-Kenwood,TK-250,,,,,,,,,,,,,,,ALH-TK-250,ALH
-Kenwood,TK-260,,,,,,,,,,,,,,,ALH-TK-260,ALH
-Kenwood,TK-270,,,,,,,,,,,,,,,ALH-TK-270,ALH
-Kenwood,TK-272,,,,,,,,,,,,,,,ALH-TK-272,ALH
-Kenwood,TK-3100,,,,,,,,,,,,,,,ALH-TK-3100,ALH
-Kenwood,TK-3101,,,,,,,,,,,,,,,ALH-TK-3101,ALH
-Kenwood,TK-3102,,,,,,,,,,,,,,,ALH-TK-3102,ALH
-Kenwood,TK-3130,,,,,,,,,,,,,,,ALH-TK-3130,ALH
-Kenwood,TK-3131,,,,,,,,,,,,,,,ALH-TK-3131,ALH
-Kenwood,TK-320,,,,,,,,,,,,,,,ALH-TK-320,ALH
-Kenwood,TK-3200,,,,,,,,,,,,,,,ALH-TK-3200,ALH
-Kenwood,TK-3201,,,,,,,,,,,,,,,ALH-TK-3201,ALH
-Kenwood,TK-3202,,,,,,,,,,,,,,,ALH-TK-3202,ALH
-Kenwood,TK-3230,,,,,,,,,,,,,,,ALH-TK-3230,ALH
-Kenwood,TK-3302,,,,,,,,,,,,,,,ALH-TK-3302,ALH
-Kenwood,TK-340,,,,,,,,,,,,,,,ALH-TK-340,ALH
-Kenwood,TK-3400,,,,,,,,,,,,,,,ALH-TK-3400,ALH
-Kenwood,TK-3402,,,,,,,,,,,,,,,ALH-TK-3402,ALH
-Kenwood,TK-350,,,,,,,,,,,,,,,ALH-TK-350,ALH
-Kenwood,TK-353,,,,,,,,,,,,,,,ALH-TK-353,ALH
-Kenwood,TK-360,,,,,,,,,,,,,,,ALH-TK-360,ALH
-Kenwood,TK-370,,,,,,,,,,,,,,,ALH-TK-370,ALH
-Kenwood,TK-372,,,,,,,,,,,,,,,ALH-TK-372,ALH
-Kenwood,TK-373,,,,,,,,,,,,,,,ALH-TK-373,ALH
-Kenwood,TK-430,,,,,,,,,,,,,,,ALH-TK-430,ALH
-Kenwood,TK-431,,,,,,,,,,,,,,,ALH-TK-431,ALH
-Kenwood,UBZ-LF14,,,,,,,,,,,,,,,ALH-UBZ-LF14,ALH
-Kenwood,UBZ-LH14,,,,,,,,,,,,,,,ALH-UBZ-LH14,ALH
-Kmd / Tssd,UV-8000,No,No,3600,$55,No,LCD,"VHF, UHF",No,Mixed,2020,TYT TH-UV8000D (Clone),10W,No,N/A,,
-Kyder,KG-205,,,,,,,,,,,,,,,,
-Kyodo,LM-2,,,,,,,,,,,,,,,,
-Luiton,NT-100,,,,,,,,,,,,,,,2AO8L-NT-100,2AO8L
-Magnum,1012,,,,,,,,,,,,,,,,
-Magnum,M-100,,,,,,,,,,,,,,,,
-Marantz,C-510,,,,,,,,,,,,,,,FNA-C-510,FNA
-Marantz,C-520,,,,,,,,,,,,,,,FNA-C-520,FNA
-Marantz,HX-460S,,,,,,,,,,,,,,,FNA-HX-460S,FNA
-Maxon,HT-750,,,,,,,,,,,,,,,HBG-HT-750,HBG
-Maxon,SP-120,,,,,,,,,,,,,,,HBG-SP-120,HBG
-Maxon,SP-130,,,,,,,,,,,,,,,HBG-SP-130,HBG
-Maxon,SP-140,,,,,,,,,,,,,,,HBG-SP-140,HBG
-Maxon,SP-2000,,,,,,,,,,,,,,,HBG-SP-2000,HBG
-Midland,AL-34,,,,,,,,,,,,,,,K4R-AL-34,K4R
-Midland,CT-22,,,,,,,,,,,,,,,K4R-CT-22,K4R
-Midland,CT-410,,,,,,,,,,,,,,,K4R-CT-410,K4R
-Midland,G-11,,,,,,,,,,,,,,,K4R-G-11,K4R
-Midland,GXT1000VP4,No,No,700 (NiMH),$80/pair,No,LCD,GMRS,No,Good (Part 95),2010,N/A,5W (Max),No,midlandusa.com,K4R-GXT1000VP4,K4R
-Midland,GXT3000,No,No,2000,$150,No,LCD,GMRS,No,Good (Part 95E),2024,N/A,5W,No,midlandusa.com,K4R-GXT3000,K4R
-Midland,GXT67 Pro,No,No,2000,$199,No,LCD,GMRS,No,Good (Part 95E),2024,N/A,5W,No,midlandusa.com,K4R-GXT67PRO,K4R
-Midland,LXT500VP3,No,No,600,$40/pair,No,LCD,FRS,No,Good (Part 95),2013,N/A,0.5W,No,midlandusa.com,K4R-LXT500VP3,K4R
-Midland,LXT600VP3,No,No,700,$50/pair,No,LCD,FRS,No,Good (Part 95),2013,N/A,0.5W/2W,No,midlandusa.com,K4R-LXT600VP3,K4R
-Midland,T290,No,No,700,$80/pair,No,LCD,GMRS,No,Good (Part 95),2020,N/A,2W,No,midlandusa.com,K4R-T290,K4R
-Mizuho,MX-144,,,,,,,,,,,,,,,,
-Motorola,GP-300,,,,,,,,,,,,,,,AZ489-GP-300,AZ489
-Motorola,GP-68,,,,,,,,,,,,,,,AZ489-GP-68,AZ489
-Motorola,HT-1000,,,,,,,,,,,,,,,AZ489-HT-1000,AZ489
-Motorola,HT-600,,,,,,,,,,,,,,,AZ489-HT-600,AZ489
-Motorola,HT-800,,,,,,,,,,,,,,,AZ489-HT-800,AZ489
-Motorola,MTS-2000,,,,,,,,,,,,,,,AZ489-MTS-2000,AZ489
-Motorola,P1225,,,,,,,,,,,,,,,AZ489-P1225,AZ489
-Motorola,Saber I / II / III,,,,,,,,,,,,,,,AZ489-SABERIIIIII,AZ489
-Motorola,Spirit,,,,,,,,,,,,,,,AZ489-SPIRIT,AZ489
-Navico,SP-300,,,,,,,,,,,,,,,,
-Pofung,BF-530,No,No,2200,$30,No,None,UHF,No,Good,2018,BelFone BF-530,5W,No,baofengradio.com,2AJGM-BF-530,2AJGM
-Pofung,BF-920,No,No,1500,$25,No,None,UHF,No,Mixed,2019,BF-888S (Slim),2W,No,baofengradio.com,2AJGM-BF-920,2AJGM
-Pofung,GT-1,No,No,1500,$20,No,None,UHF,No,Mixed,2014,Baofeng BF-888S (High Perf.),2W / 5W,No,baofengradio.com,2AJGM-GT-1,2AJGM
-Pofung,GT-5,No,No,2000,$35,No,Tri-color,"VHF, UHF",No,Good,2021,Baofeng UV-82 (Upgrade),5W / 8W,No,baofengradio.com,2AJGM-GT-5,2AJGM
-Pofung,PFG-TEN4,No,No,1800,$35,No,"1.5"" LCD",GMRS,No,Good (Part 95E),2022,Baofeng UV-5G / UV-5X,5W,No,baofengradio.com,2AJGM-PFG-TEN4,2AJGM
-Pofung,UV-5R,,,,,,,,,,,,,,,2AJGM-UV-5R,2AJGM
-Pofung,UV-66,No,No,1800,$25,No,None,UHF,No,Mixed,2018,Baofeng UV-6,5W,No,baofengradio.com,2AJGM-UV-66,2AJGM
-Pofung,UV-82,,,,,,,,,,,,,,,2AJGM-UV-82,2AJGM
-Pofung,UV-82HP,No,No,1800,$65,No,Tri-color,"VHF, UHF",No,Mixed,2015.0,Pofung UV-82HP,7W/8W,No,baofengtech.com,2AJGM-UV-82HP,2AJGM
-Pofung,UV-920,No,No,2800,$40,No,LCD,"VHF, UHF",No,Mixed,2015,Baofeng UV-82 (Variant),8W,No,baofengradio.com,2AJGM-UV-920,2AJGM
-Pofung,UV-TEN4,No,No,1800,$35,No,"1.5"" LCD","VHF, UHF",No,Notorious,2022,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-UV-TEN4,2AJGM
-Puxing,CB-50,,,,,,,,,,,,,,,W7PPX-CB-50,W7PPX
-Puxing,PX-2R,,,,,,,,,,,,,,,W7PPX-PX-2R,W7PPX
-Puxing,PX-328,,,,,,,,,,,,,,,W7PPX-PX-328,W7PPX
-Puxing,PX-333,,,,,,,,,,,,,,,W7PPX-PX-333,W7PPX
-Puxing,PX-358,,,,,,,,,,,,,,,W7PPX-PX-358,W7PPX
-Puxing,PX-359,,,,,,,,,,,,,,,W7PPX-PX-359,W7PPX
-Puxing,PX-508,,,,,,,,,,,,,,,W7PPX-PX-508,W7PPX
-Puxing,PX-558,,,,,,,,,,,,,,,W7PPX-PX-558,W7PPX
-Puxing,PX-568,,,,,,,,,,,,,,,W7PPX-PX-568,W7PPX
-Puxing,PX-578,,,,,,,,,,,,,,,W7PPX-PX-578,W7PPX
-Puxing,PX-666,,,,,,,,,,,,,,,W7PPX-PX-666,W7PPX
-Puxing,PX-728,,,,,,,,,,,,,,,W7PPX-PX-728,W7PPX
-Puxing,PX-729,,,,,,,,,,,,,,,W7PPX-PX-729,W7PPX
-Puxing,PX-777,,,,,,,,,,,,,,,W7PPX-PX-777,W7PPX
-Puxing,PX-888,,,,,,,,,,,,,,,W7PPX-PX-888,W7PPX
-Puxing,PX-888K,,,,,,,,,,,,,,,W7PPX-PX-888K,W7PPX
-Puxing,PX-999,,,,,,,,,,,,,,,W7PPX-PX-999,W7PPX
-Puxing,PX-A6,,,,,,,,,,,,,,,W7PPX-PX-A6,W7PPX
-Puxing,PX-UV973,,,,,,,,,,,,,,,W7PPX-PX-UV973,W7PPX
-Puxing,PX-UV9R,,,,,,,,,,,,,,,W7PPX-PX-UV9R,W7PPX
-Quansheng,TG-45AT,,,,,,,,,,,,,,,2ANMZ-TG-45AT,2ANMZ
-Quansheng,TG-6A,,,,,,,,,,,,,,,2ANMZ-TG-6A,2ANMZ
-Quansheng,TG-92A,,,,,,,,,,,,,,,2ANMZ-TG-92A,2ANMZ
-Quansheng,TG-K10AT,No,No,4000,$50,No,Backlit LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,qsfj.com,2ANMZ-TG-K10AT,2ANMZ
-Quansheng,TG-K4AT,,,,,,,,,,,,,,,2ANMZ-TG-K4AT,2ANMZ
-Quansheng,TG-UV2,,,,,,,,,,,,,,,2ANMZ-TG-UV2,2ANMZ
-Quansheng,TG-UV2 Plus,No,No,4000,$75,No,LCD,"VHF, UHF",No,Unknown,2018.0,qsfj.com,10W,No,,2ANMZ-TG-UV2PLUS,2ANMZ
-Quansheng,TG-UV2PLUS,No,No,4000,$55,No,Backlit LCD,"VHF, UHF",No,Unknown,2023,N/A,10W,No,qsfj.com,2ANMZ-TG-UV2PLUS,2ANMZ
-Quansheng,TK-11,No,Yes,3000,$75,No,Color LCD,Quad-Band,No,Unknown/Risk,2025,N/A,10W,No,qsfj.com,2ANMZ-TK-11,2ANMZ
-Quansheng,UV-K1 (Mini),No,Yes,1400,$35,No,"1.44"" LCD","VHF, UHF",No,Borderline,2024,N/A,5W,No,qsfj.com,2ANMZ-UV-K1,2ANMZ
-Quansheng,UV-K5(8),No,Yes,1600,$30,No,LCD,"VHF, UHF",No,Poor (Spurious),2023.0,qsfj.com,5W,No,,2ANMZ-UV-K5,2ANMZ
-Quansheng,UV-K5/K6,No,Yes,1600,$30,No,Dot-matrix,"VHF, UHF",No,Borderline,2023,"Retevis RA79, Wurui K5",5W,No,qsfj.com,2ANMZ-UV-K5K6,2ANMZ
-Radio Shack,HTX-202,,,,,,,,,,,,,,,FRS-HTX-202,FRS
-Radio Shack,HTX-404,,,,,,,,,,,,,,,FRS-HTX-404,FRS
-Radio Shack,HTX-420,,,,,,,,,,,,,,,FRS-HTX-420,FRS
-Radio Shack,PC-10,,,,,,,,,,,,,,,FRS-PC-10,FRS
-Radio Shack,PRO-201,,,,,,,,,,,,,,,FRS-PRO-201,FRS
-Radio Shack,PRO-250,,,,,,,,,,,,,,,FRS-PRO-250,FRS
-Radio Shack,TRC-222,,,,,,,,,,,,,,,FRS-TRC-222,FRS
-Radio Shack,TRC-231,,,,,,,,,,,,,,,FRS-TRC-231,FRS
-Radioddity,RT-21,,,,,,,,,,,,,,,2AJGM-RT-21,2AJGM
-Radioddity,RT-3S,,,,,,,,,,,,,,,2AJGM-RT-3S,2AJGM
-Radtel,IP68 (A1050),No,No,2000,$35,No,None,"VHF, UHF",No,Unknown,2024,RT-495 (Variant),5W,No,radtels.com,2AO8L-IP68,2AO8L
-Radtel,R8000,No,Yes,2800,$50,No,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,radtels.com,2AO8L-R8000,2AO8L
-Radtel,RT-330,No,Yes,3300,$90,No,Color LCD,Multi-Band,Yes,Unknown,2023,N/A,10W,No,radtels.com,2AO8L-RT-330,2AO8L
-Radtel,RT-420,No,Yes,2800,$40,No,Color LCD,"VHF, UHF",No,Unknown,2023,N/A,10W,No,radtels.com,2AO8L-RT-420,2AO8L
-Radtel,RT-463,No,Yes,3500,$40,No,Color LCD,Multi-Band,No,Mixed,2024,N/A,8W,No,radtels.com,2AO8L-RT-463,2AO8L
-Radtel,RT-470,,,,,,,,,,,,,,,2AO8L-RT-470,2AO8L
-Radtel,RT-470L,No,Yes,2600,$35,No,Color LCD,"VHF, UHF",No,Unknown,2023,SenHaix 8600,5W,No,radtels.com,2AO8L-RT-470L,2AO8L
-Radtel,RT-470X,No,Yes,2600,$45,No,Color LCD,"VHF, UHF",No,Unknown,2023,SenHaix 8800,5W,No,radtels.com,2AO8L-RT-470X,2AO8L
-Radtel,RT-480,,,,,,,,,,,,,,,2AO8L-RT-480,2AO8L
-Radtel,RT-490,No,Yes,2000,$50,No,Color LCD,Multi-Band,Yes,Mixed,2020,Baofeng/JJCC Generic,5W,No,radtels.com,2AO8L-RT-490,2AO8L
-Radtel,RT-493,No,No,2600,$45,No,Hidden LED,UHF,No,Mixed,2024,IP68 Waterproof (Variant),10W,No,radtels.com,2AO8L-RT-493,2AO8L
-Radtel,RT-4D,No,Yes,3500,$70,Yes,Color LCD,"VHF, UHF",No,Unknown,2024,"Bajeton DM-5000, IRadio DM-UV4R",5W,No,radtels.com,2AO8L-RT-4D,2AO8L
-Radtel,RT-580G,Yes (Pos.),Yes,3800,$60,No,Color LCD,136-600Mhz,Yes,Mixed,2024,N/A,10W,No,radtels.com,2AO8L-RT-580G,2AO8L
-Radtel,RT-590,No,Yes,1800,$30,No,LCD,Tri-Band,No,Mixed,2022,N/A,5W,No,radtels.com,2AO8L-RT-590,2AO8L
-Radtel,RT-600,No,Yes,2200,$40,No,LCD,Full Band RX,No,Unknown,2022,N/A,5W,No,radtels.com,2AO8L-RT-600,2AO8L
-Radtel,RT-630,No,Yes,2600,$50,No,Color LCD,136-629Mhz,No,Mixed,2024,N/A,10W,No,radtels.com,2AO8L-RT-630,2AO8L
-Radtel,RT-660,Yes (Analog),Yes,2600,$165,No,Color LCD,"VHF, UHF",Yes,Unknown,2023,N/A,7W,No,radtels.com,2AO8L-RT-660,2AO8L
-Radtel,RT-6D,Analog,Yes,3500,$90,Yes,Color LCD,"VHF, UHF",Yes,Unknown,2024,Bajeton DM-5000,10W,No,radtels.com,2AO8L-RT-6D,2AO8L
-Radtel,RT-730,No,Yes,2500,$30,No,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,radtels.com,2AO8L-RT-730,2AO8L
-Radtel,RT-752,No,Yes,2600,$45,No,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,radtels.com,2AO8L-RT-752,2AO8L
-Radtel,RT-7D,No,Yes,1800,$139,Yes,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,5W,No,radtels.com,2AO8L-RT-7D,2AO8L
-Radtel,RT-860,No,Yes,2000,$39,No,Color LCD,"VHF, UHF",Optional,Mixed,2024,Bajeton BJ-7700 / BinTolk BT7700,5W,No,radtels.com,2AO8L-RT-860,2AO8L
-Radtel,RT-880G,Analog,Yes,2400,$95,No,Color LCD,"VHF, UHF",Yes,Mixed,2024,N/A,10W,No,radtels.com,2AO8L-RT-880G,2AO8L
-Radtel,RT-890,No,Yes,2500,$40,No,Color LCD,"VHF, UHF",No,Unknown,2023,"Ruyage UV-890, IRadio UV-98",5W,No,radtels.com,2AO8L-RT-890,2AO8L
-Radtel,RT-900,No,Yes,2200,$35,No,Color LCD,"VHF, UHF",No,Mixed,2024,Bajeton BJ-8200 / BinTolk BT8200,8W,No,radtels.com,2AO8L-RT-900,2AO8L
-Radtel,RT-910B,No,Yes,1800,$35,No,Color LCD,"VHF, UHF, 6M",No,Unknown,2024,N/A,8W,No,radtels.com,2AO8L-RT-910B,2AO8L
-Radtel,RT-920,No,Yes,2500,$45,No,Color LCD,"VHF, UHF",No,Unknown,2025,Bajeton BJ-8300,8W,No,radtels.com,2AO8L-RT-920,2AO8L
-Radtel,RT-950,Analog,Yes,2600,$115,No,Color LC
-Start typing to filter…
-Authentication and Authorization
-Groups	Add
-Users	Add
-D,Multi-Band,Yes,Mixed,2024,Bajeton BJ-9000,10W,No,radtels.com,2AO8L-RT-950,2AO8L
-Radtel,RT-950 PRO,Analog,Yes,2600,$115,No,Color LCD,Multi-Band,Yes,Mixed,2024,Bajeton BJ-9000,10W,No,radtels.com,2AO8L-RT-950PRO,2AO8L
-Ranger,HR-2010,,,,,,,,,,,,,,,,
-Rci,RCI-2950,,,,,,,,,,,,,,,,
-Ailunce,HA2,,,,,,,,,,,,,,,,
-Retevis,B3H,No,No,1620,$25,No,Hidden LED,FRS,No,Good,2025,"""3rd Gen RT22""",2W,No,retevis.com,2AHVB-B3H,2AHVBxx
-Retevis,H-777,,,,,,,,,,,,,,,2AHVB-H-777,2AHVB
-Retevis,HA1G,No,No,2800,$55,No,Color LCD,GMRS,No,Good (Part 95E),2024,Ailunce HA1G,5W,No,retevis.com,2AHVB-HA1G,2AHVB
-Retevis,HA1UV,No,Yes,2800,$60,No,Color LCD,"VHF, UHF",No,Good (IP67),2024,Ailunce HA1UV,5W,No,retevis.com,2AHVB-HA1UV,2AHVB
-Retevis,P3,No,No,2000,$335,Yes,Color LCD,UHF (DMR),No,Good,2024,N/A,5W,No,retevis.com,2AHVB-P3,2AHVB
-Retevis,RA79,No,Yes,1600,$35,No,Dot-matrix,"VHF, UHF",No,Borderline,2023,Quansheng UV-K5 (Direct Clone),5W,No,retevis.com,2AHVB-RA79,2AHVB
-Retevis,RA89,No,No,2500,$60,No,Color LCD,"VHF, UHF",No,Mixed,2023,Baofeng UV-17 Pro / GT-3WP,10W,No,retevis.com,2AHVB-RA89,2AHVB
-Retevis,RB48,No,No,2000,$30,No,LCD,FRS/GMRS,No,Good,2021,N/A,2W/5W,No,retevis.com,2AHVB-RB48,2AHVB
-Retevis,RT-1,,,,,,,,,,,,,,,2AHVB-RT-1,2AHVB
-Retevis,RT-21,,,,,,,,,,,,,,,2AHVB-RT-21,2AHVB
-Retevis,RT-22,,,,,,,,,,,,,,,2AHVB-RT-22,2AHVB
-Retevis,RT-24,,,,,,,,,,,,,,,2AHVB-RT-24,2AHVB
-Retevis,RT-3S,No,No,2000,$90,Yes,Color LCD,"VHF, UHF",Yes,Good,2018.0,Baofeng DM-1701,5W,No,retevis.com,2AHVB-RT-3S,2AHVB
-Retevis,RT-5R,No,No,1400,$25,No,Tri-color,"VHF, UHF",No,Notorious,2013,Baofeng UV-5R (Rebadge),5W,No,retevis.com,2AHVB-RT-5R,2AHVB
-Retevis,RT-85,No,No,1400,$40,No,LCD,"VHF, UHF",No,Mixed,2019.0,Baofeng UV-82 (Internals),5W,No,retevis.com,2AHVB-RT-85,2AHVB
-Retevis,RT-95,,,,,,,,,,,,,,,2AHVB-RT-95,2AHVB
-Retevis,RT3S,No,No,2000,$110,Yes,Color LCD,"VHF, UHF",Yes,Good,2018,TYT MD-UV380 (Rebadge),5W,No,retevis.com,2AHVB-RT3S,2AHVB
-Retevis,UV-5R,,,,,,,,,,,,,,,2AHVB-UV-5R,2AHVB
-Retevis,UV-82,,,,,,,,,,,,,,,2AHVB-UV-82,2AHVB
-Rexon,RL-102,,,,,,,,,,,,,,,IJJ-RL-102,IJJ
-Rexon,RL-105,,,,,,,,,,,,,,,IJJ-RL-105,IJJ
-Rexon,RL-328,,,,,,,,,,,,,,,IJJ-RL-328,IJJ
-Rexon,RL-402,,,,,,,,,,,,,,,IJJ-RL-402,IJJ
-Rexon,RL-502,,,,,,,,,,,,,,,IJJ-RL-502,IJJ
-Ritron,A-80,,,,,,,,,,,,,,,JZP-A-80,JZP
-Ritron,SLX-100,,,,,,,,,,,,,,,JZP-SLX-100,JZP
-Ritron,SLX-400,,,,,,,,,,,,,,,JZP-SLX-400,JZP
-Ritron,SST-144,,,,,,,,,,,,,,,JZP-SST-144,JZP
-Ritron,SST-444,,,,,,,,,,,,,,,JZP-SST-444,JZP
-Ruyage,UV-98,No,Yes,2800,$50,No,Color LCD,Multi-Band,No,Unknown,2024.0,Radtel RT-890,8W,No,ruyage.com,2AN5D-UV-98,2AN5D
-Sainsionic,S-1,,,,,,,,,,,,,,,2AJGM-S-1,2AJGM
-Sainsionic,S-320,,,,,,,,,,,,,,,2AJGM-S-320,2AJGM
-Sainsionic,S-360,,,,,,,,,,,,,,,2AJGM-S-360,2AJGM
-Sainsionic,S-520,,,,,,,,,,,,,,,2AJGM-S-520,2AJGM
-Sainsionic,S-9,,,,,,,,,,,,,,,2AJGM-S-9,2AJGM
-Santec,202,,,,,,,,,,,,,,,,
-Scom,FC9 Pro,No,Yes,1600,$35,No,Dot-matrix,"VHF, UHF",No,Borderline,2023,Quansheng UV-K5 (Clone),5W,No,scom (AliExpress),,
-Senhaix,8600,No,Yes,2000,$50,No,Color LCD,"VHF, UHF",No,Unknown,2021,Radtel RT-470L,5W,No,senhaix.com,2AWSI-8600,2AWSI
-Senhaix,8800,No,Yes,3000,$70,No,Color LCD,"VHF, UHF",No,Unknown,2022,Radtel RT-470X,10W,No,senhaix.com,2AWSI-8800,2AWSI
-Senhaix,GT-10,No,No,3000,$45,No,None,"VHF, UHF",No,Unknown,2023,N/A,10W,No,senhaix.com,2AWSI-GT-10,2AWSI
-Senhaix,GT-12,No,Yes,2000,$55,No,Color LCD,"VHF, UHF",No,Unknown,2022,Anysecu GT-12,5W,No,senhaix.com,2AWSI-GT-12,2AWSI
-Senhaix,SHX-8650,No,Yes,2500,$90,No,Color LCD,"VHF, UHF",No,Unknown,2023,N/A,8W,No,senhaix.com,2AWSI-SHX-8650,2AWSI
-Senhaix,SHX-8800,,,,,,,,,,,,,,,2AWSI-SHX-8800,2AWSI
-Soontone,UV-8R,,,,,,,,,,,,,,,2AJGM-UV-8R,2AJGM
-Standard,HX-390,,,,,,,,,,,,,,,K66-HX-390,K66
-Talkabout,T-2200,,,,,,,,,,,,,,,,
-Talkabout,T-5500,,,,,,,,,,,,,,,,
-Talkabout,T-5530,,,,,,,,,,,,,,,,
-Talkabout,T-6200,,,,,,,,,,,,,,,,
-Talkabout,T-6320,,,,,,,,,,,,,,,,
-Talkabout,T-6400,,,,,,,,,,,,,,,,
-Talkabout,T-6500,,,,,,,,,,,,,,,,
-Talkabout,TF-1100,,,,,,,,,,,,,,,,
-Talkabout,TF-1400,,,,,,,,,,,,,,,,
-Tekk,D-1301,,,,,,,,,,,,,,,2AJGM-D-1301,2AJGM
-Tekk,D-200,,,,,,,,,,,,,,,2AJGM-D-200,2AJGM
-Tekk,D-30,,,,,,,,,,,,,,,2AJGM-D-30,2AJGM
-Tekk,D-400,,,,,,,,,,,,,,,2AJGM-D-400,2AJGM
-Tekk,D-500,,,,,,,,,,,,,,,2AJGM-D-500,2AJGM
-Tekk,D-600,,,,,,,,,,,,,,,2AJGM-D-600,2AJGM
-Tekk,D-700,,,,,,,,,,,,,,,2AJGM-D-700,2AJGM
-Tekk,D-800,,,,,,,,,,,,,,,2AJGM-D-800,2AJGM
-Tekk,D-900,,,,,,,,,,,,,,,2AJGM-D-900,2AJGM
-Tekk,X-1000,,,,,,,,,,,,,,,2AJGM-X-1000,2AJGM
-Tekk,X-600,,,,,,,,,,,,,,,2AJGM-X-600,2AJGM
-Tekk,X-700,,,,,,,,,,,,,,,2AJGM-X-700,2AJGM
-Tekk,X-800,,,,,,,,,,,,,,,2AJGM-X-800,2AJGM
-Tekk,X-900,,,,,,,,,,,,,,,2AJGM-X-900,2AJGM
-Tera,TC-500,,,,,,,,,,,,,,,2AL5L-TC-500,2AL5L
-Tera,TC-510,,,,,,,,,,,,,,,2AL5L-TC-510,2AL5L
-Tera,TC-580,,,,,,,,,,,,,,,2AL5L-TC-580,2AL5L
-Tera,TC-590,,,,,,,,,,,,,,,2AL5L-TC-590,2AL5L
-Tera,TR-500,,,,,,,,,,,,,,,2AL5L-TR-500,2AL5L
-Tera,TR-505,,,,,,,,,,,,,,,2AL5L-TR-505,2AL5L
-Tera,TR-590,,,,,,,,,,,,,,,2AL5L-TR-590,2AL5L
-Tidradio,TD-H3 Plus,No,Yes,2500,$45,No,"1.44"" TFT","VHF, 220, UHF",No,Good,2024,Talkpod (Competitor),5W,No,tidradio.com,2AUIUTD-TD-H3PLUS,2AUIUTD
-Tidradio,TD-H8,No,Yes,2500,$65,No,Color LCD,"VHF, 220, UHF",No,Good,2023,Rugged Radios (White Label),10W,No,tidradio.com,2AUIUTD-TD-H8,2AUIUTD
-Tidradio,TD-H9,Analog,Yes,2500,$75,No,"1.77"" TFT","VHF, UHF",Yes,Good,2025,N/A,10W,No,tidradio.com,2AUIUTD-TD-H9,2AUIUTD
-Tyt,md-uv380,,,,,,,,,,,,,,,2AMJR-MD-UV380,2AMJR
-Tyt,TH-2800,,,,,,,,,,,,,,,2AMJR-TH-2800,2AMJR
-Tyt,TH-446,,,,,,,,,,,,,,,2AMJR-TH-446,2AMJR
-Tyt,TH-F5,,,,,,,,,,,,,,,2AMJR-TH-F5,2AMJR
-Tyt,TH-F8,,,,,,,,,,,,,,,2AMJR-TH-F8,2AMJR
-Tyt,TH-UV3R,,,,,,,,,,,,,,,2AMJR-TH-UV3R,2AMJR
-Tyt,TH-UV8000D,,,,,,,,,,,,,,,2AMJR-TH-UV8000D,2AMJR
-Tyt,TH-UV88,,,,,,,,,,,,,,,2AMJR-TH-UV88,2AMJR
-Tyt,TH-UVF1,,,,,,,,,,,,,,,2AMJR-TH-UVF1,2AMJR
-Tyt,TH-UVF9,,,,,,,,,,,,,,,2AMJR-TH-UVF9,2AMJR
-Vero,UV-3R,,,,,,,,,,,,,,,2AJGM-UV-3R,2AJGM
-Vero,UV-X4,,,,,,,,,,,,,,,2AJGM-UV-X4,2AJGM
-Vero,UV-X5,,,,,,,,,,,,,,,2AJGM-UV-X5,2AJGM
-Vero,VGC VR-N76 FM and APRS dual band HT,,,,,,,,,,,,,,,2AJGM-VGCVR-N76FMANDAPRSDUALBANDHT,2AJGM
-Vero,VR N75 UHF programed & controled by Android,,,,,,,,,,,,,,,2AJGM-VRN75UHFPROGRAMEDCONTROLEDBYANDROID,2AJGM
-Vertex,FTH-2070,,,,,,,,,,,,,,,K6620-FTH-2070,K6620
-Vertex,VX-10 VHF-UHF,,,,,,,,,,,,,,,K6620-VX-10VHF-UHF,K6620
-Vertex,VX-420 Portable,,,,,,,,,,,,,,,K6620-VX-420PORTABLE,K6620
-Vertex,VX-800,,,,,,,,,,,,,,,K6620-VX-800,K6620
-Vertex,VX180,,,,,,,,,,,,,,,K6620-VX180,K6620
-Vertex,VX600,,,,,,,,,,,,,,,K6620-VX600,K6620
-Vertex,VXA-300 Pilot III,,,,,,,,,,,,,,,K6620-VXA-300PILOTIII,K6620
-Vertex,VXA-700 Spirit,,,,,,,,,,,,,,,K6620-VXA-700SPIRIT,K6620
-Vgc,VR-N75,Yes (A/D),No,2500,$140,No,Color LCD,"VHF, UHF",Yes,Good,2020,N/A,5W,Yes (App),https://www.google.com/search?q=verotelecom.com,,
-Vgc,VR-N76,Yes (A/D),No,2500,$160,Yes,Dot-matrix,"VHF, UHF",Yes,Good,2024,BTECH UV-PRO (Rebrand),5W,Yes (App),https://www.google.com/search?q=verotelecom.com,,
-Vhf Engineering,HT-144,,,,,,,,,,,,,,,,
-Wilson Electronics,WE-800 2 Meter FM Transceiver,,,,,,,,,,,,,,,,
-Wln,KD-C1,,,,,,,,,,,,,,,2ASNS-KD-C1,2ASNS
-Wouxun,KG UV8D,,,,,,,,,,,,,,,U4Z-KGUV8D,U4Z
-Wouxun,KG-1000G Plus,No,Yes,N/A (Mobile),$389,No,Detachable,GMRS,No,Good (Part 95E),2022,N/A,50W,No,wouxun.com,U4Z-KG-1000GPLUS,U4Z
-Wouxun,KG-689,,,,,,,,,,,,,,,U4Z-KG-689,U4Z
-Wouxun,KG-816,,,,,,,,,,,,,,,U4Z-KG-816,U4Z
-Wouxun,KG-833,,,,,,,,,,,,,,,U4Z-KG-833,U4Z
-Wouxun,KG-935H,No,No,2600,$150,No,Color LCD,Tri-Band (220),No,Excellent,2025,KG-935G (GMRS Variant),8W,No,wouxun.com,U4Z-KG-935H,U4Z
-Wouxun,KG-Q10H,No,Yes,3000,$220,No,Color LCD,Quad-Band,Yes,Excellent,2024,N/A,6W,No,wouxun.com,U4Z-KG-Q10H,U4Z
-Wouxun,KG-UV2D,,,,,,,,,,,,,,,U4Z-KG-UV2D,U4Z
-Wouxun,KG-UV3D,,,,,,,,,,,,,,,U4Z-KG-UV3D,U4Z
-Wouxun,KG-UV6D,,,,,,,,,,,,,,,U4Z-KG-UV6D,U4Z
-Wouxun,KG-UV6X,,,,,,,,,,,,,,,U4Z-KG-UV6X,U4Z
-Wouxun,KG-UV7D,,,,,,,,,,,,,,,U4Z-KG-UV7D,U4Z
-Wouxun,KG-UV8D+,,,,,,,,,,,,,,,U4Z-KG-UV8D,U4Z
-Wouxun,KG-UV980P,No,Yes,N/A (Mobile),$329,No,Detachable,Quad-Band,No,Good,2020,N/A,50W,No,wouxun.com,U4Z-KG-UV980P,U4Z
-Wouxun,KG-UV9D,No,Yes,2000,$110,No,Color LCD,"VHF, UHF",No,Good,2015,N/A,5W,No,wouxun.com,U4Z-KG-UV9D,U4Z
-Wouxun,KG-UV9D Plus+,,,,,,,,,,,,,,,U4Z-KG-UV9DPLUS,U4Z
-Wouxun,KG-UV9P,No,Yes,3200,$150,No,Color LCD,"VHF, UHF",No,Good,2019,N/A,9W,No,wouxun.com,U4Z-KG-UV9P,U4Z
-Wouxun,KG-UV9PX,,,,,,,,,,,,,,,U4Z-KG-UV9PX,U4Z
-Wouxun,KG-UVD1,,,,,,,,,,,,,,,U4Z-KG-UVD1,U4Z
-Wouxun,KG-UVD1P,,,,,,,,,,,,,,,U4Z-KG-UVD1P,U4Z
-Wouxun,KG-UVD2,,,,,,,,,,,,,,,U4Z-KG-UVD2,U4Z
-Wouxun,KG-XS20H,No,No,N/A (Mobile),$159,No,Color LCD,Tri-Band (220),No,Good,2024,N/A,20W,No,wouxun.com,U4Z-KG-XS20H,U4Z
-Wouxun,KGUV8H,,,,,,,,,,,,,,,U4Z-KGUV8H,U4Z
-Yaesu,FT-10R,,,,,,,,,,,,,,,K6620-FT-10R,K6620
-Yaesu,FT-11R,,,,,,,,,,,,,,,K6620-FT-11R,K6620
-Yaesu,FT-1DR,Yes,Yes,1800,Discont.,No,LCD,"VHF, UHF",Yes,Good,2013.0,yaesu.com,5W,No,,K6620-FT-1DR,K6620
-Yaesu,FT-203R,,,,,,,,,,,,,,,K6620-FT-203R,K6620
-Yaesu,FT-208R,,,,,,,,,,,,,,,K6620-FT-208R,K6620
-Yaesu,FT-209R,,,,,,,,,,,,,,,K6620-FT-209R,K6620
-Yaesu,FT-23R,,,,,,,,,,,,,,,K6620-FT-23R,K6620
-Yaesu,FT-250R,,,,,,,,,,,,,,,K6620-FT-250R,K6620
-Yaesu,FT-25R,No,No,1950,$75,No,LCD,VHF,No,Good,2017.0,yaesu.com,5W,No,,K6620-FT-25R,K6620
-Yaesu,FT-26,,,,,,,,,,,,,,,K6620-FT-26,K6620
-Yaesu,FT-270R,,,,,,,,,,,,,,,K6620-FT-270R,K6620
-Yaesu,FT-2D,Yes,Yes,2200,Discont.,No,Touchscreen,"VHF, UHF",Yes,Good,2015.0,yaesu.com,5W,No,,K6620-FT-2D,K6620
-Yaesu,FT-2DR,,,,,,,,,,,,,,,K6620-FT-2DR,K6620
-Yaesu,FT-2X,,,,,,,,,,,,,,,K6620-FT-2X,K6620
-Yaesu,FT-30,,,,,,,,,,,,,,,K6620-FT-30,K6620
-Yaesu,FT-33R,,,,,,,,,,,,,,,K6620-FT-33R,K6620
-Yaesu,FT-3D,Yes,Yes,2200,Discont.,No,Color Touch,"VHF, UHF",Yes,Good,2019.0,yaesu.com,5W,No,,K6620-FT-3D,K6620
-Yaesu,FT-3DR,,,,,,,,,,,,,,,K6620-FT-3DR,K6620
-Yaesu,FT-40,,,,,,,,,,,,,,,K6620-FT-40,K6620
-Yaesu,FT-411E,,,,,,,,,,,,,,,K6620-FT-411E,K6620
-Yaesu,FT-41R,,,,,,,,,,,,,,,K6620-FT-41R,K6620
-Yaesu,FT-470,,,,,,,,,,,,,,,K6620-FT-470,K6620
-Yaesu,FT-4VR,,,,,,,,,,,,,,,K6620-FT-4VR,K6620
-Yaesu,FT-4X,No,No,1750,$70,No,LCD,"VHF, UHF",No,Good,2018.0,yaesu.com,5W,No,,K6620-FT-4X,K6620
-Yaesu,FT-4XE,No,Yes,1750,$70,No,LCD,"VHF, UHF",No,Excellent,2018,FT-4XR (US Version),5W,No,yaesu.com,K6620-FT-4XE,K6620
-Yaesu,FT-4XR,,,,,,,,,,,,,,,K6620-FT-4XR,K6620
-Yaesu,FT-50R,,,,,,,,,,,,,,,K6620-FT-50R,K6620
-Yaesu,FT-51R,,,,,,,,,,,,,,,K6620-FT-51R,K6620
-Yaesu,FT-530,,,,,,,,,,,,,,,K6620-FT-530,K6620
-Yaesu,FT-5D,Yes,Yes,2200,$450,No,Color Touch,"VHF, UHF",Yes,Good,2021.0,yaesu.com,5W,No,,K6620-FT-5D,K6620
-Yaesu,FT-5DE,Yes (Digital),Yes,2200,$450,C4FM,Touch TFT,"VHF, UHF",Yes,Excellent,2021,FT-5DR (US Version),5W,No,yaesu.com,K6620-FT-5DE,K6620
-Yaesu,FT-5DR,,,,,,,,,,,,,,,K6620-FT-5DR,K6620
-Yaesu,FT-60R,No,Yes,1400,$150,No,LCD,"VHF, UHF",No,Good,2004.0,yaesu.com,5W,No,,K6620-FT-60R,K6620
-Yaesu,FT-65E,No,Yes,1950,$90,No,LCD,"VHF, UHF",No,Excellent,2017,FT-65R (US Version),5W,No,yaesu.com,K6620-FT-65E,K6620
-Yaesu,FT-65R,No,No,1950,$90,No,LCD,"VHF, UHF",No,Good,2017.0,yaesu.com,5W,No,,K6620-FT-65R,K6620
-Yaesu,FT-703R,,,,,,,,,,,,,,,K6620-FT-703R,K6620
-Yaesu,FT-708R,,,,,,,,,,,,,,,K6620-FT-708R,K6620
-Yaesu,FT-70D,No,Yes,1800,$170,No,LCD,"VHF, UHF",No,Good,2017.0,yaesu.com,5W,No,,K6620-FT-70D,K6620
-Yaesu,FT-70DR,,,,,,,,,,,,,,,K6620-FT-70DR,K6620
-Yaesu,FT-70G,,,,,,,,,,,,,,,K6620-FT-70G,K6620
-Yaesu,FT-727,,,,,,,,,,,,,,,K6620-FT-727,K6620
-Yaesu,FT-73R,,,,,,,,,,,,,,,K6620-FT-73R,K6620
-Yaesu,FT-76,,,,,,,,,,,,,,,K6620-FT-76,K6620
-Yaesu,FT-817,,,,,,,,,,,,,,,K6620-FT-817,K6620
-Yaesu,FT-818,,,,,,,,,,,,,,,K6620-FT-818,K6620
-Yaesu,FT-911,,,,,,,,,,,,,,,K6620-FT-911,K6620
-Yaesu,VX-110,,,,,,,,,,,,,,,K6620-VX-110,K6620
-Yaesu,VX-150,,,,,,,,,,,,,,,K6620-VX-150,K6620
-Yaesu,VX-170,,,,,,,,,,,,,,,K6620-VX-170,K6620
-Yaesu,VX-1R,,,,,,,,,,,,,,,K6620-VX-1R,K6620
-Yaesu,VX-2R,,,,,,,,,,,,,,,K6620-VX-2R,K6620
-Yaesu,VX-3R,No,Yes,1100,Discont.,No,LCD,"VHF, UHF",No,Good,2007.0,yaesu.com,1.5W/1W,No,,K6620-VX-3R,K6620
-Yaesu,VX-5R,,,,,,,,,,,,,,,K6620-VX-5R,K6620
-Yaesu,VX-6R,No,Yes,1500,$240,No,LCD,"VHF, UHF, 220",No,Good,2005.0,yaesu.com,5W/1.5W,No,,K6620-VX-6R,K6620
-Yaesu,VX-7R,,,,,,,,,,,,,,,K6620-VX-7R,K6620
-Yaesu,VX-8DR,Yes,Yes,1800,Discont.,No,Dot Matrix,"VHF, UHF, 220",Optional,Good,2009.0,yaesu.com,5W,No,,K6620-VX-8DR,K6620
-Yaesu,VX-8GR,,,,,,,,,,,,,,,K6620-VX-8GR,K6620
-Yaesu,VX-8R,,,,,,,,,,,,,,,K6620-VX-8R,K6620
-Zastone,M10,No,Yes,2800,$45,No,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,zastone.com,2AM7H-M10,2AM7H
+Brand,Model,APRS,Air Band,Battery (mAh),Cost (Approx),DMR,Display,Freq. Bands (TX),GPS,Harmonic Suppression Status,Intro Year,Known Rebadges / Clones,Power (W),Satellite Tracking,Website,FCC_ID,Grantee_Code,FCC_ID_Exists
+Adi,AT-18,,,,,,,,,,,,,,,,,
+Adi,AT-201,,,,,,,,,,,,,,,,,
+Adi,AT-600,,,,,,,,,,,,,,,,,
+Adi,HT-204,,,,,,,,,,,,,,,,,
+Aea,DX-Handy MX-6S / Mizuho MX-6S,,,,,,,,,,,,,,,,,
+Ailunce,HD-1,,,,,,,,,,,,,,,2AO3E-HD-1,2AO3E,No
+Albrecht,2990 - DRAGON SS 301 - MAGNUM 1012,,,,,,,,,,,,,,,,,
+Alinco,DJ V57T,,,,,,,,,,,,,,,C4Z-DJV57T,C4Z,No
+Alinco,DJ VX-50,,,,,,,,,,,,,,,C4Z-DJVX-50,C4Z,No
+Alinco,DJ-160T,,,,,,,,,,,,,,,C4Z-DJ-160T,C4Z,No
+Alinco,DJ-175T,,,,,,,,,,,,,,,C4Z-DJ-175T,C4Z,No
+Alinco,DJ-180,,,,,,,,,,,,,,,C4Z-DJ-180,C4Z,No
+Alinco,DJ-190,,,,,,,,,,,,,,,C4Z-DJ-190,C4Z,No
+Alinco,DJ-191,,,,,,,,,,,,,,,C4Z-DJ-191,C4Z,No
+Alinco,DJ-193,,,,,,,,,,,,,,,C4Z-DJ-193,C4Z,No
+Alinco,DJ-195T,,,,,,,,,,,,,,,C4Z-DJ-195T,C4Z,No
+Alinco,DJ-196T,,,,,,,,,,,,,,,C4Z-DJ-196T,C4Z,No
+Alinco,DJ-280TH,,,,,,,,,,,,,,,C4Z-DJ-280TH,C4Z,No
+Alinco,DJ-296T,,,,,,,,,,,,,,,C4Z-DJ-296T,C4Z,No
+Alinco,DJ-480T,,,,,,,,,,,,,,,C4Z-DJ-480T,C4Z,No
+Alinco,DJ-496T,,,,,,,,,,,,,,,C4Z-DJ-496T,C4Z,No
+Alinco,DJ-500,No,No,1500,$130,No,LCD,"VHF, UHF",No,Excellent,2014,N/A,5W,No,alinco.com,C4Z-DJ-500,C4Z,No
+Alinco,DJ-500E,No,No,1500,$130,No,LCD,"VHF, UHF",No,Excellent,2014,N/A,5W,No,alinco.com,C4Z-DJ-500E,C4Z,No
+Alinco,DJ-500T,,,,,,,,,,,,,,,C4Z-DJ-500T,C4Z,No
+Alinco,DJ-560T,,,,,,,,,,,,,,,C4Z-DJ-560T,C4Z,No
+Alinco,DJ-580,,,,,,,,,,,,,,,C4Z-DJ-580,C4Z,No
+Alinco,DJ-580T,,,,,,,,,,,,,,,C4Z-DJ-580T,C4Z,No
+Alinco,DJ-596,,,,,,,,,,,,,,,C4Z-DJ-596,C4Z,No
+Alinco,DJ-596 EJ-43 DIGITAL BOARD,,,,,,,,,,,,,,,C4Z-DJ-596EJ-43DIGITALBOARD,C4Z,No
+Alinco,DJ-596T / DJ-596E,,,,,,,,,,,,,,,C4Z-DJ-596TDJ-596E,C4Z,No
+Alinco,DJ-C4,,,,,,,,,,,,,,,C4Z-DJ-C4,C4Z,No
+Alinco,DJ-C5,,,,,,,,,,,,,,,C4Z-DJ-C5,C4Z,No
+Alinco,DJ-C7,,,,,,,,,,,,,,,C4Z-DJ-C7,C4Z,No
+Alinco,DJ-CRX7,No,No,1800,$80,No,Dot-matrix,"VHF, UHF",No,Excellent,2023,N/A,5W,No,alinco.com,C4Z-DJ-CRX7,C4Z,No
+Alinco,DJ-F1,,,,,,,,,,,,,,,C4Z-DJ-F1,C4Z,No
+Alinco,DJ-G1T,,,,,,,,,,,,,,,C4Z-DJ-G1T,C4Z,No
+Alinco,DJ-G29T FM,,,,,,,,,,,,,,,C4Z-DJ-G29TFM,C4Z,No
+Alinco,DJ-G5TH,,,,,,,,,,,,,,,C4Z-DJ-G5TH,C4Z,No
+Alinco,DJ-G7,,,,,,,,,,,,,,,C4Z-DJ-G7,C4Z,No
+Alinco,DJ-MD40,,,,,,,,,,,,,,,C4Z-DJ-MD40,C4Z,No
+Alinco,DJ-MD5,No,No,1700,$140,Yes,Color LCD,"VHF, UHF",Yes,Excellent (Part 90),2018,AnyTone AT-D868/878 (Base),5W,No,alinco.com,C4Z-DJ-MD5,C4Z,No
+Alinco,DJ-MD5T / DJ-MD5TGP,,,,,,,,,,,,,,,C4Z-DJ-MD5TDJ-MD5TGP,C4Z,No
+Alinco,DJ-MD5XEG,Yes (Digital),No,1700,$180,Yes,Color LCD,"VHF, UHF",Yes,Excellent,2021,AnyTone AT-D878 (Variant),5W,No,alinco.com,C4Z-DJ-MD5XEG,C4Z,No
+Alinco,DJ-MD5XTG,,,,,,,,,,,,,,,C4Z-DJ-MD5XTG,C4Z,No
+Alinco,DJ-S11,,,,,,,,,,,,,,,C4Z-DJ-S11,C4Z,No
+Alinco,DJ-S11T,,,,,,,,,,,,,,,C4Z-DJ-S11T,C4Z,No
+Alinco,DJ-S40T,,,,,,,,,,,,,,,C4Z-DJ-S40T,C4Z,No
+Alinco,DJ-S41,,,,,,,,,,,,,,,C4Z-DJ-S41,C4Z,No
+Alinco,DJ-S45T,,,,,,,,,,,,,,,C4Z-DJ-S45T,C4Z,No
+Alinco,DJ-V17,,,,,,,,,,,,,,,C4Z-DJ-V17,C4Z,No
+Alinco,DJ-V27T,,,,,,,,,,,,,,,C4Z-DJ-V27T,C4Z,No
+Alinco,DJ-V5T,,,,,,,,,,,,,,,C4Z-DJ-V5T,C4Z,No
+Alinco,DJ-VX50,,,,,,,,,,,,,,,C4Z-DJ-VX50,C4Z,No
+Alinco,DJ-VX50HT,No,Yes,1800,$90,No,LCD,"VHF, UHF",No,Excellent,2019,DJ-VX50 (Global),5W,No,alinco.com,C4Z-DJ-VX50HT,C4Z,No
+Alinco,DJ-W70HE,No,Yes,2000,$150,No,LCD,"VHF, UHF",No,Excellent,2020,N/A,5W,No,alinco.com,C4Z-DJ-W70HE,C4Z,No
+Alinco,DJ-W70HT,No,Yes,2600,$160,No,Color LCD,"VHF, UHF",No,Excellent,2024,N/A,8W,No,alinco.com,C4Z-DJ-W70HT,C4Z,No
+Alinco,DJV- 47T,,,,,,,,,,,,,,,C4Z-DJV-47T,C4Z,No
+Anytone,ANILE-8R,,,,,,,,,,,,,,,2AJDM-ANILE-8R,2AJDM,No
+Anytone,AT-288 2 (70cm) meter HT,,,,,,,,,,,,,,,2AJDM-AT-2882METERHT,2AJDM,No
+Anytone,AT-318UV,No,No,1300,$85,No,LCD,"VHF, UHF",No,Good (Part 90),2016,N/A,6W,No,anytone.net,2AJDM-AT-318UV,2AJDM,No
+Anytone,AT-3208UVII,No,No,1350,$75,No,LCD,"VHF, UHF",No,Good (Part 90),2015,N/A,5W,No,anytone.net,2AJDM-AT-3208UVII,2AJDM,No
+Anytone,AT-3318UV-A,,,,,,,,,,,,,,,2AJDM-AT-3318UV-A,2AJDM,No
+Anytone,AT-398UV,No,Yes,2200,$90,No,LCD,"VHF, UHF",No,Good (Part 90),2018,N/A,5W,No,anytone.net,2AJDM-AT-398UV,2AJDM,No
+Anytone,AT-D168UV,Beacon,No,2500,$150,Yes,"1.77"" TFT","VHF, UHF",No,Excellent (Part 90),2023,Alinco DJ-MD5X,5W,No,anytone.net,2AJDM-AT-D168UV,2AJDM,No
+Anytone,AT-D868uv dual-band DMR HT,,,,,,,,,,,,,,,2AJDM-AT-D868UVDUAL-BANDDMRHT,2AJDM,No
+Anytone,AT-D878UV,,,,,,,,,,,,,,,2AJDM-AT-D878UV,2AJDM,No
+Anytone,AT-D878UVII Plus,Yes (A/D),No,3100,$250,Yes,"1.77"" TFT","VHF, UHF",Yes,Excellent (Part 90),2021,Alinco DJ-MD5,7W,No,anytone.net,2AJDM-AT-D878UVIIPLUS,2AJDM,No
+Anytone,AT-D890UV,Yes (A/D),Yes,3100,~$299,Yes,"1.77"" TFT","VHF, UHF",Yes,Excellent,2025,BridgeCom Maverick,7W,Yes (Native),anytone.net,2AJDM-AT-D890UV,2AJDM,No
+Anytone,NSTIG-8R,,,,,,,,,,,,,,,2AJDM-NSTIG-8R,2AJDM,No
+Anytone,OBLTR-8R,,,,,,,,,,,,,,,2AJDM-OBLTR-8R,2AJDM,No
+Anytone,TERMN-8R,,,,,,,,,,,,,,,2AJDM-TERMN-8R,2AJDM,No
+Anytone,UVA1,Optional,Yes,2000,$95,No,Color Screen,"VHF, UHF",Optional,Excellent,2025,N/A,5W,No,anytone.net,2AJDM-UVA1,2AJDM,No
+Azden,800,,,,,,,,,,,,,,,FRH-800,FRH,No
+Azden,AZ-21A,,,,,,,,,,,,,,,FRH-AZ-21A,FRH,No
+Azden,AZ-61,,,,,,,,,,,,,,,FRH-AZ-61,FRH,No
+Bajeton,BJ-7700,No,Yes,2500,$40,No,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-860 / BinTolk BT7700,5W,No,bajeton (AliExpress),,,
+Bajeton,BJ-7800,No,Yes,2500,$45,No,Color LCD,"VHF, UHF",No,Unknown,2025,Radtel RT-920 (Variant),10W,No,bajeton (AliExpress),,,
+Bajeton,BJ-8200,No,Yes,2800,$55,No,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-900 / BinTolk BT8200,10W,No,bajeton (AliExpress),,,
+Bajeton,BJ-8300,No,Yes,2500,$50,No,Color LCD,"VHF, UHF",No,Unknown,2025,Radtel RT-920,10W,No,bajeton (AliExpress),,,
+Bajeton,BJ-9000,Yes (Analog),Yes,2600,$80,No,Color LCD,Multi-Band,Yes,Unknown,2025,Radtel RT-950 PRO,10W,No,bajeton (AliExpress),,,
+Bajeton,DM-5000,No,No,3500,$60,Yes,Color Screen,"VHF, UHF",No,Unknown,2025,Radtel RT-4D / IRadio DM-UV4R,5W,No,bajeton (AliExpress),,,
+Baofeng,5RH PRO,No,Yes,2500,$50,No,"1.77"" TFT","VHF, UHF",No,Mixed,2024,Baofeng UV-5RM Plus,10W,No,baofengradio.com,2AJGM-5RHPRO,2AJGM,No
+Baofeng,AR-152,No,No,12000 (Claimed),$45,No,LCD,"VHF, UHF",No,Unknown,2022.0,baofengradio.com,10W,No,,2AJGM-AR-152,2AJGM,No
+Baofeng,AR-26,Yes (Analog),Yes,2500,$55,No,"1.77"" TFT","VHF, 220, UHF",Yes,Mixed,2024,Baofeng UV-5RH Pro (Variant),10W,No,baofengradio.com,2AJGM-AR-26,2AJGM,No
+Baofeng,BF-1904,No,No,4200 (Adv),$50,No,None,UHF,No,Unknown,2019,Retevis RT29 (Similar),10W,No,baofengradio.com,2AJGM-BF-1904,2AJGM,No
+Baofeng,BF-33C,No,No,1400,$25/3pk,No,LCD,FRS,No,Good,2023,N/A,2W,No,baofengradio.com,2AJGM-BF-33C,2AJGM,No
+Baofeng,BF-528,No,No,1800,$35,No,None,"VHF, UHF",No,Unknown,2020,N/A,10W,No,baofengradio.com,2AJGM-BF-528,2AJGM,No
+Baofeng,BF-888S,No,No,1500,$12,No,None,UHF,No,Notorious,2013,"Retevis H777, Arcshell AR-5",5W,No,baofengradio.com,2AJGM-BF-888S,2AJGM,No
+Baofeng,BF-88ST,No,No,1500,$25/pair,No,None,FRS,No,Good,2021,N/A,2W,No,baofengradio.com,2AJGM-BF-88ST,2AJGM,No
+Baofeng,BF-F8+,No,No,1800,$35,No,LCD,"VHF, UHF",No,Mixed,2013.0,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-BF-F8,2AJGM,No
+Baofeng,BF-F8HP,No,No,2000,$65,No,Tri-color,"VHF, UHF",No,Poor,2014,N/A,8W,No,baofengtech.com,2AJGM-BF-F8HP,2AJGM,No
+Baofeng,BF-F8HP PRO,No,Yes,2500,$65,No,Color LCD,"VHF, 220, UHF",No,Mixed,2024,N/A,10W,No,baofengtech.com,2AJGM-BF-F8HPPRO,2AJGM,No
+Baofeng,BF-H6,No,No,2200,$40,No,LCD,"VHF, UHF",No,Mixed,2020,N/A,10W,No,baofengradio.com,2AJGM-BF-H6,2AJGM,No
+Baofeng,BF-T1 Mini,,,,,,,,,,,,,,,2AJGM-BF-T1MINI,2AJGM,No
+Baofeng,DM-1701,No,No,2200,$80,Yes,Color LCD,"VHF, UHF",No,Good,2018.0,Retevis RT-3S,5W,No,baofengradio.com,2AJGM-DM-1701,2AJGM,No
+Baofeng,DM-1801,No,No,2000,$70,Yes,LCD,"VHF, UHF",No,Mixed,2018.0,baofengradio.com,5W,No,,2AJGM-DM-1801,2AJGM,No
+Baofeng,DM-5R,No,No,2000,$50,Yes,LCD,"VHF, UHF",No,Poor (Tier I),2016.0,baofengradio.com,5W,No,,2AJGM-DM-5R,2AJGM,No
+Baofeng,DM-V1,No,No,2000,$40,Yes,None,UHF,No,Good,2019,Retevis RT22 (Similar),2W,No,baofengradio.com,2AJGM-DM-V1,2AJGM,No
+Baofeng,DR-1801UV,No,No,2200,$70,Yes,LCD,"VHF, UHF",No,Good,2020.0,Baofeng DM-1801 (Updated),5W,No,baofengradio.com,2AJGM-DR-1801UV,2AJGM,No
+Baofeng,FRS-A1,No,No,1500,$25,No,LCD,FRS,No,Good (Part 95B),2019,BTECH FRS-A1,2W,No,baofengradio.com,2AJGM-FRS-A1,2AJGM,No
+Baofeng,G11S,No,No,1500,$25,No,None,GMRS,No,N/A,2023.0,baofengradio.com,5W,No,,2AJGM-G11S,2AJGM,No
+Baofeng,GM-15 Pro,No,No,1800,$40,No,LCD,GMRS,No,N/A,2022.0,baofengradio.com,5W,No,,2AJGM-GM-15PRO,2AJGM,No
+Baofeng,GT-22,No,No,1500,$25/pair,No,None,FRS,No,Good,2020,N/A,2W,No,baofengradio.com,2AJGM-GT-22,2AJGM,No
+Baofeng,GT-3,No,No,1800,$40,No,LCD,"VHF, UHF",No,Mixed,2014.0,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-GT-3,2AJGM,No
+Baofeng,GT-3 Mark II,,,,,,,,,,,,,,,2AJGM-GT-3MARKII,2AJGM,No
+Baofeng,GT-3TP,No,No,1800,$50,No,LCD,"VHF, UHF",No,Mixed,2015.0,Baofeng UV-5R (High Power),8W,No,baofengradio.com,2AJGM-GT-3TP,2AJGM,No
+Baofeng,GT-5R,No,No,1800,$30,No,LCD,"VHF, UHF",No,Good (Spurious Fix),2021.0,Baofeng UV-5R (Clean TX),5W,No,baofengradio.com,2AJGM-GT-5R,2AJGM,No
+Baofeng,K61 PRO,No,Yes,2600,$35,No,"1.54"" TFT",Multi-Band,No,Unknown,2024,N/A,5W,No,baofengradio.com,2AJGM-K61PRO,2AJGM,No
+Baofeng,M-5R,No,No,1800,$30,No,LCD,"VHF, UHF",No,Mixed,2023.0,Baofeng UV-5R (Rugged),5W,No,baofengradio.com,2AJGM-M-5R,2AJGM,No
+Baofeng,RD-55 Pro,Analog,Yes,2500,$50,No,LCD,"VHF, UHF",Yes,Mixed,2023,Radtel RT-490,10W,No,baofengradio.com,2AJGM-RD-55PRO,2AJGM,No
+Baofeng,UV-10R,No,No,2800,$45,No,Segmented,"VHF, UHF",No,Notorious,2021,N/A,10W,No,baofengradio.com,2AJGM-UV-10R,2AJGM,No
+Baofeng,UV-13 Pro,No,No,1800,$35,No,"1.44"" LCD","VHF, UHF",No,Mixed,2021,N/A,8W,No,baofengradio.com,2AJGM-UV-13PRO,2AJGM,No
+Baofeng,UV-17 Pro GPS,No,Yes,1800,$40,No,"1.77"" TFT","VHF, UHF",Yes,Mixed,2023,Retevis RA89 (Similar chassis),5W,No,baofengradio.com,2AJGM-UV-17PROGPS,2AJGM,No
+Baofeng,UV-21,No,Yes,2800,$30,No,"1.77"" TFT","VHF, 220, UHF",No,Unknown,2024,UV-17 (Variant),6W,No,baofengradio.com,2AJGM-UV-21,2AJGM,No
+Baofeng,UV-21 Pro,No,Yes,2800,$50,No,Color LCD,"VHF, UHF",No,Unknown,2023.0,baofengradio.com,10W,No,,2AJGM-UV-21PRO,2AJGM,No
+Baofeng,UV-21R,No,Yes,2800,$35,No,"1.77"" TFT","VHF, 220, UHF",No,Unknown,2023,UV-17R (Variant),6W,No,baofengradio.com,2AJGM-UV-21R,2AJGM,No
+Baofeng,UV-28 Plus,No,Yes,2200,$35,No,"1.77"" TFT","VHF, 220, UHF",Yes,Mixed,2025,N/A,10W,No,baofengradio.com,2AJGM-UV-28PLUS,2AJGM,No
+Baofeng,UV-3R,No,No,1500,$25,No,LCD,"VHF, UHF",No,Poor,2011.0,baofengradio.com,2W,No,,2AJGM-UV-3R,2AJGM,No
+Baofeng,UV-3R Mark II,,,,,,,,,,,,,,,2AJGM-UV-3RMARKII,2AJGM,No
+Baofeng,UV-3R+,No,No,1500,$30,No,LCD,"VHF, UHF",No,Mixed,2012.0,baofengradio.com,2W,No,,2AJGM-UV-3R,2AJGM,No
+Baofeng,UV-5G (UV-5X),No,No,1800,$40,No,LCD,GMRS,No,N/A,2021.0,Baofeng UV-5R (GMRS Locked),5W,No,baofengradio.com,2AJGM-UV-5G,2AJGM,No
+Baofeng,UV-5R,No,No,1800,$25,No,LCD,"VHF, UHF",No,Mixed,2012.0,baofengradio.com,5W,No,,2AJGM-UV-5R,2AJGM,No
+Baofeng,UV-5R (Standard),No,Some,1800,$25,No,Tri-color,"VHF, UHF",No,Notorious,2012,"Retevis RT-5R, Pofung UV-5R",5W,No,baofengradio.com,2AJGM-UV-5R,2AJGM,No
+Baofeng,UV-5R Mini,No,No,1400,$25,No,Small LCD,"VHF, UHF",No,Unknown,2024,N/A,5W,No,baofengradio.com,2AJGM-UV-5RMINI,2AJGM,No
+Baofeng,UV-5R Plus,No,No,1800,$30,No,LCD,"VHF, UHF",No,Mixed,2013.0,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-UV-5RPLUS,2AJGM,No
+Baofeng,UV-5R V2+,No,No,1800,$30,No,LCD,"VHF, UHF",No,Mixed,2014.0,Baofeng UV-5R (Firmware Upd),5W,No,baofengradio.com,2AJGM-UV-5RV2,2AJGM,No
+Baofeng,UV-5R3,,,,,,,,,,,,,,,2AJGM-UV-5R3,2AJGM,No
+Baofeng,UV-5RA,No,No,1800,$25,No,Tri-color,"VHF, UHF",No,Notorious,2013,N/A,5W,No,baofengradio.com,2AJGM-UV-5RA,2AJGM,No
+Baofeng,UV-5RE,No,No,1800,$30,No,LCD,"VHF, UHF",No,Mixed,2013.0,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-UV-5RE,2AJGM,No
+Baofeng,UV-5RH,No,Yes,2500,$45,No,"1.77"" TFT","VHF, UHF",No,Mixed,2023,Pofung UV-5RH,10W,No,baofengradio.com,2AJGM-UV-5RH,2AJGM,No
+Baofeng,UV-5RH Pro,Analog,Yes,2500,$40,No,"1.77"" TFT","VHF, 220, UHF",Yes,Mixed,2024,UV-5RM Plus (Rebadge),10W,No,baofengradio.com,2AJGM-UV-5RHPRO,2AJGM,No
+Baofeng,UV-5RM,No,Yes,2500,$35,No,"1.77"" TFT","VHF, 220, UHF",No,Mixed,2023,Baofeng AR-5RM,10W,No,baofengradio.com,2AJGM-UV-5RM,2AJGM,No
+Baofeng,UV-5RM Plus,Analog,Yes,2500,$35,No,"1.77"" TFT","VHF, 220, UHF",Yes,Mixed,2024,UV-5RH Pro (Variant),10W,No,baofengradio.com,2AJGM-UV-5RMPLUS,2AJGM,No
+Baofeng,UV-5RQ,No,No,1800,$25,No,Tri-color,"VHF, UHF",No,Notorious,2013,N/A,5W,No,baofengradio.com,2AJGM-UV-5RQ,2AJGM,No
+Baofeng,UV-5X3,No,No,1500,$60,No,Tri-color,Tri-Band (220),No,Mixed,2016,N/A,5W,No,baofengtech.com,2AJGM-UV-5X3,2AJGM,No
+Baofeng,UV-6,,,,,,,,,,,,,,,2AJGM-UV-6,2AJGM,No
+Baofeng,UV-68 Pro,No,No,2800,$45,No,LCD,"VHF, UHF",No,Unknown,2024,UV-S22 (Variant),10W,No,baofengradio.com,2AJGM-UV-68PRO,2AJGM,No
+Baofeng,UV-82,No,No,1800,$35,No,LCD,"VHF, UHF",No,Mixed,2013.0,baofengradio.com,5W,No,,2AJGM-UV-82,2AJGM,No
+Baofeng,UV-82C,No,No,1800,$55,No,Tri-color,"VHF, UHF",No,Good (Commercial),2013,N/A,5W,No,baofengtech.com,2AJGM-UV-82C,2AJGM,No
+Baofeng,UV-82HP,No,No,1800,$65,No,Tri-color,"VHF, UHF",No,Mixed,2015,Pofung UV-82HP,7W/8W,No,baofengtech.com,2AJGM-UV-82HP,2AJGM,No
+Baofeng,UV-82L,,,,,,,,,,,,,,,2AJGM-UV-82L,2AJGM,No
+Baofeng,UV-82X,No,No,1800,Discont.,No,Tri-color,"VHF, 220",No,Good,2014,N/A,5W,No,baofengradio.com,2AJGM-UV-82X,2AJGM,No
+Baofeng,UV-B5,No,No,2000,$30,No,LCD,"VHF, UHF",No,Good (Old Gen),2012,N/A,5W,No,baofengradio.com,2AJGM-UV-B5,2AJGM,No
+Baofeng,UV-B6,,,,,,,,,,,,,,,2AJGM-UV-B6,2AJGM,No
+Baojie,BF-UV88,,,,,,,,,,,,,,,2AFPR-BF-UV88,2AFPR,No
+Baojie,HG-UV2,,,,,,,,,,,,,,,2AFPR-HG-UV2,2AFPR,No
+Baojie,UV-55,,,,,,,,,,,,,,,2AFPR-UV-55,2AFPR,No
+Baojie,UV-88,,,,,,,,,,,,,,,2AFPR-UV-88,2AFPR,No
+Baojie,UV-99,,,,,,,,,,,,,,,2AFPR-UV-99,2AFPR,No
+Benjamin,Tech 1200,,,,,,,,,,,,,,,,,
+Bintolk,BT7700,No,Yes,2500,$35,No,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-860 / Bajeton BJ-7700,5W,No,bintolk (AliExpress),2AJGM-BT7700,2AJGM,No
+Bintolk,BT8200,No,Yes,2800,$50,No,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-900 / Bajeton BJ-8200,10W,No,bintolk (AliExpress),2AJGM-BT8200,2AJGM,No
+Blackbox,BR-188,,,,,,,,,,,,,,,,,
+Bridgecom,Maverick,Yes (A/D),Yes,3100,$299,Yes,Color TFT,"VHF, UHF",Yes,Excellent,2025,AnyTone AT-D890UV,7W,Yes (Native),bridgecomsystems.com,,,
+Btech,DMR-6X2 PRO,Yes (A/D),Yes,3100,$180,Yes,Color TFT,"VHF, UHF",Yes,Good (Filtered),2022,AnyTone AT-D878 (Custom FW),7W,Yes (FW Update),baofengtech.com,2AJGM-DMR-6X2PRO,2AJGM,No
+Btech,FRS-A1,No,No,1500,$35/pair,No,LCD,FRS,No,Good (Part 95B),2019,Baofeng BF-888S (Internals),2W,No,baofengtech.com,2AJGM-FRS-A1,2AJGM,No
+Btech,FRS-B1,No,No,1500,$35/pair,No,LCD,FRS,No,Good (Part 95B),2019,Baofeng BF-88E,2W,No,baofengtech.com,2AJGM-FRS-B1,2AJGM,No
+Btech,GMRS-PRO,No,No,2600,$135,No,Color LCD,GMRS,Yes,Good (Part 95E),2022,VR-N7500 (Mobile relative),5W,No,baofengtech.com,2AJGM-GMRS-PRO,2AJGM,No
+Btech,GMRS-V1,,,,,,,,,,,,,,,2AJGM-GMRS-V1,2AJGM,No
+Btech,GMRS-V2,No,No,1800,$55,No,Tri-color,GMRS,No,Good (Part 95E),2022,Baofeng UV-5G (Variant),5W,No,baofengtech.com,2AJGM-GMRS-V2,2AJGM,No
+Btech,MURS-V1,,,,,,,,,,,,,,,2AJGM-MURS-V1,2AJGM,No
+Btech,UV-5R,,,,,,,,,,,,,,,2AJGM-UV-5R,2AJGM,No
+Btech,UV-5X3,,,,,,,,,,,,,,,2AJGM-UV-5X3,2AJGM,No
+Btech,UV-PRO,Yes (A/D),Yes,2600,$165,No,Color LCD,"VHF, UHF",Yes,Good,2022,VGC VR-N76 (OEM),7W,Yes (App),baofengtech.com,2AJGM-UV-PRO,2AJGM,No
+C-Standard,C112,,,,,,,,,,,,,,,,,
+C-Standard,C508A,,,,,,,,,,,,,,,,,
+C-Standard,C510,,,,,,,,,,,,,,,,,
+C-Standard,C520,,,,,,,,,,,,,,,,,
+C-Standard,C528,,,,,,,,,,,,,,,,,
+C-Standard,C558,,,,,,,,,,,,,,,,,
+C-Standard,HX-240,,,,,,,,,,,,,,,,,
+C-Standard,HX-290,,,,,,,,,,,,,,,,,
+C-Standard,HX-370S,,,,,,,,,,,,,,,,,
+C-Standard,HX-460S,,,,,,,,,,,,,,,,,
+C-Standard,HX471S,,,,,,,,,,,,,,,,,
+C-Standard,HX580,,,,,,,,,,,,,,,,,
+Cleartone,ClearSpeach,,,,,,,,,,,,,,,,,
+Connect Systems,CS-600,,,,,,,,,,,,,,,XH8-CS-600,XH8,No
+Connect Systems,CS-700,,,,,,,,,,,,,,,XH8-CS-700,XH8,No
+Connect Systems,CS-750,,,,,,,,,,,,,,,XH8-CS-750,XH8,No
+Connect Systems,CS-800,,,,,,,,,,,,,,,XH8-CS-800,XH8,No
+Cybercom,ATP-100,,,,,,,,,,,,,,,,,
+Cybercom,ATP-200,,,,,,,,,,,,,,,,,
+Cybercom,ATP-400,,,,,,,,,,,,,,,,,
+Daiwa,Com 1080 / 1090,,,,,,,,,,,,,,,,,
+Dra,BR-2020,,,,,,,,,,,,,,,,,
+Drag,TC-1085,,,,,,,,,,,,,,,,,
+Drag,TC-2085,,,,,,,,,,,,,,,,,
+Drag,TC-4085,,,,,,,,,,,,,,,,,
+Drake,2213,,,,,,,,,,,,,,,,,
+Eagle,DMR-6X2,,,,,,,,,,,,,,,2AJGM-DMR-6X2,2AJGM,No
+Eagle,DMR-6X2 Pro,,,,,,,,,,,,,,,2AJGM-DMR-6X2PRO,2AJGM,No
+Hongxun,DP4801,No,No,2000,$40,No,Color LCD,"VHF, UHF",No,Unknown,2023,Motorola DP4801 (Cosmetic Clone),5W,No,N/A,2AL5L-DP4801,2AL5L,No
+Hongxun,HP-788,No,No,2500,$50,No,Color LCD,"VHF, UHF",No,Unknown,2024,Hytera HP788 (Clone),5W,No,N/A,2AL5L-HP-788,2AL5L,No
+Hongxun,R8,No,No,6800 (Adv),$45,No,Color LCD,"VHF, UHF",No,Unknown,2024,Motorola R8 (Clone),10W,No,N/A,2AL5L-R8,2AL5L,No
+Icom,A-14,,,,,,,,,,,,,,,AFJ-A-14,AFJ,No
+Icom,A-4,,,,,,,,,,,,,,,AFJ-A-4,AFJ,No
+Icom,A-6,,,,,,,,,,,,,,,AFJ-A-6,AFJ,No
+Icom,AT-55,,,,,,,,,,,,,,,AFJ-AT-55,AFJ,No
+Icom,IC-02AT,,,,,,,,,,,,,,,AFJ-IC-02AT,AFJ,No
+Icom,IC-03AT,,,,,,,,,,,,,,,AFJ-IC-03AT,AFJ,No
+Icom,IC-04AT,,,,,,,,,,,,,,,AFJ-IC-04AT,AFJ,No
+Icom,IC-12,,,,,,,,,,,,,,,AFJ-IC-12,AFJ,No
+Icom,IC-12AT,,,,,,,,,,,,,,,AFJ-IC-12AT,AFJ,No
+Icom,IC-12GAT,,,,,,,,,,,,,,,AFJ-IC-12GAT,AFJ,No
+Icom,IC-215,,,,,,,,,,,,,,,AFJ-IC-215,AFJ,No
+Icom,IC-24AT,,,,,,,,,,,,,,,AFJ-IC-24AT,AFJ,No
+Icom,IC-281,,,,,,,,,,,,,,,AFJ-IC-281,AFJ,No
+Icom,IC-2A / 2AT / 2E,,,,,,,,,,,,,,,AFJ-IC-2A2AT2E,AFJ,No
+Icom,IC-2GAT,,,,,,,,,,,,,,,AFJ-IC-2GAT,AFJ,No
+Icom,IC-2GXAT,,,,,,,,,,,,,,,AFJ-IC-2GXAT,AFJ,No
+Icom,IC-2iA,,,,,,,,,,,,,,,AFJ-IC-2IA,AFJ,No
+Icom,IC-2N,,,,,,,,,,,,,,,AFJ-IC-2N,AFJ,No
+Icom,IC-2SRA,,,,,,,,,,,,,,,AFJ-IC-2SRA,AFJ,No
+Icom,IC-32AT,,,,,,,,,,,,,,,AFJ-IC-32AT,AFJ,No
+Icom,IC-3A / 3AT,,,,,,,,,,,,,,,AFJ-IC-3A3AT,AFJ,No
+Icom,IC-3FGX,,,,,,,,,,,,,,,AFJ-IC-3FGX,AFJ,No
+Icom,IC-3SAT,,,,,,,,,,,,,,,AFJ-IC-3SAT,AFJ,No
+Icom,IC-40,,,,,,,,,,,,,,,AFJ-IC-40,AFJ,No
+Icom,IC-4008A,,,,,,,,,,,,,,,AFJ-IC-4008A,AFJ,No
+Icom,IC-4088A,,,,,,,,,,,,,,,AFJ-IC-4088A,AFJ,No
+Icom,IC-40GX,,,,,,,,,,,,,,,AFJ-IC-40GX,AFJ,No
+Icom,IC-449,,,,,,,,,,,,,,,AFJ-IC-449,AFJ,No
+Icom,IC-47A/E,,,,,,,,,,,,,,,AFJ-IC-47AE,AFJ,No
+Icom,IC-4GAT,,,,,,,,,,,,,,,AFJ-IC-4GAT,AFJ,No
+Icom,IC-4GXAT,,,,,,,,,,,,,,,AFJ-IC-4GXAT,AFJ,No
+Icom,IC-4iA,,,,,,,,,,,,,,,AFJ-IC-4IA,AFJ,No
+Icom,IC-4SRA,,,,,,,,,,,,,,,AFJ-IC-4SRA,AFJ,No
+Icom,IC-80AD,,,,,,,,,,,,,,,AFJ-IC-80AD,AFJ,No
+Icom,IC-91A/AD,,,,,,,,,,,,,,,AFJ-IC-91AAD,AFJ,No
+Icom,IC-92AD,,,,,,,,,,,,,,,AFJ-IC-92AD,AFJ,No
+Icom,IC-A14,,,,,,,,,,,,,,,AFJ-IC-A14,AFJ,No
+Icom,IC-A2,,,,,,,,,,,,,,,AFJ-IC-A2,AFJ,No
+Icom,IC-A20,,,,,,,,,,,,,,,AFJ-IC-A20,AFJ,No
+Icom,IC-A21,,,,,,,,,,,,,,,AFJ-IC-A21,AFJ,No
+Icom,IC-A22,,,,,,,,,,,,,,,AFJ-IC-A22,AFJ,No
+Icom,IC-A23,,,,,,,,,,,,,,,AFJ-IC-A23,AFJ,No
+Icom,IC-A24,,,,,,,,,,,,,,,AFJ-IC-A24,AFJ,No
+Icom,IC-A3,,,,,,,,,,,,,,,AFJ-IC-A3,AFJ,No
+Icom,IC-A4,,,,,,,,,,,,,,,AFJ-IC-A4,AFJ,No
+Icom,IC-A5,,,,,,,,,,,,,,,AFJ-IC-A5,AFJ,No
+Icom,IC-A6,,,,,,,,,,,,,,,AFJ-IC-A6,AFJ,No
+Icom,IC-Delta 1A,,,,,,,,,,,,,,,AFJ-IC-DELTA1A,AFJ,No
+Icom,IC-F10,,,,,,,,,,,,,,,AFJ-IC-F10,AFJ,No
+Icom,IC-F11,,,,,,,,,,,,,,,AFJ-IC-F11,AFJ,No
+Icom,IC-F11S,,,,,,,,,,,,,,,AFJ-IC-F11S,AFJ,No
+Icom,IC-F21,,,,,,,,,,,,,,,AFJ-IC-F21,AFJ,No
+Icom,IC-F21S,,,,,,,,,,,,,,,AFJ-IC-F21S,AFJ,No
+Icom,IC-F3,,,,,,,,,,,,,,,AFJ-IC-F3,AFJ,No
+Icom,IC-F30 LT,,,,,,,,,,,,,,,AFJ-IC-F30LT,AFJ,No
+Icom,IC-F33,,,,,,,,,,,,,,,AFJ-IC-F33,AFJ,No
+Icom,IC-F3S,,,,,,,,,,,,,,,AFJ-IC-F3S,AFJ,No
+Icom,IC-F4,,,,,,,,,,,,,,,AFJ-IC-F4,AFJ,No
+Icom,IC-F40LT,,,,,,,,,,,,,,,AFJ-IC-F40LT,AFJ,No
+Icom,IC-F43,,,,,,,,,,,,,,,AFJ-IC-F43,AFJ,No
+Icom,IC-F4S,,,,,,,,,,,,,,,AFJ-IC-F4S,AFJ,No
+Icom,IC-F4TR,,,,,,,,,,,,,,,AFJ-IC-F4TR,AFJ,No
+Icom,IC-H16,,,,,,,,,,,,,,,AFJ-IC-H16,AFJ,No
+Icom,IC-M1,,,,,,,,,,,,,,,AFJ-IC-M1,AFJ,No
+Icom,IC-M10A,,,,,,,,,,,,,,,AFJ-IC-M10A,AFJ,No
+Icom,IC-M11,,,,,,,,,,,,,,,AFJ-IC-M11,AFJ,No
+Icom,IC-M127,,,,,,,,,,,,,,,AFJ-IC-M127,AFJ,No
+Icom,IC-M15,,,,,,,,,,,,,,,AFJ-IC-M15,AFJ,No
+Icom,IC-M1V,,,,,,,,,,,,,,,AFJ-IC-M1V,AFJ,No
+Icom,IC-M2,,,,,,,,,,,,,,,AFJ-IC-M2,AFJ,No
+Icom,IC-M24,,,,,,,,,,,,,,,AFJ-IC-M24,AFJ,No
+Icom,IC-M34,,,,,,,,,,,,,,,AFJ-IC-M34,AFJ,No
+Icom,IC-M36,,,,,,,,,,,,,,,AFJ-IC-M36,AFJ,No
+Icom,IC-M5,,,,,,,,,,,,,,,AFJ-IC-M5,AFJ,No
+Icom,IC-M7,,,,,,,,,,,,,,,AFJ-IC-M7,AFJ,No
+Icom,IC-M72,,,,,,,,,,,,,,,AFJ-IC-M72,AFJ,No
+Icom,IC-M8,,,,,,,,,,,,,,,AFJ-IC-M8,AFJ,No
+Icom,IC-M88,,,,,,,,,,,,,,,AFJ-IC-M88,AFJ,No
+Icom,IC-M9,,,,,,,,,,,,,,,AFJ-IC-M9,AFJ,No
+Icom,IC-P2A / P2AT / P2E / P2ET,,,,,,,,,,,,,,,AFJ-IC-P2AP2ATP2EP2ET,AFJ,No
+Icom,IC-P3AT,,,,,,,,,,,,,,,AFJ-IC-P3AT,AFJ,No
+Icom,IC-P4AT,,,,,,,,,,,,,,,AFJ-IC-P4AT,AFJ,No
+Icom,IC-P7A,,,,,,,,,,,,,,,AFJ-IC-P7A,AFJ,No
+Icom,IC-Q7A,,,,,,,,,,,,,,,AFJ-IC-Q7A,AFJ,No
+Icom,IC-R1,,,,,,,,,,,,,,,AFJ-IC-R1,AFJ,No
+Icom,IC-R10,,,,,,,,,,,,,,,AFJ-IC-R10,AFJ,No
+Icom,IC-R100,,,,,,,,,,,,,,,AFJ-IC-R100,AFJ,No
+Icom,IC-R2,,,,,,,,,,,,,,,AFJ-IC-R2,AFJ,No
+Icom,IC-R20,,,,,,,,,,,,,,,AFJ-IC-R20,AFJ,No
+Icom,IC-R3,,,,,,,,,,,,,,,AFJ-IC-R3,AFJ,No
+Icom,IC-R5,,,,,,,,,,,,,,,AFJ-IC-R5,AFJ,No
+Icom,IC-R6,,,,,,,,,,,,,,,AFJ-IC-R6,AFJ,No
+Icom,IC-RX7,,,,,,,,,,,,,,,AFJ-IC-RX7,AFJ,No
+Icom,IC-S25,,,,,,,,,,,,,,,AFJ-IC-S25,AFJ,No
+Icom,IC-T10,No,Yes,2400,$230,No,LCD,"VHF, UHF",No,Excellent,2022,N/A,5W,No,https://www.google.com/search?q=icomjapan.com,AFJ-IC-T10,AFJ,No
+Icom,IC-T21A,,,,,,,,,,,,,,,AFJ-IC-T21A,AFJ,No
+Icom,IC-T22A,,,,,,,,,,,,,,,AFJ-IC-T22A,AFJ,No
+Icom,IC-T2A / T2H,,,,,,,,,,,,,,,AFJ-IC-T2AT2H,AFJ,No
+Icom,IC-T3H,,,,,,,,,,,,,,,AFJ-IC-T3H,AFJ,No
+Icom,IC-T42A,,,,,,,,,,,,,,,AFJ-IC-T42A,AFJ,No
+Icom,IC-T70,,,,,,,,,,,,,,,AFJ-IC-T70,AFJ,No
+Icom,IC-T7A / T7H,,,,,,,,,,,,,,,AFJ-IC-T7AT7H,AFJ,No
+Icom,IC-T81A,,,,,,,,,,,,,,,AFJ-IC-T81A,AFJ,No
+Icom,IC-T8A,,,,,,,,,,,,,,,AFJ-IC-T8A,AFJ,No
+Icom,IC-T90A,,,,,,,,,,,,,,,AFJ-IC-T90A,AFJ,No
+Icom,IC-U12,,,,,,,,,,,,,,,AFJ-IC-U12,AFJ,No
+Icom,IC-U16,,,,,,,,,,,,,,,AFJ-IC-U16,AFJ,No
+Icom,IC-U82,,,,,,,,,,,,,,,AFJ-IC-U82,AFJ,No
+Icom,IC-V21AT,,,,,,,,,,,,,,,AFJ-IC-V21AT,AFJ,No
+Icom,IC-V8,,,,,,,,,,,,,,,AFJ-IC-V8,AFJ,No
+Icom,IC-V80,,,,,,,,,,,,,,,AFJ-IC-V80,AFJ,No
+Icom,IC-V82,,,,,,,,,,,,,,,AFJ-IC-V82,AFJ,No
+Icom,IC-V85,,,,,,,,,,,,,,,AFJ-IC-V85,AFJ,No
+Icom,IC-W2A,,,,,,,,,,,,,,,AFJ-IC-W2A,AFJ,No
+Icom,IC-W31A,,,,,,,,,,,,,,,AFJ-IC-W31A,AFJ,No
+Icom,IC-W32A,,,,,,,,,,,,,,,AFJ-IC-W32A,AFJ,No
+Icom,IC-X2A,,,,,,,,,,,,,,,AFJ-IC-X2A,AFJ,No
+Icom,IC-Z1A,,,,,,,,,,,,,,,AFJ-IC-Z1A,AFJ,No
+Icom,ID-31A,,,,,,,,,,,,,,,AFJ-ID-31A,AFJ,No
+Icom,ID-50,No,Yes,2350,$230,Yes (D-STAR),LCD (Mono),"VHF, UHF",Yes,Good,2023.0,icomamerica.com,5W,No,,AFJ-ID-50,AFJ,No
+Icom,ID-51A,No,Yes,1150,$300,Yes (D-STAR),LCD,"VHF, UHF",Yes,Good,2013.0,icomamerica.com,5W,No,,AFJ-ID-51A,AFJ,No
+Icom,ID-51A Plus,No,Yes,1150,$320,Yes (D-STAR),LCD,"VHF, UHF",Yes,Good,2014.0,icomamerica.com,5W,No,,AFJ-ID-51APLUS,AFJ,No
+Icom,ID-51A Plus2,No,Yes,1150,$330,Yes (D-STAR),LCD,"VHF, UHF",Yes,Good,2016.0,icomamerica.com,5W,No,,AFJ-ID-51APLUS2,AFJ,No
+Icom,ID-52A,No,Yes,2200,$450,Yes (D-STAR),Color LCD,"VHF, UHF",Yes,Good,2021.0,icomamerica.com,5W,No,,AFJ-ID-52A,AFJ,No
+Icom,M-71,,,,,,,,,,,,,,,AFJ-M-71,AFJ,No
+Icom,S-21,,,,,,,,,,,,,,,AFJ-S-21,AFJ,No
+Inrico,T368,No,No,6000,$250,Yes,"2.4"" Touch",UHF (DMR) + LTE,Yes,N/A (Cellular),2022,N/A,2W (RF),No,inrico.cn,,,
+Iradio,CP-268,No,No,1800,$25,No,None,UHF,No,Good,2018,Baofeng BF-888S (Likely),2W,No,iradio.com,2AO8L-CP-268,2AO8L,No
+Iradio,UV-98 Pro,No,Yes,2800,$55,No,Color LCD,Multi-Band,No,Unknown,2024,Radtel RT-890 / Ruyage UV-98,8W,No,iradio.com,2AO8L-UV-98PRO,2AO8L,No
+Iradio,Y23DM-UV4R,No,No,3500,$60,Yes,Color LCD,"VHF, UHF",No,Unknown,2024,Radtel RT-4D / Bajeton DM-5000,5W,No,iradio.com,2AO8L-Y23DM-UV4R,2AO8L,No
+Jingtong,DB-20,,,,,,,,,,,,,,,2AJGM-DB-20,2AJGM,No
+Jingtong,JT-208,,,,,,,,,,,,,,,2AJGM-JT-208,2AJGM,No
+Jingtong,JT-308,,,,,,,,,,,,,,,2AJGM-JT-308,2AJGM,No
+K-Po,TH-UV8000D,,,,,,,,,,,,,,,,,
+K-Po,TH-UVF1,,,,,,,,,,,,,,,,,
+Kenwood,D200,,,,,,,,,,,,,,,ALH-D200,ALH,No
+Kenwood,D75,,,,,,,,,,,,,,,ALH-D75,ALH,No
+Kenwood,TH-205,,,,,,,,,,,,,,,ALH-TH-205,ALH,No
+Kenwood,TH-21,,,,,,,,,,,,,,,ALH-TH-21,ALH,No
+Kenwood,TH-215,,,,,,,,,,,,,,,ALH-TH-215,ALH,No
+Kenwood,TH-22,,,,,,,,,,,,,,,ALH-TH-22,ALH,No
+Kenwood,TH-225,,,,,,,,,,,,,,,ALH-TH-225,ALH,No
+Kenwood,TH-235,,,,,,,,,,,,,,,ALH-TH-235,ALH,No
+Kenwood,TH-25,,,,,,,,,,,,,,,ALH-TH-25,ALH,No
+Kenwood,TH-26,,,,,,,,,,,,,,,ALH-TH-26,ALH,No
+Kenwood,TH-27,,,,,,,,,,,,,,,ALH-TH-27,ALH,No
+Kenwood,TH-28,,,,,,,,,,,,,,,ALH-TH-28,ALH,No
+Kenwood,TH-31,,,,,,,,,,,,,,,ALH-TH-31,ALH,No
+Kenwood,TH-315,,,,,,,,,,,,,,,ALH-TH-315,ALH,No
+Kenwood,TH-405,,,,,,,,,,,,,,,ALH-TH-405,ALH,No
+Kenwood,TH-41,,,,,,,,,,,,,,,ALH-TH-41,ALH,No
+Kenwood,TH-415,,,,,,,,,,,,,,,ALH-TH-415,ALH,No
+Kenwood,TH-42,,,,,,,,,,,,,,,ALH-TH-42,ALH,No
+Kenwood,TH-42A/E,,,,,,,,,,,,,,,ALH-TH-42AE,ALH,No
+Kenwood,TH-45,,,,,,,,,,,,,,,ALH-TH-45,ALH,No
+Kenwood,TH-46,,,,,,,,,,,,,,,ALH-TH-46,ALH,No
+Kenwood,TH-47,,,,,,,,,,,,,,,ALH-TH-47,ALH,No
+Kenwood,TH-48,,,,,,,,,,,,,,,ALH-TH-48,ALH,No
+Kenwood,TH-55,,,,,,,,,,,,,,,ALH-TH-55,ALH,No
+Kenwood,TH-75,,,,,,,,,,,,,,,ALH-TH-75,ALH,No
+Kenwood,TH-77,,,,,,,,,,,,,,,ALH-TH-77,ALH,No
+Kenwood,TH-78,,,,,,,,,,,,,,,ALH-TH-78,ALH,No
+Kenwood,TH-79,,,,,,,,,,,,,,,ALH-TH-79,ALH,No
+Kenwood,TH-D7,,,,,,,,,,,,,,,ALH-TH-D7,ALH,No
+Kenwood,TH-D72A,Yes,Yes,1800,Discont.,No,Dot Matrix,"VHF, UHF",Yes,Good,2010.0,kenwood.com,5W,Yes,,ALH-TH-D72A,ALH,No
+Kenwood,TH-D74A,Yes,Yes,1800,Discont.,Yes (D-STAR),Color LCD,"VHF, UHF, 220",Yes,Good,2016.0,kenwood.com,5W,No,,ALH-TH-D74A,ALH,No
+Kenwood,TH-D75,Yes (A/D),Yes,1820,$750,D-STAR,Color TFT,Tri-Band (220),Yes,Excellent,2024,N/A,5W,Yes (Native),kenwood.com,ALH-TH-D75,ALH,No
+Kenwood,TH-D75A,Yes,Yes,1800,$750,Yes (D-STAR),Color LCD,"VHF, UHF, 220",Yes,Good,2024.0,kenwood.com,5W,No,,ALH-TH-D75A,ALH,No
+Kenwood,TH-F6,,,,,,,,,,,,,,,ALH-TH-F6,ALH,No
+Kenwood,TH-F6A,No,Yes,2000,$300,No,LCD,"VHF, UHF, 220",No,Good,2001.0,kenwood.com,5W,No,,ALH-TH-F6A,ALH,No
+Kenwood,TH-G71,,,,,,,,,,,,,,,ALH-TH-G71,ALH,No
+Kenwood,TH-K2,,,,,,,,,,,,,,,ALH-TH-K2,ALH,No
+Kenwood,TH-K20A,,,,,,,,,,,,,,,ALH-TH-K20A,ALH,No
+Kenwood,TH-K4,,,,,,,,,,,,,,,ALH-TH-K4,ALH,No
+Kenwood,TK-2100,,,,,,,,,,,,,,,ALH-TK-2100,ALH,No
+Kenwood,TK-2102,,,,,,,,,,,,,,,ALH-TK-2102,ALH,No
+Kenwood,TK-220,,,,,,,,,,,,,,,ALH-TK-220,ALH,No
+Kenwood,TK-2200,,,,,,,,,,,,,,,ALH-TK-2200,ALH,No
+Kenwood,TK-2302,,,,,,,,,,,,,,,ALH-TK-2302,ALH,No
+Kenwood,TK-240,,,,,,,,,,,,,,,ALH-TK-240,ALH,No
+Kenwood,TK-2400,,,,,,,,,,,,,,,ALH-TK-2400,ALH,No
+Kenwood,TK-2402,,,,,,,,,,,,,,,ALH-TK-2402,ALH,No
+Kenwood,TK-250,,,,,,,,,,,,,,,ALH-TK-250,ALH,No
+Kenwood,TK-260,,,,,,,,,,,,,,,ALH-TK-260,ALH,No
+Kenwood,TK-270,,,,,,,,,,,,,,,ALH-TK-270,ALH,No
+Kenwood,TK-272,,,,,,,,,,,,,,,ALH-TK-272,ALH,No
+Kenwood,TK-3100,,,,,,,,,,,,,,,ALH-TK-3100,ALH,No
+Kenwood,TK-3101,,,,,,,,,,,,,,,ALH-TK-3101,ALH,No
+Kenwood,TK-3102,,,,,,,,,,,,,,,ALH-TK-3102,ALH,No
+Kenwood,TK-3130,,,,,,,,,,,,,,,ALH-TK-3130,ALH,No
+Kenwood,TK-3131,,,,,,,,,,,,,,,ALH-TK-3131,ALH,No
+Kenwood,TK-320,,,,,,,,,,,,,,,ALH-TK-320,ALH,No
+Kenwood,TK-3200,,,,,,,,,,,,,,,ALH-TK-3200,ALH,No
+Kenwood,TK-3201,,,,,,,,,,,,,,,ALH-TK-3201,ALH,No
+Kenwood,TK-3202,,,,,,,,,,,,,,,ALH-TK-3202,ALH,No
+Kenwood,TK-3230,,,,,,,,,,,,,,,ALH-TK-3230,ALH,No
+Kenwood,TK-3302,,,,,,,,,,,,,,,ALH-TK-3302,ALH,No
+Kenwood,TK-340,,,,,,,,,,,,,,,ALH-TK-340,ALH,No
+Kenwood,TK-3400,,,,,,,,,,,,,,,ALH-TK-3400,ALH,No
+Kenwood,TK-3402,,,,,,,,,,,,,,,ALH-TK-3402,ALH,No
+Kenwood,TK-350,,,,,,,,,,,,,,,ALH-TK-350,ALH,No
+Kenwood,TK-353,,,,,,,,,,,,,,,ALH-TK-353,ALH,No
+Kenwood,TK-360,,,,,,,,,,,,,,,ALH-TK-360,ALH,No
+Kenwood,TK-370,,,,,,,,,,,,,,,ALH-TK-370,ALH,No
+Kenwood,TK-372,,,,,,,,,,,,,,,ALH-TK-372,ALH,No
+Kenwood,TK-373,,,,,,,,,,,,,,,ALH-TK-373,ALH,No
+Kenwood,TK-430,,,,,,,,,,,,,,,ALH-TK-430,ALH,No
+Kenwood,TK-431,,,,,,,,,,,,,,,ALH-TK-431,ALH,No
+Kenwood,UBZ-LF14,,,,,,,,,,,,,,,ALH-UBZ-LF14,ALH,No
+Kenwood,UBZ-LH14,,,,,,,,,,,,,,,ALH-UBZ-LH14,ALH,No
+Kmd / Tssd,UV-8000,No,No,3600,$55,No,LCD,"VHF, UHF",No,Mixed,2020,TYT TH-UV8000D (Clone),10W,No,N/A,,,
+Kyder,KG-205,,,,,,,,,,,,,,,,,
+Kyodo,LM-2,,,,,,,,,,,,,,,,,
+Luiton,NT-100,,,,,,,,,,,,,,,2AO8L-NT-100,2AO8L,No
+Magnum,1012,,,,,,,,,,,,,,,,,
+Magnum,M-100,,,,,,,,,,,,,,,,,
+Marantz,C-510,,,,,,,,,,,,,,,FNA-C-510,FNA,No
+Marantz,C-520,,,,,,,,,,,,,,,FNA-C-520,FNA,No
+Marantz,HX-460S,,,,,,,,,,,,,,,FNA-HX-460S,FNA,No
+Maxon,HT-750,,,,,,,,,,,,,,,HBG-HT-750,HBG,No
+Maxon,SP-120,,,,,,,,,,,,,,,HBG-SP-120,HBG,No
+Maxon,SP-130,,,,,,,,,,,,,,,HBG-SP-130,HBG,No
+Maxon,SP-140,,,,,,,,,,,,,,,HBG-SP-140,HBG,No
+Maxon,SP-2000,,,,,,,,,,,,,,,HBG-SP-2000,HBG,No
+Midland,AL-34,,,,,,,,,,,,,,,K4R-AL-34,K4R,No
+Midland,CT-22,,,,,,,,,,,,,,,K4R-CT-22,K4R,No
+Midland,CT-410,,,,,,,,,,,,,,,K4R-CT-410,K4R,No
+Midland,G-11,,,,,,,,,,,,,,,K4R-G-11,K4R,No
+Midland,GXT1000VP4,No,No,700 (NiMH),$80/pair,No,LCD,GMRS,No,Good (Part 95),2010,N/A,5W (Max),No,midlandusa.com,K4R-GXT1000VP4,K4R,No
+Midland,GXT3000,No,No,2000,$150,No,LCD,GMRS,No,Good (Part 95E),2024,N/A,5W,No,midlandusa.com,K4R-GXT3000,K4R,No
+Midland,GXT67 Pro,No,No,2000,$199,No,LCD,GMRS,No,Good (Part 95E),2024,N/A,5W,No,midlandusa.com,K4R-GXT67PRO,K4R,No
+Midland,LXT500VP3,No,No,600,$40/pair,No,LCD,FRS,No,Good (Part 95),2013,N/A,0.5W,No,midlandusa.com,K4R-LXT500VP3,K4R,No
+Midland,LXT600VP3,No,No,700,$50/pair,No,LCD,FRS,No,Good (Part 95),2013,N/A,0.5W/2W,No,midlandusa.com,K4R-LXT600VP3,K4R,No
+Midland,T290,No,No,700,$80/pair,No,LCD,GMRS,No,Good (Part 95),2020,N/A,2W,No,midlandusa.com,K4R-T290,K4R,No
+Mizuho,MX-144,,,,,,,,,,,,,,,,,
+Motorola,GP-300,,,,,,,,,,,,,,,AZ489-GP-300,AZ489,No
+Motorola,GP-68,,,,,,,,,,,,,,,AZ489-GP-68,AZ489,No
+Motorola,HT-1000,,,,,,,,,,,,,,,AZ489-HT-1000,AZ489,No
+Motorola,HT-600,,,,,,,,,,,,,,,AZ489-HT-600,AZ489,No
+Motorola,HT-800,,,,,,,,,,,,,,,AZ489-HT-800,AZ489,No
+Motorola,MTS-2000,,,,,,,,,,,,,,,AZ489-MTS-2000,AZ489,No
+Motorola,P1225,,,,,,,,,,,,,,,AZ489-P1225,AZ489,No
+Motorola,Saber I / II / III,,,,,,,,,,,,,,,AZ489-SABERIIIIII,AZ489,No
+Motorola,Spirit,,,,,,,,,,,,,,,AZ489-SPIRIT,AZ489,No
+Navico,SP-300,,,,,,,,,,,,,,,,,
+Pofung,BF-530,No,No,2200,$30,No,None,UHF,No,Good,2018,BelFone BF-530,5W,No,baofengradio.com,2AJGM-BF-530,2AJGM,No
+Pofung,BF-920,No,No,1500,$25,No,None,UHF,No,Mixed,2019,BF-888S (Slim),2W,No,baofengradio.com,2AJGM-BF-920,2AJGM,No
+Pofung,GT-1,No,No,1500,$20,No,None,UHF,No,Mixed,2014,Baofeng BF-888S (High Perf.),2W / 5W,No,baofengradio.com,2AJGM-GT-1,2AJGM,No
+Pofung,GT-5,No,No,2000,$35,No,Tri-color,"VHF, UHF",No,Good,2021,Baofeng UV-82 (Upgrade),5W / 8W,No,baofengradio.com,2AJGM-GT-5,2AJGM,No
+Pofung,PFG-TEN4,No,No,1800,$35,No,"1.5"" LCD",GMRS,No,Good (Part 95E),2022,Baofeng UV-5G / UV-5X,5W,No,baofengradio.com,2AJGM-PFG-TEN4,2AJGM,No
+Pofung,UV-5R,,,,,,,,,,,,,,,2AJGM-UV-5R,2AJGM,No
+Pofung,UV-66,No,No,1800,$25,No,None,UHF,No,Mixed,2018,Baofeng UV-6,5W,No,baofengradio.com,2AJGM-UV-66,2AJGM,No
+Pofung,UV-82,,,,,,,,,,,,,,,2AJGM-UV-82,2AJGM,No
+Pofung,UV-82HP,No,No,1800,$65,No,Tri-color,"VHF, UHF",No,Mixed,2015.0,Pofung UV-82HP,7W/8W,No,baofengtech.com,2AJGM-UV-82HP,2AJGM,No
+Pofung,UV-920,No,No,2800,$40,No,LCD,"VHF, UHF",No,Mixed,2015,Baofeng UV-82 (Variant),8W,No,baofengradio.com,2AJGM-UV-920,2AJGM,No
+Pofung,UV-TEN4,No,No,1800,$35,No,"1.5"" LCD","VHF, UHF",No,Notorious,2022,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-UV-TEN4,2AJGM,No
+Puxing,CB-50,,,,,,,,,,,,,,,W7PPX-CB-50,W7PPX,No
+Puxing,PX-2R,,,,,,,,,,,,,,,W7PPX-PX-2R,W7PPX,No
+Puxing,PX-328,,,,,,,,,,,,,,,W7PPX-PX-328,W7PPX,No
+Puxing,PX-333,,,,,,,,,,,,,,,W7PPX-PX-333,W7PPX,No
+Puxing,PX-358,,,,,,,,,,,,,,,W7PPX-PX-358,W7PPX,No
+Puxing,PX-359,,,,,,,,,,,,,,,W7PPX-PX-359,W7PPX,No
+Puxing,PX-508,,,,,,,,,,,,,,,W7PPX-PX-508,W7PPX,No
+Puxing,PX-558,,,,,,,,,,,,,,,W7PPX-PX-558,W7PPX,No
+Puxing,PX-568,,,,,,,,,,,,,,,W7PPX-PX-568,W7PPX,No
+Puxing,PX-578,,,,,,,,,,,,,,,W7PPX-PX-578,W7PPX,No
+Puxing,PX-666,,,,,,,,,,,,,,,W7PPX-PX-666,W7PPX,No
+Puxing,PX-728,,,,,,,,,,,,,,,W7PPX-PX-728,W7PPX,No
+Puxing,PX-729,,,,,,,,,,,,,,,W7PPX-PX-729,W7PPX,No
+Puxing,PX-777,,,,,,,,,,,,,,,W7PPX-PX-777,W7PPX,No
+Puxing,PX-888,,,,,,,,,,,,,,,W7PPX-PX-888,W7PPX,No
+Puxing,PX-888K,,,,,,,,,,,,,,,W7PPX-PX-888K,W7PPX,No
+Puxing,PX-999,,,,,,,,,,,,,,,W7PPX-PX-999,W7PPX,No
+Puxing,PX-A6,,,,,,,,,,,,,,,W7PPX-PX-A6,W7PPX,No
+Puxing,PX-UV973,,,,,,,,,,,,,,,W7PPX-PX-UV973,W7PPX,No
+Puxing,PX-UV9R,,,,,,,,,,,,,,,W7PPX-PX-UV9R,W7PPX,No
+Quansheng,TG-45AT,,,,,,,,,,,,,,,2ANMZ-TG-45AT,2ANMZ,No
+Quansheng,TG-6A,,,,,,,,,,,,,,,2ANMZ-TG-6A,2ANMZ,No
+Quansheng,TG-92A,,,,,,,,,,,,,,,2ANMZ-TG-92A,2ANMZ,No
+Quansheng,TG-K10AT,No,No,4000,$50,No,Backlit LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,qsfj.com,2ANMZ-TG-K10AT,2ANMZ,No
+Quansheng,TG-K4AT,,,,,,,,,,,,,,,2ANMZ-TG-K4AT,2ANMZ,No
+Quansheng,TG-UV2,,,,,,,,,,,,,,,2ANMZ-TG-UV2,2ANMZ,No
+Quansheng,TG-UV2 Plus,No,No,4000,$75,No,LCD,"VHF, UHF",No,Unknown,2018.0,qsfj.com,10W,No,,2ANMZ-TG-UV2PLUS,2ANMZ,No
+Quansheng,TG-UV2PLUS,No,No,4000,$55,No,Backlit LCD,"VHF, UHF",No,Unknown,2023,N/A,10W,No,qsfj.com,2ANMZ-TG-UV2PLUS,2ANMZ,No
+Quansheng,TK-11,No,Yes,3000,$75,No,Color LCD,Quad-Band,No,Unknown/Risk,2025,N/A,10W,No,qsfj.com,2ANMZ-TK-11,2ANMZ,No
+Quansheng,UV-K1 (Mini),No,Yes,1400,$35,No,"1.44"" LCD","VHF, UHF",No,Borderline,2024,N/A,5W,No,qsfj.com,2ANMZ-UV-K1,2ANMZ,No
+Quansheng,UV-K5(8),No,Yes,1600,$30,No,LCD,"VHF, UHF",No,Poor (Spurious),2023.0,qsfj.com,5W,No,,2ANMZ-UV-K5,2ANMZ,No
+Quansheng,UV-K5/K6,No,Yes,1600,$30,No,Dot-matrix,"VHF, UHF",No,Borderline,2023,"Retevis RA79, Wurui K5",5W,No,qsfj.com,2ANMZ-UV-K5K6,2ANMZ,No
+Radio Shack,HTX-202,,,,,,,,,,,,,,,FRS-HTX-202,FRS,No
+Radio Shack,HTX-404,,,,,,,,,,,,,,,FRS-HTX-404,FRS,No
+Radio Shack,HTX-420,,,,,,,,,,,,,,,FRS-HTX-420,FRS,No
+Radio Shack,PC-10,,,,,,,,,,,,,,,FRS-PC-10,FRS,No
+Radio Shack,PRO-201,,,,,,,,,,,,,,,FRS-PRO-201,FRS,No
+Radio Shack,PRO-250,,,,,,,,,,,,,,,FRS-PRO-250,FRS,No
+Radio Shack,TRC-222,,,,,,,,,,,,,,,FRS-TRC-222,FRS,No
+Radio Shack,TRC-231,,,,,,,,,,,,,,,FRS-TRC-231,FRS,No
+Radioddity,RT-21,,,,,,,,,,,,,,,2AJGM-RT-21,2AJGM,No
+Radioddity,RT-3S,,,,,,,,,,,,,,,2AJGM-RT-3S,2AJGM,No
+Radtel,IP68 (A1050),No,No,2000,$35,No,None,"VHF, UHF",No,Unknown,2024,RT-495 (Variant),5W,No,radtels.com,2AO8L-IP68,2AO8L,No
+Radtel,R8000,No,Yes,2800,$50,No,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,radtels.com,2AO8L-R8000,2AO8L,No
+Radtel,RT-330,No,Yes,3300,$90,No,Color LCD,Multi-Band,Yes,Unknown,2023,N/A,10W,No,radtels.com,2AO8L-RT-330,2AO8L,No
+Radtel,RT-420,No,Yes,2800,$40,No,Color LCD,"VHF, UHF",No,Unknown,2023,N/A,10W,No,radtels.com,2AO8L-RT-420,2AO8L,No
+Radtel,RT-463,No,Yes,3500,$40,No,Color LCD,Multi-Band,No,Mixed,2024,N/A,8W,No,radtels.com,2AO8L-RT-463,2AO8L,No
+Radtel,RT-470,,,,,,,,,,,,,,,2AO8L-RT-470,2AO8L,No
+Radtel,RT-470L,No,Yes,2600,$35,No,Color LCD,"VHF, UHF",No,Unknown,2023,SenHaix 8600,5W,No,radtels.com,2AO8L-RT-470L,2AO8L,No
+Radtel,RT-470X,No,Yes,2600,$45,No,Color LCD,"VHF, UHF",No,Unknown,2023,SenHaix 8800,5W,No,radtels.com,2AO8L-RT-470X,2AO8L,No
+Radtel,RT-480,,,,,,,,,,,,,,,2AO8L-RT-480,2AO8L,No
+Radtel,RT-490,No,Yes,2000,$50,No,Color LCD,Multi-Band,Yes,Mixed,2020,Baofeng/JJCC Generic,5W,No,radtels.com,2AO8L-RT-490,2AO8L,No
+Radtel,RT-493,No,No,2600,$45,No,Hidden LED,UHF,No,Mixed,2024,IP68 Waterproof (Variant),10W,No,radtels.com,2AO8L-RT-493,2AO8L,No
+Radtel,RT-4D,No,Yes,3500,$70,Yes,Color LCD,"VHF, UHF",No,Unknown,2024,"Bajeton DM-5000, IRadio DM-UV4R",5W,No,radtels.com,2AO8L-RT-4D,2AO8L,No
+Radtel,RT-580G,Yes (Pos.),Yes,3800,$60,No,Color LCD,136-600Mhz,Yes,Mixed,2024,N/A,10W,No,radtels.com,2AO8L-RT-580G,2AO8L,No
+Radtel,RT-590,No,Yes,1800,$30,No,LCD,Tri-Band,No,Mixed,2022,N/A,5W,No,radtels.com,2AO8L-RT-590,2AO8L,No
+Radtel,RT-600,No,Yes,2200,$40,No,LCD,Full Band RX,No,Unknown,2022,N/A,5W,No,radtels.com,2AO8L-RT-600,2AO8L,No
+Radtel,RT-630,No,Yes,2600,$50,No,Color LCD,136-629Mhz,No,Mixed,2024,N/A,10W,No,radtels.com,2AO8L-RT-630,2AO8L,No
+Radtel,RT-660,Yes (Analog),Yes,2600,$165,No,Color LCD,"VHF, UHF",Yes,Unknown,2023,N/A,7W,No,radtels.com,2AO8L-RT-660,2AO8L,No
+Radtel,RT-6D,Analog,Yes,3500,$90,Yes,Color LCD,"VHF, UHF",Yes,Unknown,2024,Bajeton DM-5000,10W,No,radtels.com,2AO8L-RT-6D,2AO8L,No
+Radtel,RT-730,No,Yes,2500,$30,No,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,radtels.com,2AO8L-RT-730,2AO8L,No
+Radtel,RT-752,No,Yes,2600,$45,No,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,radtels.com,2AO8L-RT-752,2AO8L,No
+Radtel,RT-7D,No,Yes,1800,$139,Yes,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,5W,No,radtels.com,2AO8L-RT-7D,2AO8L,No
+Radtel,RT-860,No,Yes,2000,$39,No,Color LCD,"VHF, UHF",Optional,Mixed,2024,Bajeton BJ-7700 / BinTolk BT7700,5W,No,radtels.com,2AO8L-RT-860,2AO8L,No
+Radtel,RT-880G,Analog,Yes,2400,$95,No,Color LCD,"VHF, UHF",Yes,Mixed,2024,N/A,10W,No,radtels.com,2AO8L-RT-880G,2AO8L,No
+Radtel,RT-890,No,Yes,2500,$40,No,Color LCD,"VHF, UHF",No,Unknown,2023,"Ruyage UV-890, IRadio UV-98",5W,No,radtels.com,2AO8L-RT-890,2AO8L,No
+Radtel,RT-900,No,Yes,2200,$35,No,Color LCD,"VHF, UHF",No,Mixed,2024,Bajeton BJ-8200 / BinTolk BT8200,8W,No,radtels.com,2AO8L-RT-900,2AO8L,No
+Radtel,RT-910B,No,Yes,1800,$35,No,Color LCD,"VHF, UHF, 6M",No,Unknown,2024,N/A,8W,No,radtels.com,2AO8L-RT-910B,2AO8L,No
+Radtel,RT-920,No,Yes,2500,$45,No,Color LCD,"VHF, UHF",No,Unknown,2025,Bajeton BJ-8300,8W,No,radtels.com,2AO8L-RT-920,2AO8L,No
+Radtel,RT-950,Analog,Yes,2600,$115,No,Color LCD,Multi-Band,Yes,Mixed,2024,Bajeton BJ-9000,10W,No,radtels.com,2AO8L-RT-950,2AO8L,No
+Radtel,RT-950 PRO,Analog,Yes,2600,$115,No,Color LCD,Multi-Band,Yes,Mixed,2024,Bajeton BJ-9000,10W,No,radtels.com,2AO8L-RT-950PRO,2AO8L,No
+Ranger,HR-2010,,,,,,,,,,,,,,,,,
+Rci,RCI-2950,,,,,,,,,,,,,,,,,
+Retevis,B3H,No,No,1620,$25,No,Hidden LED,FRS,No,Good,2025,"""3rd Gen RT22""",2W,No,retevis.com,2AHVB-B3H,2AHVB,No
+Retevis,H-777,,,,,,,,,,,,,,,2AHVB-H-777,2AHVB,No
+Retevis,HA1G,No,No,2800,$55,No,Color LCD,GMRS,No,Good (Part 95E),2024,Ailunce HA1G,5W,No,retevis.com,2AHVB-HA1G,2AHVB,No
+Retevis,HA1UV,No,Yes,2800,$60,No,Color LCD,"VHF, UHF",No,Good (IP67),2024,Ailunce HA1UV,5W,No,retevis.com,2AHVB-HA1UV,2AHVB,No
+Retevis,P3,No,No,2000,$335,Yes,Color LCD,UHF (DMR),No,Good,2024,N/A,5W,No,retevis.com,2AHVB-P3,2AHVB,No
+Retevis,RA79,No,Yes,1600,$35,No,Dot-matrix,"VHF, UHF",No,Borderline,2023,Quansheng UV-K5 (Direct Clone),5W,No,retevis.com,2AHVB-RA79,2AHVB,No
+Retevis,RA89,No,No,2500,$60,No,Color LCD,"VHF, UHF",No,Mixed,2023,Baofeng UV-17 Pro / GT-3WP,10W,No,retevis.com,2AHVB-RA89,2AHVB,No
+Retevis,RB48,No,No,2000,$30,No,LCD,FRS/GMRS,No,Good,2021,N/A,2W/5W,No,retevis.com,2AHVB-RB48,2AHVB,No
+Retevis,RT-1,,,,,,,,,,,,,,,2AHVB-RT-1,2AHVB,No
+Retevis,RT-21,,,,,,,,,,,,,,,2AHVB-RT-21,2AHVB,No
+Retevis,RT-22,,,,,,,,,,,,,,,2AHVB-RT-22,2AHVB,No
+Retevis,RT-24,,,,,,,,,,,,,,,2AHVB-RT-24,2AHVB,No
+Retevis,RT-3S,No,No,2000,$90,Yes,Color LCD,"VHF, UHF",Yes,Good,2018.0,Baofeng DM-1701,5W,No,retevis.com,2AHVB-RT-3S,2AHVB,No
+Retevis,RT-5R,No,No,1400,$25,No,Tri-color,"VHF, UHF",No,Notorious,2013,Baofeng UV-5R (Rebadge),5W,No,retevis.com,2AHVB-RT-5R,2AHVB,No
+Retevis,RT-85,No,No,1400,$40,No,LCD,"VHF, UHF",No,Mixed,2019.0,Baofeng UV-82 (Internals),5W,No,retevis.com,2AHVB-RT-85,2AHVB,No
+Retevis,RT-95,,,,,,,,,,,,,,,2AHVB-RT-95,2AHVB,No
+Retevis,RT3S,No,No,2000,$110,Yes,Color LCD,"VHF, UHF",Yes,Good,2018,TYT MD-UV380 (Rebadge),5W,No,retevis.com,2AHVB-RT3S,2AHVB,No
+Retevis,UV-5R,,,,,,,,,,,,,,,2AHVB-UV-5R,2AHVB,No
+Retevis,UV-82,,,,,,,,,,,,,,,2AHVB-UV-82,2AHVB,No
+Rexon,RL-102,,,,,,,,,,,,,,,IJJ-RL-102,IJJ,No
+Rexon,RL-105,,,,,,,,,,,,,,,IJJ-RL-105,IJJ,No
+Rexon,RL-328,,,,,,,,,,,,,,,IJJ-RL-328,IJJ,No
+Rexon,RL-402,,,,,,,,,,,,,,,IJJ-RL-402,IJJ,No
+Rexon,RL-502,,,,,,,,,,,,,,,IJJ-RL-502,IJJ,No
+Ritron,A-80,,,,,,,,,,,,,,,JZP-A-80,JZP,No
+Ritron,SLX-100,,,,,,,,,,,,,,,JZP-SLX-100,JZP,No
+Ritron,SLX-400,,,,,,,,,,,,,,,JZP-SLX-400,JZP,No
+Ritron,SST-144,,,,,,,,,,,,,,,JZP-SST-144,JZP,No
+Ritron,SST-444,,,,,,,,,,,,,,,JZP-SST-444,JZP,No
+Ruyage,UV-98,No,Yes,2800,$50,No,Color LCD,Multi-Band,No,Unknown,2024.0,Radtel RT-890,8W,No,ruyage.com,2AN5D-UV-98,2AN5D,No
+Sainsionic,S-1,,,,,,,,,,,,,,,2AJGM-S-1,2AJGM,No
+Sainsionic,S-320,,,,,,,,,,,,,,,2AJGM-S-320,2AJGM,No
+Sainsionic,S-360,,,,,,,,,,,,,,,2AJGM-S-360,2AJGM,No
+Sainsionic,S-520,,,,,,,,,,,,,,,2AJGM-S-520,2AJGM,No
+Sainsionic,S-9,,,,,,,,,,,,,,,2AJGM-S-9,2AJGM,No
+Santec,202,,,,,,,,,,,,,,,,,
+Scom,FC9 Pro,No,Yes,1600,$35,No,Dot-matrix,"VHF, UHF",No,Borderline,2023,Quansheng UV-K5 (Clone),5W,No,scom (AliExpress),,,
+Senhaix,8600,No,Yes,2000,$50,No,Color LCD,"VHF, UHF",No,Unknown,2021,Radtel RT-470L,5W,No,senhaix.com,2AWSI-8600,2AWSI,No
+Senhaix,8800,No,Yes,3000,$70,No,Color LCD,"VHF, UHF",No,Unknown,2022,Radtel RT-470X,10W,No,senhaix.com,2AWSI-8800,2AWSI,No
+Senhaix,GT-10,No,No,3000,$45,No,None,"VHF, UHF",No,Unknown,2023,N/A,10W,No,senhaix.com,2AWSI-GT-10,2AWSI,No
+Senhaix,GT-12,No,Yes,2000,$55,No,Color LCD,"VHF, UHF",No,Unknown,2022,Anysecu GT-12,5W,No,senhaix.com,2AWSI-GT-12,2AWSI,No
+Senhaix,SHX-8650,No,Yes,2500,$90,No,Color LCD,"VHF, UHF",No,Unknown,2023,N/A,8W,No,senhaix.com,2AWSI-SHX-8650,2AWSI,No
+Senhaix,SHX-8800,,,,,,,,,,,,,,,2AWSI-SHX-8800,2AWSI,No
+Soontone,UV-8R,,,,,,,,,,,,,,,2AJGM-UV-8R,2AJGM,No
+Standard,HX-390,,,,,,,,,,,,,,,K66-HX-390,K66,No
+Talkabout,T-2200,,,,,,,,,,,,,,,,,
+Talkabout,T-5500,,,,,,,,,,,,,,,,,
+Talkabout,T-5530,,,,,,,,,,,,,,,,,
+Talkabout,T-6200,,,,,,,,,,,,,,,,,
+Talkabout,T-6320,,,,,,,,,,,,,,,,,
+Talkabout,T-6400,,,,,,,,,,,,,,,,,
+Talkabout,T-6500,,,,,,,,,,,,,,,,,
+Talkabout,TF-1100,,,,,,,,,,,,,,,,,
+Talkabout,TF-1400,,,,,,,,,,,,,,,,,
+Tekk,D-1301,,,,,,,,,,,,,,,2AJGM-D-1301,2AJGM,No
+Tekk,D-200,,,,,,,,,,,,,,,2AJGM-D-200,2AJGM,No
+Tekk,D-30,,,,,,,,,,,,,,,2AJGM-D-30,2AJGM,No
+Tekk,D-400,,,,,,,,,,,,,,,2AJGM-D-400,2AJGM,No
+Tekk,D-500,,,,,,,,,,,,,,,2AJGM-D-500,2AJGM,No
+Tekk,D-600,,,,,,,,,,,,,,,2AJGM-D-600,2AJGM,No
+Tekk,D-700,,,,,,,,,,,,,,,2AJGM-D-700,2AJGM,No
+Tekk,D-800,,,,,,,,,,,,,,,2AJGM-D-800,2AJGM,No
+Tekk,D-900,,,,,,,,,,,,,,,2AJGM-D-900,2AJGM,No
+Tekk,X-1000,,,,,,,,,,,,,,,2AJGM-X-1000,2AJGM,No
+Tekk,X-600,,,,,,,,,,,,,,,2AJGM-X-600,2AJGM,No
+Tekk,X-700,,,,,,,,,,,,,,,2AJGM-X-700,2AJGM,No
+Tekk,X-800,,,,,,,,,,,,,,,2AJGM-X-800,2AJGM,No
+Tekk,X-900,,,,,,,,,,,,,,,2AJGM-X-900,2AJGM,No
+Tera,TC-500,,,,,,,,,,,,,,,2AL5L-TC-500,2AL5L,No
+Tera,TC-510,,,,,,,,,,,,,,,2AL5L-TC-510,2AL5L,No
+Tera,TC-580,,,,,,,,,,,,,,,2AL5L-TC-580,2AL5L,No
+Tera,TC-590,,,,,,,,,,,,,,,2AL5L-TC-590,2AL5L,No
+Tera,TR-500,,,,,,,,,,,,,,,2AL5L-TR-500,2AL5L,No
+Tera,TR-505,,,,,,,,,,,,,,,2AL5L-TR-505,2AL5L,No
+Tera,TR-590,,,,,,,,,,,,,,,2AL5L-TR-590,2AL5L,No
+Tidradio,TD-H3 Plus,No,Yes,2500,$45,No,"1.44"" TFT","VHF, 220, UHF",No,Good,2024,Talkpod (Competitor),5W,No,tidradio.com,2AUIUTD-TD-H3PLUS,2AUIUTD,No
+Tidradio,TD-H8,No,Yes,2500,$65,No,Color LCD,"VHF, 220, UHF",No,Good,2023,Rugged Radios (White Label),10W,No,tidradio.com,2AUIUTD-TD-H8,2AUIUTD,No
+Tidradio,TD-H9,Analog,Yes,2500,$75,No,"1.77"" TFT","VHF, UHF",Yes,Good,2025,N/A,10W,No,tidradio.com,2AUIUTD-TD-H9,2AUIUTD,No
+Tyt,md-uv380,,,,,,,,,,,,,,,2AMJR-MD-UV380,2AMJR,No
+Tyt,TH-2800,,,,,,,,,,,,,,,2AMJR-TH-2800,2AMJR,No
+Tyt,TH-446,,,,,,,,,,,,,,,2AMJR-TH-446,2AMJR,No
+Tyt,TH-F5,,,,,,,,,,,,,,,2AMJR-TH-F5,2AMJR,No
+Tyt,TH-F8,,,,,,,,,,,,,,,2AMJR-TH-F8,2AMJR,No
+Tyt,TH-UV3R,,,,,,,,,,,,,,,2AMJR-TH-UV3R,2AMJR,No
+Tyt,TH-UV8000D,,,,,,,,,,,,,,,2AMJR-TH-UV8000D,2AMJR,No
+Tyt,TH-UV88,,,,,,,,,,,,,,,2AMJR-TH-UV88,2AMJR,No
+Tyt,TH-UVF1,,,,,,,,,,,,,,,2AMJR-TH-UVF1,2AMJR,No
+Tyt,TH-UVF9,,,,,,,,,,,,,,,2AMJR-TH-UVF9,2AMJR,No
+Vero,UV-3R,,,,,,,,,,,,,,,2AJGM-UV-3R,2AJGM,No
+Vero,UV-X4,,,,,,,,,,,,,,,2AJGM-UV-X4,2AJGM,No
+Vero,UV-X5,,,,,,,,,,,,,,,2AJGM-UV-X5,2AJGM,No
+Vero,VGC VR-N76 FM and APRS dual band HT,,,,,,,,,,,,,,,2AJGM-VGCVR-N76FMANDAPRSDUALBANDHT,2AJGM,No
+Vero,VR N75 UHF programed & controled by Android,,,,,,,,,,,,,,,2AJGM-VRN75UHFPROGRAMEDCONTROLEDBYANDROID,2AJGM,No
+Vertex,FTH-2070,,,,,,,,,,,,,,,K6620-FTH-2070,K6620,No
+Vertex,VX-10 VHF-UHF,,,,,,,,,,,,,,,K6620-VX-10VHF-UHF,K6620,No
+Vertex,VX-420 Portable,,,,,,,,,,,,,,,K6620-VX-420PORTABLE,K6620,No
+Vertex,VX-800,,,,,,,,,,,,,,,K6620-VX-800,K6620,No
+Vertex,VX180,,,,,,,,,,,,,,,K6620-VX180,K6620,No
+Vertex,VX600,,,,,,,,,,,,,,,K6620-VX600,K6620,No
+Vertex,VXA-300 Pilot III,,,,,,,,,,,,,,,K6620-VXA-300PILOTIII,K6620,No
+Vertex,VXA-700 Spirit,,,,,,,,,,,,,,,K6620-VXA-700SPIRIT,K6620,No
+Vgc,VR-N75,Yes (A/D),No,2500,$140,No,Color LCD,"VHF, UHF",Yes,Good,2020,N/A,5W,Yes (App),https://www.google.com/search?q=verotelecom.com,,,
+Vgc,VR-N76,Yes (A/D),No,2500,$160,Yes,Dot-matrix,"VHF, UHF",Yes,Good,2024,BTECH UV-PRO (Rebrand),5W,Yes (App),https://www.google.com/search?q=verotelecom.com,,,
+Vhf Engineering,HT-144,,,,,,,,,,,,,,,,,
+Wilson Electronics,WE-800 2 Meter FM Transceiver,,,,,,,,,,,,,,,,,
+Wln,KD-C1,,,,,,,,,,,,,,,2ASNS-KD-C1,2ASNS,No
+Wouxun,KG UV8D,,,,,,,,,,,,,,,U4Z-KGUV8D,U4Z,No
+Wouxun,KG-1000G Plus,No,Yes,N/A (Mobile),$389,No,Detachable,GMRS,No,Good (Part 95E),2022,N/A,50W,No,wouxun.com,U4Z-KG-1000GPLUS,U4Z,No
+Wouxun,KG-689,,,,,,,,,,,,,,,U4Z-KG-689,U4Z,No
+Wouxun,KG-816,,,,,,,,,,,,,,,U4Z-KG-816,U4Z,No
+Wouxun,KG-833,,,,,,,,,,,,,,,U4Z-KG-833,U4Z,No
+Wouxun,KG-935H,No,No,2600,$150,No,Color LCD,Tri-Band (220),No,Excellent,2025,KG-935G (GMRS Variant),8W,No,wouxun.com,U4Z-KG-935H,U4Z,No
+Wouxun,KG-Q10H,No,Yes,3000,$220,No,Color LCD,Quad-Band,Yes,Excellent,2024,N/A,6W,No,wouxun.com,U4Z-KG-Q10H,U4Z,No
+Wouxun,KG-UV2D,,,,,,,,,,,,,,,U4Z-KG-UV2D,U4Z,No
+Wouxun,KG-UV3D,,,,,,,,,,,,,,,U4Z-KG-UV3D,U4Z,No
+Wouxun,KG-UV6D,,,,,,,,,,,,,,,U4Z-KG-UV6D,U4Z,No
+Wouxun,KG-UV6X,,,,,,,,,,,,,,,U4Z-KG-UV6X,U4Z,No
+Wouxun,KG-UV7D,,,,,,,,,,,,,,,U4Z-KG-UV7D,U4Z,No
+Wouxun,KG-UV8D+,,,,,,,,,,,,,,,U4Z-KG-UV8D,U4Z,No
+Wouxun,KG-UV980P,No,Yes,N/A (Mobile),$329,No,Detachable,Quad-Band,No,Good,2020,N/A,50W,No,wouxun.com,U4Z-KG-UV980P,U4Z,No
+Wouxun,KG-UV9D,No,Yes,2000,$110,No,Color LCD,"VHF, UHF",No,Good,2015,N/A,5W,No,wouxun.com,U4Z-KG-UV9D,U4Z,No
+Wouxun,KG-UV9D Plus+,,,,,,,,,,,,,,,U4Z-KG-UV9DPLUS,U4Z,No
+Wouxun,KG-UV9P,No,Yes,3200,$150,No,Color LCD,"VHF, UHF",No,Good,2019,N/A,9W,No,wouxun.com,U4Z-KG-UV9P,U4Z,No
+Wouxun,KG-UV9PX,,,,,,,,,,,,,,,U4Z-KG-UV9PX,U4Z,No
+Wouxun,KG-UVD1,,,,,,,,,,,,,,,U4Z-KG-UVD1,U4Z,No
+Wouxun,KG-UVD1P,,,,,,,,,,,,,,,U4Z-KG-UVD1P,U4Z,No
+Wouxun,KG-UVD2,,,,,,,,,,,,,,,U4Z-KG-UVD2,U4Z,No
+Wouxun,KG-XS20H,No,No,N/A (Mobile),$159,No,Color LCD,Tri-Band (220),No,Good,2024,N/A,20W,No,wouxun.com,U4Z-KG-XS20H,U4Z,No
+Wouxun,KGUV8H,,,,,,,,,,,,,,,U4Z-KGUV8H,U4Z,No
+Yaesu,FT-10R,,,,,,,,,,,,,,,K6620-FT-10R,K6620,No
+Yaesu,FT-11R,,,,,,,,,,,,,,,K6620-FT-11R,K6620,No
+Yaesu,FT-1DR,Yes,Yes,1800,Discont.,No,LCD,"VHF, UHF",Yes,Good,2013.0,yaesu.com,5W,No,,K6620-FT-1DR,K6620,No
+Yaesu,FT-203R,,,,,,,,,,,,,,,K6620-FT-203R,K6620,No
+Yaesu,FT-208R,,,,,,,,,,,,,,,K6620-FT-208R,K6620,No
+Yaesu,FT-209R,,,,,,,,,,,,,,,K6620-FT-209R,K6620,No
+Yaesu,FT-23R,,,,,,,,,,,,,,,K6620-FT-23R,K6620,No
+Yaesu,FT-250R,,,,,,,,,,,,,,,K6620-FT-250R,K6620,No
+Yaesu,FT-25R,No,No,1950,$75,No,LCD,VHF,No,Good,2017.0,yaesu.com,5W,No,,K6620-FT-25R,K6620,No
+Yaesu,FT-26,,,,,,,,,,,,,,,K6620-FT-26,K6620,No
+Yaesu,FT-270R,,,,,,,,,,,,,,,K6620-FT-270R,K6620,No
+Yaesu,FT-2D,Yes,Yes,2200,Discont.,No,Touchscreen,"VHF, UHF",Yes,Good,2015.0,yaesu.com,5W,No,,K6620-FT-2D,K6620,No
+Yaesu,FT-2DR,,,,,,,,,,,,,,,K6620-FT-2DR,K6620,No
+Yaesu,FT-2X,,,,,,,,,,,,,,,K6620-FT-2X,K6620,No
+Yaesu,FT-30,,,,,,,,,,,,,,,K6620-FT-30,K6620,No
+Yaesu,FT-33R,,,,,,,,,,,,,,,K6620-FT-33R,K6620,No
+Yaesu,FT-3D,Yes,Yes,2200,Discont.,No,Color Touch,"VHF, UHF",Yes,Good,2019.0,yaesu.com,5W,No,,K6620-FT-3D,K6620,No
+Yaesu,FT-3DR,,,,,,,,,,,,,,,K6620-FT-3DR,K6620,No
+Yaesu,FT-40,,,,,,,,,,,,,,,K6620-FT-40,K6620,No
+Yaesu,FT-411E,,,,,,,,,,,,,,,K6620-FT-411E,K6620,No
+Yaesu,FT-41R,,,,,,,,,,,,,,,K6620-FT-41R,K6620,No
+Yaesu,FT-470,,,,,,,,,,,,,,,K6620-FT-470,K6620,No
+Yaesu,FT-4VR,,,,,,,,,,,,,,,K6620-FT-4VR,K6620,No
+Yaesu,FT-4X,No,No,1750,$70,No,LCD,"VHF, UHF",No,Good,2018.0,yaesu.com,5W,No,,K6620-FT-4X,K6620,No
+Yaesu,FT-4XE,No,Yes,1750,$70,No,LCD,"VHF, UHF",No,Excellent,2018,FT-4XR (US Version),5W,No,yaesu.com,K6620-FT-4XE,K6620,No
+Yaesu,FT-4XR,,,,,,,,,,,,,,,K6620-FT-4XR,K6620,No
+Yaesu,FT-50R,,,,,,,,,,,,,,,K6620-FT-50R,K6620,No
+Yaesu,FT-51R,,,,,,,,,,,,,,,K6620-FT-51R,K6620,No
+Yaesu,FT-530,,,,,,,,,,,,,,,K6620-FT-530,K6620,No
+Yaesu,FT-5D,Yes,Yes,2200,$450,No,Color Touch,"VHF, UHF",Yes,Good,2021.0,yaesu.com,5W,No,,K6620-FT-5D,K6620,No
+Yaesu,FT-5DE,Yes (Digital),Yes,2200,$450,C4FM,Touch TFT,"VHF, UHF",Yes,Excellent,2021,FT-5DR (US Version),5W,No,yaesu.com,K6620-FT-5DE,K6620,No
+Yaesu,FT-5DR,,,,,,,,,,,,,,,K6620-FT-5DR,K6620,No
+Yaesu,FT-60R,No,Yes,1400,$150,No,LCD,"VHF, UHF",No,Good,2004.0,yaesu.com,5W,No,,K6620-FT-60R,K6620,No
+Yaesu,FT-65E,No,Yes,1950,$90,No,LCD,"VHF, UHF",No,Excellent,2017,FT-65R (US Version),5W,No,yaesu.com,K6620-FT-65E,K6620,No
+Yaesu,FT-65R,No,No,1950,$90,No,LCD,"VHF, UHF",No,Good,2017.0,yaesu.com,5W,No,,K6620-FT-65R,K6620,No
+Yaesu,FT-703R,,,,,,,,,,,,,,,K6620-FT-703R,K6620,No
+Yaesu,FT-708R,,,,,,,,,,,,,,,K6620-FT-708R,K6620,No
+Yaesu,FT-70D,No,Yes,1800,$170,No,LCD,"VHF, UHF",No,Good,2017.0,yaesu.com,5W,No,,K6620-FT-70D,K6620,No
+Yaesu,FT-70DR,,,,,,,,,,,,,,,K6620-FT-70DR,K6620,No
+Yaesu,FT-70G,,,,,,,,,,,,,,,K6620-FT-70G,K6620,No
+Yaesu,FT-727,,,,,,,,,,,,,,,K6620-FT-727,K6620,No
+Yaesu,FT-73R,,,,,,,,,,,,,,,K6620-FT-73R,K6620,No
+Yaesu,FT-76,,,,,,,,,,,,,,,K6620-FT-76,K6620,No
+Yaesu,FT-817,,,,,,,,,,,,,,,K6620-FT-817,K6620,No
+Yaesu,FT-818,,,,,,,,,,,,,,,K6620-FT-818,K6620,No
+Yaesu,FT-911,,,,,,,,,,,,,,,K6620-FT-911,K6620,No
+Yaesu,VX-110,,,,,,,,,,,,,,,K6620-VX-110,K6620,No
+Yaesu,VX-150,,,,,,,,,,,,,,,K6620-VX-150,K6620,No
+Yaesu,VX-170,,,,,,,,,,,,,,,K6620-VX-170,K6620,No
+Yaesu,VX-1R,,,,,,,,,,,,,,,K6620-VX-1R,K6620,No
+Yaesu,VX-2R,,,,,,,,,,,,,,,K6620-VX-2R,K6620,No
+Yaesu,VX-3R,No,Yes,1100,Discont.,No,LCD,"VHF, UHF",No,Good,2007.0,yaesu.com,1.5W/1W,No,,K6620-VX-3R,K6620,No
+Yaesu,VX-5R,,,,,,,,,,,,,,,K6620-VX-5R,K6620,No
+Yaesu,VX-6R,No,Yes,1500,$240,No,LCD,"VHF, UHF, 220",No,Good,2005.0,yaesu.com,5W/1.5W,No,,K6620-VX-6R,K6620,No
+Yaesu,VX-7R,,,,,,,,,,,,,,,K6620-VX-7R,K6620,No
+Yaesu,VX-8DR,Yes,Yes,1800,Discont.,No,Dot Matrix,"VHF, UHF, 220",Optional,Good,2009.0,yaesu.com,5W,No,,K6620-VX-8DR,K6620,No
+Yaesu,VX-8GR,,,,,,,,,,,,,,,K6620-VX-8GR,K6620,No
+Yaesu,VX-8R,,,,,,,,,,,,,,,K6620-VX-8R,K6620,No
+Zastone,M10,No,Yes,2800,$45,No,Color LCD,"VHF, UHF",No,Unknown,2024,N/A,10W,No,zastone.com,2AM7H-M10,2AM7H,No
