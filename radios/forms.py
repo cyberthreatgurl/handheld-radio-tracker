@@ -112,3 +112,17 @@ class RadioSearchForm(forms.Form):
             'placeholder': 'Filter by brand...'
         })
     )
+
+
+class ImportGranteeXMLForm(forms.Form):
+    """Form for uploading FCC XML files"""
+    
+    xml_file = forms.FileField(
+        label="FCC XML File",
+        help_text="Upload FCC XML file for a specific grantee."
+    )
+    overwrite_records = forms.BooleanField(
+        label="Overwrite existing records",
+        required=False,
+        help_text="If checked, existing records will be updated."
+    )

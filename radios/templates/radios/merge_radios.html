@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="max-w-2xl mx-auto bg-white shadow rounded-lg p-8 mt-8">
+    <h2 class="text-2xl font-bold text-indigo-700 mb-6">Merge Radios</h2>
+    <form method="post">
+      {% csrf_token %}
+      {% for radio_id in radio_ids %}
+        <input type="hidden" name="radio_ids" value="{{ radio_id }}">
+      {% endfor %}
+      <div class="mb-6">
+        <p class="mb-2 text-gray-700">You are about to merge the following radios:</p>
+        <ul class="list-disc pl-6 mb-4">
+          {% for radio in radios %}
+            <li><strong>{{ radio.brand }}</strong> {{ radio.model }} (FCC ID: {{ radio.fcc_id }})</li>
+          {% endfor %}
+        </ul>
+        <p class="mb-2 text-gray-700">For each field, select which value to keep:</p>
+        <div class="space-y-4">
+          {% for field in form %}
+            <div>
+              <label class="block font-semibold text-gray-800 mb-1">{{ field.label }}</label>
+              {{ field }}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <button type="submit" name="confirm" class="w-full flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded shadow transition mt-6">
+        Confirm Merge
+      </button>
+      <a href="{% url 'radio_list' %}" class="block text-center mt-4 text-indigo-600 hover:underline">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'admin/base_site.html' %}
+{% block content %}
+  <h1>Globally Rename Brand</h1>
+  <p>Renaming <strong>{{ brand.name }}</strong> will update both the Brand and all Radio records with this name.</p>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" name="apply" value="Rename" class="default">
+    <a href="../" class="button">Cancel</a>
+  </form>
+{% endblock %}

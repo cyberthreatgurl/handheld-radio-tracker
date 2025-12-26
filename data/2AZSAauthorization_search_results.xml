@@ -1,0 +1,956 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<Results>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT490</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>06/27/2023</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT490</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>06/27/2023</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>520.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT860</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>04/22/2025</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT860</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>04/22/2025</grant_date>
+	 <lower_freq_mhz>350.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>390.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT860</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>04/22/2025</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>520.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT900</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/11/2025</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT900</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/11/2025</grant_date>
+	 <lower_freq_mhz>220.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>260.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT900</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/11/2025</grant_date>
+	 <lower_freq_mhz>350.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>390.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT900</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/11/2025</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>520.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT88</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>07/23/2021</grant_date>
+	 <lower_freq_mhz>462.56250000</lower_freq_mhz>
+	 <upper_freq_mhz>462.71250000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT88</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>07/23/2021</grant_date>
+	 <lower_freq_mhz>467.56250000</lower_freq_mhz>
+	 <upper_freq_mhz>467.71250000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT830</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/02/2023</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT830</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/02/2023</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>520.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT890</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>10/23/2023</grant_date>
+	 <lower_freq_mhz></lower_freq_mhz>
+	 <upper_freq_mhz></upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT12</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>05/16/2021</grant_date>
+	 <lower_freq_mhz>462.55000000</lower_freq_mhz>
+	 <upper_freq_mhz>462.72500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT12</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>05/16/2021</grant_date>
+	 <lower_freq_mhz>467.56250000</lower_freq_mhz>
+	 <upper_freq_mhz>467.71250000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT752</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>09/19/2024</grant_date>
+	 <lower_freq_mhz>136.02500000</lower_freq_mhz>
+	 <upper_freq_mhz>173.97500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT752</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>09/19/2024</grant_date>
+	 <lower_freq_mhz>406.12500000</lower_freq_mhz>
+	 <upper_freq_mhz>469.97500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT590</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>05/14/2023</grant_date>
+	 <lower_freq_mhz>108.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>136.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT470X</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>06/27/2023</grant_date>
+	 <lower_freq_mhz></lower_freq_mhz>
+	 <upper_freq_mhz></upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT630</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/06/2023</grant_date>
+	 <lower_freq_mhz>65.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>108.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT630</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/06/2023</grant_date>
+	 <lower_freq_mhz>108.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>136.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT630</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/06/2023</grant_date>
+	 <lower_freq_mhz>162.40000000</lower_freq_mhz>
+	 <upper_freq_mhz>162.55000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT830</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/02/2023</grant_date>
+	 <lower_freq_mhz></lower_freq_mhz>
+	 <upper_freq_mhz></upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT493</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/11/2025</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT493</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/11/2025</grant_date>
+	 <lower_freq_mhz>457.55000000</lower_freq_mhz>
+	 <upper_freq_mhz>467.72500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT493</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/11/2025</grant_date>
+	 <lower_freq_mhz>457.56250000</lower_freq_mhz>
+	 <upper_freq_mhz>467.71250000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT493</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/11/2025</grant_date>
+	 <lower_freq_mhz>462.55000000</lower_freq_mhz>
+	 <upper_freq_mhz>462.72500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT493</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/11/2025</grant_date>
+	 <lower_freq_mhz>462.56250000</lower_freq_mhz>
+	 <upper_freq_mhz>462.71250000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT730</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/19/2024</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>629.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT91020</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/16/2025</grant_date>
+	 <lower_freq_mhz>88.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>108.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-R260</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/12/2021</grant_date>
+	 <lower_freq_mhz>462.55000000</lower_freq_mhz>
+	 <upper_freq_mhz>462.72500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-R260</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/12/2021</grant_date>
+	 <lower_freq_mhz>467.56250000</lower_freq_mhz>
+	 <upper_freq_mhz>467.71250000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT590</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>05/14/2023</grant_date>
+	 <lower_freq_mhz>50.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>76.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT590</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>05/14/2023</grant_date>
+	 <lower_freq_mhz>76.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>108.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT590</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>05/14/2023</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT590</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>05/14/2023</grant_date>
+	 <lower_freq_mhz>174.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>350.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT590</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>05/14/2023</grant_date>
+	 <lower_freq_mhz>350.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>470.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT590</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>05/14/2023</grant_date>
+	 <lower_freq_mhz>470.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>600.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT890</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>10/23/2023</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT890</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>10/23/2023</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT630</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/06/2023</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT630</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/06/2023</grant_date>
+	 <lower_freq_mhz>220.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>260.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT630</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/06/2023</grant_date>
+	 <lower_freq_mhz>330.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>390.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT630</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/06/2023</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>520.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT470X</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>06/27/2023</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT470X</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>06/27/2023</grant_date>
+	 <lower_freq_mhz>220.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>260.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT470X</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>06/27/2023</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>520.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT91020</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/16/2025</grant_date>
+	 <lower_freq_mhz>108.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>136.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT91020</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/16/2025</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT91020</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/16/2025</grant_date>
+	 <lower_freq_mhz>220.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>260.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT91020</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/16/2025</grant_date>
+	 <lower_freq_mhz>350.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>390.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT91020</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/16/2025</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>520.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-6D880</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/14/2025</grant_date>
+	 <lower_freq_mhz>108.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>136.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-6D880</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/14/2025</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-6D880</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/14/2025</grant_date>
+	 <lower_freq_mhz>220.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>260.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-6D880</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/14/2025</grant_date>
+	 <lower_freq_mhz>350.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>390.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-6D880</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>08/14/2025</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>520.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT490</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>06/27/2023</grant_date>
+	 <lower_freq_mhz>108.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>136.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT4D</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/04/2024</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT4D</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/04/2024</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>470.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-7518000</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>09/19/2024</grant_date>
+	 <lower_freq_mhz>136.02500000</lower_freq_mhz>
+	 <upper_freq_mhz>173.97500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-7518000</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>09/19/2024</grant_date>
+	 <lower_freq_mhz>406.12500000</lower_freq_mhz>
+	 <upper_freq_mhz>469.12500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT493</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/11/2025</grant_date>
+	 <lower_freq_mhz>462.55000000</lower_freq_mhz>
+	 <upper_freq_mhz>462.72500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT493</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/11/2025</grant_date>
+	 <lower_freq_mhz>462.56250000</lower_freq_mhz>
+	 <upper_freq_mhz>462.71250000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT493</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/11/2025</grant_date>
+	 <lower_freq_mhz>467.55000000</lower_freq_mhz>
+	 <upper_freq_mhz>467.72500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT493</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/11/2025</grant_date>
+	 <lower_freq_mhz>467.56250000</lower_freq_mhz>
+	 <upper_freq_mhz>467.71250000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Xiamen Radtel Electronics Co., Ltd</applicant_name>
+     <address></address>
+     <city>Xiamen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>361004</zip_code>
+     <fcc_id>2AZSA-RT730</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/19/2024</grant_date>
+	 <lower_freq_mhz></lower_freq_mhz>
+	 <upper_freq_mhz></upper_freq_mhz>
+  </Row>
+
+</Results> 

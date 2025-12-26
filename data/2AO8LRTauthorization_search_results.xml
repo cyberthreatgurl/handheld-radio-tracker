@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<Results>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-HUB01</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>02/09/2022</grant_date>
+	 <lower_freq_mhz>13.56000000</lower_freq_mhz>
+	 <upper_freq_mhz>13.56000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/10/2021</grant_date>
+	 <lower_freq_mhz>5180.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5240.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/10/2021</grant_date>
+	 <lower_freq_mhz>5190.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5230.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/10/2021</grant_date>
+	 <lower_freq_mhz>5260.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5320.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/10/2021</grant_date>
+	 <lower_freq_mhz>5270.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5310.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/10/2021</grant_date>
+	 <lower_freq_mhz>5500.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5700.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/10/2021</grant_date>
+	 <lower_freq_mhz>5745.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5825.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WSI01</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/14/2025</grant_date>
+	 <lower_freq_mhz>2392.80000000</lower_freq_mhz>
+	 <upper_freq_mhz>2398.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>12/22/2021</grant_date>
+	 <lower_freq_mhz>2412.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2462.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>12/15/2022</grant_date>
+	 <lower_freq_mhz>2402.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>12/15/2022</grant_date>
+	 <lower_freq_mhz>2412.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2462.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WSI01</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/14/2025</grant_date>
+	 <lower_freq_mhz>2402.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2478.80000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-SBT01</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>09/30/2021</grant_date>
+	 <lower_freq_mhz>2402.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2478.80000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WSI01</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/14/2025</grant_date>
+	 <lower_freq_mhz>13.56000000</lower_freq_mhz>
+	 <upper_freq_mhz>13.56000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-HUB01</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>02/09/2022</grant_date>
+	 <lower_freq_mhz>2402.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2478.80000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/09/2021</grant_date>
+	 <lower_freq_mhz>2402.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/09/2021</grant_date>
+	 <lower_freq_mhz>2412.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2462.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-SBT01</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>09/30/2021</grant_date>
+	 <lower_freq_mhz>2392.80000000</lower_freq_mhz>
+	 <upper_freq_mhz>2398.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-HUB01</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>02/09/2022</grant_date>
+	 <lower_freq_mhz>2392.80000000</lower_freq_mhz>
+	 <upper_freq_mhz>2398.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Change in Identification</application_purpose>
+     <grant_date>12/10/2021</grant_date>
+	 <lower_freq_mhz>2402.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>12/22/2021</grant_date>
+	 <lower_freq_mhz>5180.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5240.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>12/22/2021</grant_date>
+	 <lower_freq_mhz>5190.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5230.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>12/22/2021</grant_date>
+	 <lower_freq_mhz>5260.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5320.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>12/22/2021</grant_date>
+	 <lower_freq_mhz>5270.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5310.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>12/22/2021</grant_date>
+	 <lower_freq_mhz>5500.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5700.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>GE Healthcare Finland Oy</applicant_name>
+     <address></address>
+     <city>Helsinki</city>
+     <state>N/A</state>
+     <country>Finland</country>
+     <zip_code>00510</zip_code>
+     <fcc_id>2AO8L-WL18DBMOD</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>12/22/2021</grant_date>
+	 <lower_freq_mhz>5745.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>5825.00000000</upper_freq_mhz>
+  </Row>
+
+</Results> 
