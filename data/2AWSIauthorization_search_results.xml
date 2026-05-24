@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<Results>
+
+  <Row>
+     <applicant_name>Fujian Yiyun Vegue Electronic Technology Co., Ltd.</applicant_name>
+     <address>Room 3-D, Building D, No.24 Houyu Road, Jinan District</address>
+     <city>Fuzhou City, Fujian Province</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>N/A</zip_code>
+     <fcc_id>2AWSI-VS-0866</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/09/2020</grant_date>
+	 <lower_freq_mhz>2402.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Fujian Yiyun Vegue Electronic Technology Co., Ltd.</applicant_name>
+     <address>Room 3-D, Building D, No.24 Houyu Road, Jinan District</address>
+     <city>Fuzhou City, Fujian Province</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>N/A</zip_code>
+     <fcc_id>2AWSI-KWP022</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/09/2020</grant_date>
+	 <lower_freq_mhz>556.50000000</lower_freq_mhz>
+	 <upper_freq_mhz>566.50000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Fujian Yiyun Vegue Electronic Technology Co., Ltd.</applicant_name>
+     <address>Room 3-D, Building D, No.24 Houyu Road, Jinan District</address>
+     <city>Fuzhou City, Fujian Province</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>N/A</zip_code>
+     <fcc_id>2AWSI-KWP022</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/09/2020</grant_date>
+	 <lower_freq_mhz>585.50000000</lower_freq_mhz>
+	 <upper_freq_mhz>592.50000000</upper_freq_mhz>
+  </Row>
+
+</Results> 

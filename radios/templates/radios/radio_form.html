@@ -57,6 +57,29 @@
                             <p class="mt-2 text-sm text-red-600">{{ form.model.errors.0 }}</p>
                             {% endif %}
                         </div>
+                        <div class="flex items-center mt-6">
+                            {{ form.is_a_whitelabel }}
+                            <label for="{{ form.is_a_whitelabel.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                This radio is a white label model
+                            </label>
+                        </div>
+                        <div>
+                            <label for="{{ form.manufacturer.id_for_label }}" class="block text-sm font-medium text-gray-700">Original Manufacturer</label>
+                            {{ form.manufacturer }}
+                            {% if form.manufacturer.help_text %}
+                            <p class="mt-1 text-sm text-gray-500">{{ form.manufacturer.help_text }}</p>
+                            {% endif %}
+                            {% if form.manufacturer.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.manufacturer.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.radio_type.id_for_label }}" class="block text-sm font-medium text-gray-700">Type</label>
+                            {{ form.radio_type }}
+                            {% if form.radio_type.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.radio_type.errors.0 }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
@@ -123,6 +146,10 @@
                         <div>
                             <label for="{{ form.rebadges_clones.id_for_label }}" class="block text-sm font-medium text-gray-700">Known Rebadges / Clones</label>
                             {{ form.rebadges_clones }}
+                        </div>
+                        <div>
+                            <label for="{{ form.white_label_vendors.id_for_label }}" class="block text-sm font-medium text-gray-700">White Label Vendors</label>
+                            {{ form.white_label_vendors }}
                         </div>
                         <div>
                             <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700">Website</label>

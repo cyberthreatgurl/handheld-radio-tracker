@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<Results>
+
+  <Row>
+     <applicant_name>Vero Global Communication Co., Limited</applicant_name>
+     <address>No.1A301#, Xincheng Wangjiao, Detai Road Economy and Technology Development Zone</address>
+     <city>Quanzhou, Fujian</city>
+     <state></state>
+     <country>China</country>
+     <zip_code></zip_code>
+     <fcc_id>XAEVERO200</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/16/2009</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>454.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Vero Global Communication Co., Limited</applicant_name>
+     <address>No.1A301#, Xincheng Wangjiao, Detai Road Economy and Technology Development Zone</address>
+     <city>Quanzhou, Fujian</city>
+     <state></state>
+     <country>China</country>
+     <zip_code></zip_code>
+     <fcc_id>XAEVERO200</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/16/2009</grant_date>
+	 <lower_freq_mhz>456.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>462.53750000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Vero Global Communication Co., Limited</applicant_name>
+     <address>No.1A301#, Xincheng Wangjiao, Detai Road Economy and Technology Development Zone</address>
+     <city>Quanzhou, Fujian</city>
+     <state></state>
+     <country>China</country>
+     <zip_code></zip_code>
+     <fcc_id>XAEVERO200</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/16/2009</grant_date>
+	 <lower_freq_mhz>462.73750000</lower_freq_mhz>
+	 <upper_freq_mhz>467.53750000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>Vero Global Communication Co., Limited</applicant_name>
+     <address>No.1A301#, Xincheng Wangjiao, Detai Road Economy and Technology Development Zone</address>
+     <city>Quanzhou, Fujian</city>
+     <state></state>
+     <country>China</country>
+     <zip_code></zip_code>
+     <fcc_id>XAEVERO200</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/16/2009</grant_date>
+	 <lower_freq_mhz>467.73750000</lower_freq_mhz>
+	 <upper_freq_mhz>470.00000000</upper_freq_mhz>
+  </Row>
+
+</Results> 

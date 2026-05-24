@@ -1,0 +1,760 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<Results>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6TK-688A</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/18/2008</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6TK-688A</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/18/2008</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-300UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/19/2021</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-300UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/19/2021</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6TK-688A</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>04/27/2010</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6TK-688A</fcc_id>
+     <application_purpose>Class II Permissive Change</application_purpose>
+     <grant_date>04/27/2010</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-607</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/15/2016</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-607</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/15/2016</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-850</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/07/2016</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-850</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/07/2016</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-6R</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/28/2016</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-6R</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/28/2016</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6-200UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>11/06/2018</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6-200UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>11/06/2018</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-300UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/19/2021</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-300UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/19/2021</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-300UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/19/2021</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6NC3330</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>02/27/2014</grant_date>
+	 <lower_freq_mhz>450.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>470.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6NC-6R</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>12/02/2010</grant_date>
+	 <lower_freq_mhz>420.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-880</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>12/17/2014</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-880</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>12/17/2014</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR-880UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/26/2022</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR-880UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/26/2022</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR8200</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/29/2022</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR8200</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/29/2022</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR-100</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/07/2022</grant_date>
+	 <lower_freq_mhz></lower_freq_mhz>
+	 <upper_freq_mhz></upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6NC-3100</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/30/2010</grant_date>
+	 <lower_freq_mhz>150.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>170.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6TD-780</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>01/17/2008</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-8500</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/18/2016</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DM-8500</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/18/2016</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR-350</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>05/28/2019</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-700UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/16/2023</grant_date>
+	 <lower_freq_mhz>2402.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-700UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/16/2023</grant_date>
+	 <lower_freq_mhz>2402.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR8200</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/29/2022</grant_date>
+	 <lower_freq_mhz></lower_freq_mhz>
+	 <upper_freq_mhz></upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6IP-607</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/30/2012</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6IP-607</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/30/2012</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-700UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/16/2023</grant_date>
+	 <lower_freq_mhz>136.02500000</lower_freq_mhz>
+	 <upper_freq_mhz>173.97500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-700UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/16/2023</grant_date>
+	 <lower_freq_mhz>406.12500000</lower_freq_mhz>
+	 <upper_freq_mhz>479.97500000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR-100</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/07/2022</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR-100</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/07/2022</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6IP-609</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/30/2012</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6IP-609</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/30/2012</grant_date>
+	 <lower_freq_mhz>406.70000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6TD-790</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>11/13/2007</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6TD-790</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>11/13/2007</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-700UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/16/2023</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6CDR-700UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>08/16/2023</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6TR-6000DM</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/05/2017</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>406.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6TR-6000DM</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>07/05/2017</grant_date>
+	 <lower_freq_mhz>406.10000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6IP-VU1A</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/30/2012</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6IP-VU1A</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>04/30/2012</grant_date>
+	 <lower_freq_mhz>420.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>520.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6-600UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>10/19/2018</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6-600UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>10/19/2018</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR-880UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/26/2022</grant_date>
+	 <lower_freq_mhz>136.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>174.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD</applicant_name>
+     <address>NO.1 FENGSHOU RD., ZHAOFENG IND. ZONE FENGZE DISTRICT, QUANZHOU, FUJIAN, CHINA.</address>
+     <city>Quanzhou</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>362000</zip_code>
+     <fcc_id>VO6DR-880UV</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/26/2022</grant_date>
+	 <lower_freq_mhz>400.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>480.00000000</upper_freq_mhz>
+  </Row>
+
+</Results> 

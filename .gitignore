@@ -10,10 +10,12 @@ __pycache__/
 dist/
 build/
 *.log
+fix*.py
 *.pot
 *.mo
 .env
 .venv
+data/*.xmnl
 db.sqlite3
 .DS_Store
 staticfiles/

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<Results>
+
+  <Row>
+     <applicant_name>SHENZHEN ABREE COMMUNICATION TECHNOLOGY CO., LTD</applicant_name>
+     <address>Flr.3,Bld. No.50, Second Industrial Zone, Xitian Community,Guangming New Dist.,</address>
+     <city>Shenzhen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>518106</zip_code>
+     <fcc_id>2AWNTABR06636A</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/19/2020</grant_date>
+	 <lower_freq_mhz>13.56000000</lower_freq_mhz>
+	 <upper_freq_mhz>13.56000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>SHENZHEN ABREE COMMUNICATION TECHNOLOGY CO., LTD</applicant_name>
+     <address>Flr.3,Bld. No.50, Second Industrial Zone, Xitian Community,Guangming New Dist.,</address>
+     <city>Shenzhen</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>518106</zip_code>
+     <fcc_id>2AWNTABR06636A</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>06/19/2020</grant_date>
+	 <lower_freq_mhz>2412.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2462.00000000</upper_freq_mhz>
+  </Row>
+
+</Results> 

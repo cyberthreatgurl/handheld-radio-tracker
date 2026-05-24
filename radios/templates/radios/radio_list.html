@@ -54,19 +54,66 @@
                       <input type="checkbox" id="select-all" onclick="document.querySelectorAll('.select-radio').forEach(cb => cb.checked = this.checked)">
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Brand & Model
+                        <a href="?sort=brand&order={% if current_sort == 'brand' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
+                            Brand & Model
+                            {% if current_sort == 'brand' %}
+                                <span class="ml-1">{% if current_order == 'asc' %}↑{% else %}↓{% endif %}</span>
+                            {% endif %}
+                        </a>
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Year
+                        <a href="?sort=intro_year&order={% if current_sort == 'intro_year' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
+                            Year
+                            {% if current_sort == 'intro_year' %}
+                                <span class="ml-1">{% if current_order == 'asc' %}↑{% else %}↓{% endif %}</span>
+                            {% endif %}
+                        </a>
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Bands
+                        <a href="?sort=freq_bands_tx&order={% if current_sort == 'freq_bands_tx' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
+                            Bands
+                            {% if current_sort == 'freq_bands_tx' %}
+                                <span class="ml-1">{% if current_order == 'asc' %}↑{% else %}↓{% endif %}</span>
+                            {% endif %}
+                        </a>
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Power
+                        <a href="?sort=power_watts&order={% if current_sort == 'power_watts' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
+                            Power
+                            {% if current_sort == 'power_watts' %}
+                                <span class="ml-1">{% if current_order == 'asc' %}↑{% else %}↓{% endif %}</span>
+                            {% endif %}
+                        </a>
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Cost
+                        <a href="?sort=cost_approx&order={% if current_sort == 'cost_approx' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
+                            Cost
+                            {% if current_sort == 'cost_approx' %}
+                                <span class="ml-1">{% if current_order == 'asc' %}↑{% else %}↓{% endif %}</span>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="?sort=aprs&order={% if current_sort == 'aprs' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
+                            APRS
+                            {% if current_sort == 'aprs' %}
+                                <span class="ml-1">{% if current_order == 'asc' %}↑{% else %}↓{% endif %}</span>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Rebadges/Clones
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        White Label
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="?sort=updated_at&order={% if current_sort == 'updated_at' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
+                            Updated
+                            {% if current_sort == 'updated_at' %}
+                                <span class="ml-1">{% if current_order == 'asc' %}↑{% else %}↓{% endif %}</span>
+                            {% endif %}
+                        </a>
                     </th>
                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
@@ -95,6 +142,18 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {{ radio.cost_approx|default:"-" }}
                     </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ radio.aprs|default:"-" }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ radio.rebadges_clones|default:"-" }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ radio.white_label_vendors|default:"-" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ radio.updated_at|date:"M d, Y" }}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                         <a href="{% url 'radio_detail' radio.pk %}" class="text-indigo-600 hover:text-indigo-900">View</a>
                         <a href="{% url 'radio_edit' radio.pk %}" class="text-green-600 hover:text-green-900">Edit</a>
@@ -103,7 +162,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                    <td colspan="11" class="px-6 py-12 text-center text-gray-500">
                         No radios found. <a href="{% url 'radio_add' %}" class="text-indigo-600 hover:text-indigo-900">Add your first radio</a>
                     </td>
                 </tr>
@@ -118,12 +177,12 @@
     <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow">
         <div class="flex-1 flex justify-between sm:hidden">
             {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            <a href="?page={{ page_obj.previous_page_number }}{{ query_string }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                 Previous
             </a>
             {% endif %}
             {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            <a href="?page={{ page_obj.next_page_number }}{{ query_string }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                 Next
             </a>
             {% endif %}
@@ -137,12 +196,12 @@
             <div>
                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                     {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <a href="?page={{ page_obj.previous_page_number }}{{ query_string }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                         Previous
                     </a>
                     {% endif %}
                     {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <a href="?page={{ page_obj.next_page_number }}{{ query_string }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                         Next
                     </a>
                     {% endif %}

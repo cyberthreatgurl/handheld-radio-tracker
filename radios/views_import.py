@@ -88,6 +88,38 @@ def import_grantee_radios(request):
             # Get grantee info from first record
             grantee_code = radio_list[0]['grantee_code'] if radio_list else ''
             grantee_name = radio_list[0]['brand'] if radio_list else ''
+            grantee_country = radio_list[0].get('country', '') if radio_list else ''
+            
+            # Update or create Brand record for this grantee
+            if grantee_code and grantee_name:
+                try:
+                    brand_obj = Brand.objects.get(grantee_code=grantee_code)
+                    # Grantee code exists. Update country if missing.
+                    if not brand_obj.country and grantee_country:
+                        brand_obj.country = grantee_country
+                        brand_obj.save(update_fields=['country'])
+                except Brand.DoesNotExist:
+                    # Grantee code doesn't exist. Check by name, alias, or full_name.
+                    from django.db.models import Q
+                    brand_obj = Brand.objects.filter(
+                        Q(name__iexact=grantee_name) | 
+                        Q(alias__iexact=grantee_name) | 
+                        Q(full_name__iexact=grantee_name)
+                    ).first()
+                    
+                    if brand_obj:
+                        # Match found. Update grantee code and country if missing.
+                        brand_obj.grantee_code = grantee_code
+                        if not brand_obj.country and grantee_country:
+                            brand_obj.country = grantee_country
+                        brand_obj.save(update_fields=['grantee_code', 'country'])
+                    else:
+                        # Neither exists, create a new one.
+                        Brand.objects.create(
+                            name=grantee_name,
+                            grantee_code=grantee_code,
+                            country=grantee_country
+                        )
             
             for data in radio_list:
                 brand = data['brand']
@@ -145,8 +177,9 @@ def import_grantee_radios(request):
             # Load grantee code -> name map
             grantee_map = load_grantee_map(RESULTS_XML)
             
-            # Aggregate all rows by (brand, model)
+            # Aggregate all rows by (brand, model), also capture country from first row
             radio_data = {}
+            grantee_country = ''
             for row in root.findall('Row'):
                 fcc_id = row.findtext('fcc_id', '').strip()
                 if not fcc_id:
@@ -155,12 +188,16 @@ def import_grantee_radios(request):
                 if not grantee_code or not model:
                     continue
                 brand_name = grantee_map.get(grantee_code, grantee_code)
+                # Capture country from first valid row
+                if not grantee_country:
+                    grantee_country = row.findtext('country', '').strip()
                 key = (brand_name, grantee_code, model)
                 if key not in radio_data:
                     radio_data[key] = {
                         'brand': brand_name,
                         'grantee_code': grantee_code,
                         'model': model,
+                        'country': grantee_country,
                     }
             
             # Show preview with radio data stored as base64-encoded JSON for confirmation

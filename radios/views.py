@@ -3,8 +3,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db.models import Q, Count
-from .models import Radio
-from .forms import RadioForm, RadioSearchForm
+from .models import Radio, Brand
+from .forms import RadioForm, RadioSearchForm, BrandForm
 
 
 class RadioListView(ListView):
@@ -13,6 +13,18 @@ class RadioListView(ListView):
     template_name = 'radios/radio_list.html'
     context_object_name = 'radios'
     paginate_by = 50
+    
+    # Define allowed sort fields
+    SORT_FIELDS = {
+        'brand': 'brand',
+        'model': 'model',
+        'intro_year': 'intro_year',
+        'freq_bands_tx': 'freq_bands_tx',
+        'power_watts': 'power_watts',
+        'cost_approx': 'cost_approx',
+        'aprs': 'aprs',
+        'updated_at': 'updated_at',
+    }
     
     def get_queryset(self):
         queryset = Radio.objects.all()
@@ -23,13 +35,25 @@ class RadioListView(ListView):
             queryset = queryset.filter(
                 Q(brand__icontains=query) |
                 Q(model__icontains=query) |
-                Q(fcc_id__icontains=query)
+                Q(fcc_id__icontains=query) |
+                Q(rebadges_clones__icontains=query) |
+                Q(white_label_vendors__icontains=query)
             )
         
         # Brand filter
         brand = self.request.GET.get('brand')
         if brand:
             queryset = queryset.filter(brand__iexact=brand)
+        
+        # Sorting
+        sort = self.request.GET.get('sort', 'brand')
+        order = self.request.GET.get('order', 'asc')
+        
+        if sort in self.SORT_FIELDS:
+            sort_field = self.SORT_FIELDS[sort]
+            if order == 'desc':
+                sort_field = f'-{sort_field}'
+            queryset = queryset.order_by(sort_field)
         
         return queryset
     
@@ -40,6 +64,16 @@ class RadioListView(ListView):
         context['brands'] = Radio.objects.values('brand').annotate(
             count=Count('id')
         ).order_by('brand')
+        # Pass current sort parameters to template
+        context['current_sort'] = self.request.GET.get('sort', 'brand')
+        context['current_order'] = self.request.GET.get('order', 'asc')
+        
+        # Build query string for pagination
+        query_params = self.request.GET.copy()
+        if 'page' in query_params:
+            del query_params['page']
+        context['query_string'] = f"&{query_params.urlencode()}" if query_params else ""
+        
         return context
 
 
@@ -97,6 +131,70 @@ class RadioDeleteView(DeleteView):
         radio = self.get_object()
         messages.success(request, f'Radio {radio} has been deleted successfully!')
         return super().delete(request, *args, **kwargs)
+
+
+class BrandListView(ListView):
+    """View for listing all brands"""
+    model = Brand
+    template_name = 'radios/brand_list.html'
+    context_object_name = 'brands'
+    paginate_by = 50
+    ordering = ['name']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('query')
+        if query:
+            queryset = queryset.filter(
+                Q(name__icontains=query) |
+                Q(alias__icontains=query) |
+                Q(full_name__icontains=query) |
+                Q(grantee_code__icontains=query) |
+                Q(white_label_vendors__icontains=query)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Build query string for pagination
+        query_params = self.request.GET.copy()
+        if 'page' in query_params:
+            del query_params['page']
+        context['query_string'] = f"&{query_params.urlencode()}" if query_params else ""
+        return context
+
+class BrandCreateView(CreateView):
+    """View for creating a new brand entry"""
+    model = Brand
+    form_class = BrandForm
+    template_name = 'radios/brand_form.html'
+    success_url = reverse_lazy('brand_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['all_brands'] = Brand.objects.all().order_by('name')
+        return context
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Brand {form.instance} has been created successfully!')
+        return super().form_valid(form)
+
+
+class BrandUpdateView(UpdateView):
+    """View for updating an existing brand entry"""
+    model = Brand
+    form_class = BrandForm
+    template_name = 'radios/brand_form.html'
+    success_url = reverse_lazy('brand_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['all_brands'] = Brand.objects.all().order_by('name')
+        return context
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Brand {form.instance} has been updated successfully!')
+        return super().form_valid(form)
 
 
 def dashboard_view(request):

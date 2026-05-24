@@ -10,6 +10,11 @@ urlpatterns = [
     path('radios/<int:pk>/', views.RadioDetailView.as_view(), name='radio_detail'),
     path('radios/<int:pk>/edit/', views.RadioUpdateView.as_view(), name='radio_edit'),
     path('radios/<int:pk>/delete/', views.RadioDeleteView.as_view(), name='radio_delete'),
+    
+    path('brands/', views.BrandListView.as_view(), name='brand_list'),
+    path('brands/add/', views.BrandCreateView.as_view(), name='brand_add'),
+    path('brands/<int:pk>/edit/', views.BrandUpdateView.as_view(), name='brand_edit'),
+    
     path('import-grantee-radios/', import_grantee_radios, name='import_grantee_radios'),
     path('merge-radios/', merge_radios, name='merge_radios'),
 ]

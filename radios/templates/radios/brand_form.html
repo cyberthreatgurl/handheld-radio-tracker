@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Brand - Ham Radio Database{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="space-y-6">
+        <!-- Header -->
+        <div>
+            <a href="{% url 'brand_list' %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
+                ← Back to all brands
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">
+                {% if form.instance.pk %}Edit Brand{% else %}Add New Brand{% endif %}
+            </h1>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white shadow rounded-lg">
+            <form method="post" class="space-y-6 p-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="rounded-md bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                Please correct the following errors:
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                {{ form.non_field_errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Basic Information -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Brand Information</h3>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                Name <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.alias.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                Alias
+                            </label>
+                            {{ form.alias }}
+                            {% if form.alias.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.alias.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="{{ form.parent_brand.id_for_label }}" class="block text-sm font-medium text-gray-700">Parent Brand (Original Manufacturer)</label>
+                            {{ form.parent_brand }}
+                            <datalist id="brand-options">
+                                {% for b in all_brands %}
+                                <option value="{{ b.name }}"></option>
+                                {% endfor %}
+                            </datalist>
+                            <p class="mt-1 text-xs text-gray-500">If this is a white-label arm or shell company, select or type the original manufacturer.</p>
+                            {% if form.parent_brand.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.parent_brand.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            {{ form.full_name }}
+                            {% if form.full_name.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.full_name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-b border-gray-200 pb-6">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="{{ form.grantee_code.id_for_label }}" class="block text-sm font-medium text-gray-700">Grantee Code</label>
+                            {{ form.grantee_code }}
+                        </div>
+                        <div>
+                            <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700">Country</label>
+                            {{ form.country }}
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="{{ form.white_label_vendors.id_for_label }}" class="block text-sm font-medium text-gray-700">White Label Vendors</label>
+                            {{ form.white_label_vendors }}
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700">Website</label>
+                            {{ form.website }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Details -->
+                <div class="pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Details</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                Notes
+                            </label>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="pt-5 border-t border-gray-200 flex justify-end space-x-3">
+                    <a href="{% url 'brand_list' %}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Save Brand
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

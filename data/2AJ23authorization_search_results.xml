@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<Results>
+
+  <Row>
+     <applicant_name>QUANZHOU HEYI ELECTRONICS CO., LTD.</applicant_name>
+     <address>No.4-12, Chongrui Street Qingmeng Economic Developmment Zone</address>
+     <city>QUANZHOU</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>N/A</zip_code>
+     <fcc_id>2AJ23-HY-W20</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>12/01/2016</grant_date>
+	 <lower_freq_mhz>824.20000000</lower_freq_mhz>
+	 <upper_freq_mhz>848.80000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>QUANZHOU HEYI ELECTRONICS CO., LTD.</applicant_name>
+     <address>No.4-12, Chongrui Street Qingmeng Economic Developmment Zone</address>
+     <city>QUANZHOU</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>N/A</zip_code>
+     <fcc_id>2AJ23-HY-W20</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>12/01/2016</grant_date>
+	 <lower_freq_mhz>1850.20000000</lower_freq_mhz>
+	 <upper_freq_mhz>1909.80000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>QUANZHOU HEYI ELECTRONICS CO., LTD.</applicant_name>
+     <address>No.4-12, Chongrui Street Qingmeng Economic Developmment Zone</address>
+     <city>QUANZHOU</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>N/A</zip_code>
+     <fcc_id>2AJ23-HY-W20</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>12/01/2016</grant_date>
+	 <lower_freq_mhz>2412.00000000</lower_freq_mhz>
+	 <upper_freq_mhz>2462.00000000</upper_freq_mhz>
+  </Row>
+
+  <Row>
+     <applicant_name>QUANZHOU HEYI ELECTRONICS CO., LTD.</applicant_name>
+     <address>No.4-12, Chongrui Street Qingmeng Economic Developmment Zone</address>
+     <city>QUANZHOU</city>
+     <state>N/A</state>
+     <country>China</country>
+     <zip_code>N/A</zip_code>
+     <fcc_id>2AJ23-HY-W20</fcc_id>
+     <application_purpose>Original Equipment</application_purpose>
+     <grant_date>12/01/2016</grant_date>
+	 <lower_freq_mhz>433.92000000</lower_freq_mhz>
+	 <upper_freq_mhz>433.92000000</upper_freq_mhz>
+  </Row>
+
+</Results> 
