@@ -2,10 +2,28 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Max
 from .models import Radio, Brand
 from .forms import RadioForm, RadioSearchForm, BrandForm
+from .fcc_utils import fetch_and_sync_fcc_id
 
+def sync_fcc_view(request):
+    """View to handle fetching and syncing an FCC ID from the dashboard."""
+    if request.method == 'POST':
+        fcc_id = request.POST.get('fcc_id', '').strip()
+        if fcc_id:
+            try:
+                added, updated, processing_msgs = fetch_and_sync_fcc_id(fcc_id)
+                if added > 0 or updated > 0:
+                    messages.success(request, f"Success! Added {added} and updated {updated} records for FCC ID '{fcc_id}'.")
+                else:
+                    messages.warning(request, f"No new records or updates found for '{fcc_id}'.")
+            except Exception as e:
+                messages.error(request, f"Error processing FCC ID: {e}")
+        else:
+            messages.error(request, "Please enter a valid FCC ID.")
+            
+    return redirect('dashboard')
 
 class RadioListView(ListView):
     """View for listing all radios with search and filter"""
@@ -94,6 +112,22 @@ class RadioDetailView(DetailView):
             fcc_grantee, fcc_product = fcc_id.split('-', 1)
         context['fcc_grantee'] = fcc_grantee
         context['fcc_product'] = fcc_product
+        
+        # Gather lineage and relationship data
+        manufacturer = radio.manufacturer
+        primary_models = []
+        white_label_models = []
+        
+        if fcc_id:
+            # Group by FCC ID
+            related_radios = Radio.objects.filter(fcc_id__iexact=fcc_id)
+            primary_models = related_radios.filter(is_a_whitelabel=False)
+            white_label_models = related_radios.filter(is_a_whitelabel=True)
+        
+        context['manufacturer'] = manufacturer
+        context['primary_models'] = primary_models
+        context['white_label_models'] = white_label_models
+        
         return context
 
 
@@ -204,7 +238,8 @@ def dashboard_view(request):
         'total_brands': Radio.objects.values('brand').distinct().count(),
         'recent_radios': Radio.objects.order_by('-created_at')[:10],
         'top_brands': Radio.objects.values('brand').annotate(
-            count=Count('id')
-        ).order_by('-count')[:10],
+            count=Count('id'),
+            latest_update=Max('updated_at')
+        ).order_by('-latest_update', '-count')[:10],
     }
     return render(request, 'radios/dashboard.html', context)

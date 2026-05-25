@@ -75,7 +75,7 @@
                                 <span>{{ radio.fcc_id }}</span>
                             {% endif %}
                         {% else %}
-                            <span class="text-gray-400">Not specified</span>
+                            <span class="text-orange-600 font-medium italic">As of now, not certified by the FCC of the United States</span>
                         {% endif %}
                     </dd>
                 </div>
@@ -174,5 +174,78 @@
             </dl>
         </div>
     </div>
+
+    <!-- Lineage & Relationships Visualization -->
+    {% if manufacturer or primary_models or white_label_models %}
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Lineage & Relationships</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Visualizing original manufacturers and white-label derivatives</p>
+        </div>
+        <div class="border-t border-gray-200 p-6 flex justify-center overflow-x-auto">
+            <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8 min-w-max">
+                
+                {% if manufacturer %}
+                <!-- Manufacturer Node -->
+                <a href="{% url 'brand_list' %}?query={{ manufacturer.name }}" class="w-56 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 rounded-lg p-4 text-center shadow-sm relative transition-all">
+                    <div class="text-xs text-indigo-500 font-semibold uppercase tracking-wider mb-1">Manufacturer</div>
+                    <div class="font-bold text-gray-900">{{ manufacturer.name }}</div>
+                    {% if manufacturer.alias %}
+                    <div class="text-sm text-indigo-700 font-medium mt-1">Brand: {{ manufacturer.alias }}</div>
+                    {% endif %}
+                </a>
+                
+                <div class="hidden md:block text-gray-300">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </div>
+                <div class="block md:hidden text-gray-300 transform rotate-90">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </div>
+                {% endif %}
+
+                <!-- Primary Models -->
+                <div class="flex flex-col space-y-3">
+                    {% if primary_models %}
+                        {% for p_radio in primary_models %}
+                        <a href="{{ p_radio.get_absolute_url }}" class="w-56 bg-white border {% if p_radio.pk == radio.pk %}border-green-500 ring-2 ring-green-200 shadow-md transform scale-105 z-10{% else %}border-gray-200 shadow-sm{% endif %} hover:bg-gray-50 rounded-lg p-4 text-center transition-all duration-200">
+                            <div class="text-xs {% if p_radio.pk == radio.pk %}text-green-600 font-bold{% else %}text-gray-500 font-medium{% endif %} uppercase tracking-wider mb-1">Original Model</div>
+                            <div class="font-bold text-gray-900">{{ p_radio.brand }}</div>
+                            <div class="text-sm text-gray-600">{{ p_radio.model }}</div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Fallback to current radio if no primary models matched -->
+                        <div class="w-56 bg-white border border-green-500 ring-2 ring-green-200 shadow-md rounded-lg p-4 text-center">
+                            <div class="text-xs text-green-600 font-bold uppercase tracking-wider mb-1">{% if radio.is_a_whitelabel %}White Label{% else %}Original Model{% endif %}</div>
+                            <div class="font-bold text-gray-900">{{ radio.brand }}</div>
+                            <div class="text-sm text-gray-600">{{ radio.model }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- White Labels Branch -->
+                {% if white_label_models %}
+                <div class="hidden md:block text-gray-300">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </div>
+                <div class="block md:hidden text-gray-300 transform rotate-90">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </div>
+
+                <div class="flex flex-col space-y-3">
+                    {% for wl_radio in white_label_models %}
+                    <a href="{{ wl_radio.get_absolute_url }}" class="w-56 bg-purple-50 border {% if wl_radio.pk == radio.pk %}border-purple-500 ring-2 ring-purple-200 shadow-md transform scale-105 z-10{% else %}border-purple-200 shadow-sm{% endif %} hover:bg-purple-100 rounded-lg p-4 text-center transition-all duration-200">
+                        <div class="text-xs {% if wl_radio.pk == radio.pk %}text-purple-700 font-bold{% else %}text-purple-500 font-semibold{% endif %} uppercase tracking-wider mb-1">White Label</div>
+                        <div class="font-bold text-gray-900">{{ wl_radio.brand }}</div>
+                        <div class="text-sm text-gray-600">{{ wl_radio.model }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

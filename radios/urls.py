@@ -11,6 +11,8 @@ urlpatterns = [
     path('radios/<int:pk>/edit/', views.RadioUpdateView.as_view(), name='radio_edit'),
     path('radios/<int:pk>/delete/', views.RadioDeleteView.as_view(), name='radio_delete'),
     
+    path('sync-fcc/', views.sync_fcc_view, name='sync_fcc_id'),
+    
     path('brands/', views.BrandListView.as_view(), name='brand_list'),
     path('brands/add/', views.BrandCreateView.as_view(), name='brand_add'),
     path('brands/<int:pk>/edit/', views.BrandUpdateView.as_view(), name='brand_edit'),

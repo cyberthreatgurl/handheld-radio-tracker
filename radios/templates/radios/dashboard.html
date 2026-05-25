@@ -4,9 +4,21 @@
 
 {% block content %}
 <div class="space-y-6">
-    <div>
-        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p class="mt-2 text-sm text-gray-600">Overview of your ham radio database</p>
+    <div class="sm:flex sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p class="mt-2 text-sm text-gray-600">Overview of your ham radio database</p>
+        </div>
+        
+        <!-- Global Search -->
+        <div class="mt-4 sm:mt-0 flex-1 max-w-md sm:ml-4">
+            <form action="{% url 'radio_list' %}" method="get" class="flex relative w-full">
+                <input type="text" name="query" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-l-md p-2 border" placeholder="Search brands, models, or FCC IDs...">
+                <button type="submit" class="inline-flex justify-center flex-shrink-0 items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md text-white bg-indigo-600 hover:bg-indigo-700">
+                    Search
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Stats -->
@@ -44,16 +56,40 @@
     </div>
 
     <!-- Top Brands -->
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Top Brands</h3>
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                {% for brand in top_brands %}
-                <a href="{% url 'radio_list' %}?brand={{ brand.brand }}" class="text-center p-4 border rounded-lg hover:bg-gray-50 transition">
-                    <p class="font-semibold text-gray-900">{{ brand.brand }}</p>
-                    <p class="text-sm text-gray-500">{{ brand.count }} models</p>
-                </a>
-                {% endfor %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Recently Updated Brands</h3>
+                <ul class="divide-y divide-gray-200">
+                    {% for brand in top_brands %}
+                    <li class="py-3 flex justify-between items-center sm:px-2 hover:bg-gray-50 rounded transition">
+                        <a href="{% url 'radio_list' %}?brand={{ brand.brand|urlencode }}" class="text-indigo-600 hover:text-indigo-900 font-medium truncate pr-4">
+                            {{ brand.brand }}
+                        </a>
+                        <span class="text-sm font-semibold text-gray-600 bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap">
+                            {{ brand.count }} models
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sync FCC ID Tool -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Sync API</h3>
+                <p class="text-sm text-gray-500 mb-4">Fetch and import a new FCC ID or Grantee directly from the FCC database.</p>
+                <form action="{% url 'sync_fcc_id' %}" method="post" class="space-y-3">
+                    {% csrf_token %}
+                    <div>
+                        <label for="fcc_id" class="sr-only">FCC ID</label>
+                        <input type="text" name="fcc_id" id="fcc_id" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="e.g., 2AJGM-UV5R">
+                    </div>
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                        Search & Import
+                    </button>
+                </form>
             </div>
         </div>
     </div>
