@@ -13,6 +13,25 @@ class RadioForm(forms.ModelForm):
         }),
         help_text="Select the radio manufacturer/brand"
     )
+
+    manual_pdf = forms.FileField(
+        required=False,
+        label='Attach Manual PDF',
+        help_text='Optional: upload a PDF manual to parse and link to this radio.',
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'mt-1 block w-full text-sm text-gray-700'
+        }),
+    )
+
+    manual_product_url = forms.URLField(
+        required=False,
+        label='Manual Product URL (optional)',
+        help_text='Optional: product/sales URL to enrich specs and pricing while processing the manual.',
+        widget=forms.URLInput(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+            'placeholder': 'https://...'
+        }),
+    )
     
     class Meta:
         model = Radio
@@ -122,6 +141,12 @@ class RadioForm(forms.ModelForm):
         brand_choices += [(b.name, b.name) for b in Brand.objects.all().order_by('name')]
         self.fields['brand'].choices = brand_choices
 
+    def clean_manual_pdf(self):
+        manual_pdf = self.cleaned_data.get('manual_pdf')
+        if manual_pdf and not manual_pdf.name.lower().endswith('.pdf'):
+            raise forms.ValidationError('Only PDF files are supported for manual uploads.')
+        return manual_pdf
+
 
 class BrandForm(forms.ModelForm):
     """Form for creating and editing radio brands"""
@@ -224,3 +249,50 @@ class ImportGranteeXMLForm(forms.Form):
         required=False,
         help_text="If checked, existing records will be updated."
     )
+
+
+class ManualUploadForm(forms.Form):
+    """Upload a manual PDF and optional product URL for enrichment."""
+
+    manual_pdf = forms.FileField(
+        label='Manual PDF',
+        help_text='Upload a PDF manual for parsing and model matching.',
+    )
+    product_url = forms.URLField(
+        required=False,
+        label='Product page URL (optional)',
+        help_text='Optional sales/product page used to enrich specs and pricing.',
+        widget=forms.URLInput(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+            'placeholder': 'https://...'
+        })
+    )
+
+    def clean_manual_pdf(self):
+        manual_pdf = self.cleaned_data['manual_pdf']
+        if not manual_pdf.name.lower().endswith('.pdf'):
+            raise forms.ValidationError('Only PDF files are supported.')
+        return manual_pdf
+
+
+class ManualReviewForm(forms.Form):
+    """User-reviewed extraction values before linking or creating a radio."""
+
+    manual_id = forms.IntegerField(widget=forms.HiddenInput)
+    selected_radio_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    action = forms.ChoiceField(
+        choices=[('existing', 'Attach to selected existing model'), ('new', 'Add new model')],
+        widget=forms.RadioSelect,
+        initial='existing',
+    )
+
+    brand = forms.CharField(max_length=100)
+    manufacturer = forms.CharField(max_length=200, required=False)
+    model = forms.CharField(max_length=200)
+    fcc_id = forms.CharField(max_length=50, required=False)
+    freq_bands_tx = forms.CharField(max_length=200, required=False)
+    aprs = forms.CharField(max_length=100, required=False)
+    gps = forms.CharField(max_length=50, required=False)
+    power_watts = forms.CharField(max_length=100, required=False)
+    cost_approx = forms.CharField(max_length=100, required=False)
+    website = forms.URLField(max_length=500, required=False)

@@ -130,6 +130,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Media/manual uploads
+MANUALS_DIR = os.environ.get('MANUALS_DIR', 'artifacts/manuals').strip('/ ')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -144,3 +149,62 @@ INTERNAL_IPS = [
 
 # NPM binary path (for django-tailwind)
 NPM_BIN_PATH = "/usr/local/bin/npm"
+
+# Application logging
+LOGGING_ENABLED = os.environ.get('LOGGING', 'true').strip().lower() in {'1', 'true', 'yes', 'on'}
+LOGS_DIR = os.environ.get('LOGS_DIR', 'logs').strip('/ ')
+LOG_DIR = BASE_DIR / LOGS_DIR
+if LOGGING_ENABLED:
+    os.makedirs(LOG_DIR, exist_ok=True)
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'standard': {
+                'format': '%(asctime)s %(levelname)s [%(name)s] %(message)s',
+            },
+        },
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'standard',
+            },
+            'app_file': {
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': str(LOG_DIR / 'radio_tracker.log'),
+                'formatter': 'standard',
+                'when': 'midnight',
+                'interval': 1,
+                'backupCount': 30,
+                'encoding': 'utf-8',
+            },
+        },
+        'loggers': {
+            'radios': {
+                'handlers': ['console', 'app_file'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+        },
+    }
+else:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'handlers': {
+            'null': {
+                'class': 'logging.NullHandler',
+            },
+        },
+        'root': {
+            'handlers': ['null'],
+            'level': 'CRITICAL',
+        },
+        'loggers': {
+            'radios': {
+                'handlers': ['null'],
+                'level': 'CRITICAL',
+                'propagate': False,
+            },
+        },
+    }

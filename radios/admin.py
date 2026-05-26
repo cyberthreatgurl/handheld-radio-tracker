@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Radio, Brand
+from .models import Radio, Brand, RadioManual
 
 
 @admin.register(Brand)
@@ -64,3 +64,11 @@ class RadioAdmin(admin.ModelAdmin):
             'fields': ('notes',)
         }),
     )
+
+
+@admin.register(RadioManual)
+class RadioManualAdmin(admin.ModelAdmin):
+    list_display = ['id', 'radio', 'status', 'extraction_confidence', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['radio__brand', 'radio__model', 'source_url']
+    ordering = ['-created_at']

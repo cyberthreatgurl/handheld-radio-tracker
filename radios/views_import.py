@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+import logging
 from .forms import ImportGranteeXMLForm
 from .models import Radio, Brand
+from .fcc_validation import validate_fcc_brand_assignment
 import xml.etree.ElementTree as ET
 import os
 import re
@@ -9,6 +11,14 @@ import json
 import base64
 
 RESULTS_XML = os.path.join('data', 'results.xml')
+logger = logging.getLogger(__name__)
+
+
+def _actor_label(request):
+    user = getattr(request, 'user', None)
+    if user and user.is_authenticated:
+        return str(user)
+    return 'anonymous'
 
 
 def sanitize_xml_content(content):
@@ -69,6 +79,7 @@ def freq_range_to_band(lower, upper):
 
 def import_grantee_radios(request):
     if request.method == 'POST':
+        logger.info("User action xml_import submit actor=%s", _actor_label(request))
         # Check if this is confirmation of a preview (radio_data passed via hidden field)
         if 'confirm_import' in request.POST and 'radio_data_b64' in request.POST:
             radio_data_b64 = request.POST.get('radio_data_b64', '')
@@ -77,6 +88,7 @@ def import_grantee_radios(request):
                 radio_data_json = base64.b64decode(radio_data_b64).decode('utf-8')
                 radio_list = json.loads(radio_data_json)
             except (json.JSONDecodeError, ValueError, UnicodeDecodeError) as e:
+                logger.exception("XML import confirmation decode error actor=%s", _actor_label(request))
                 messages.error(request, f"Invalid import data. Please try again. ({e})")
                 return redirect('import_grantee_radios')
             
@@ -126,21 +138,92 @@ def import_grantee_radios(request):
                 model = data['model']
                 g_code = data['grantee_code']
                 fcc_id = f"{g_code}{model}" if '-' not in model else f"{g_code}-{model}"
+
+                validation = validate_fcc_brand_assignment(fcc_id, brand)
+                if validation.get('status') == 'white_label_possible':
+                    logger.info(
+                        "FCC validation white-label candidate source=xml_import actor=%s fcc_id=%s inferred_grantee=%s grantee_brand=%s provided_brand=%s resolved_brand=%s",
+                        _actor_label(request),
+                        fcc_id,
+                        validation.get('inferred_grantee_code', ''),
+                        validation.get('grantee_brand_name', ''),
+                        validation.get('provided_brand_name', ''),
+                        validation.get('resolved_brand_name', ''),
+                    )
+                elif validation.get('status') == 'invalid_fcc_id':
+                    logger.warning(
+                        "FCC validation invalid id source=xml_import actor=%s fcc_id=%s provided_brand=%s",
+                        _actor_label(request),
+                        fcc_id,
+                        validation.get('provided_brand_name', ''),
+                    )
+
+                resolved_brand = validation.get('resolved_brand_name') or brand
+
                 if overwrite:
-                    radio, created = Radio.objects.update_or_create(
-                        brand=brand, model=model,
+                    radio_obj, created = Radio.objects.update_or_create(
+                        brand=resolved_brand, model=model,
                         defaults={'fcc_id': fcc_id}
                     )
                     if created:
                         created_count += 1
+                        logger.info(
+                            "FCC ingest create source=xml_import actor=%s radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s overwrite=%s",
+                            _actor_label(request),
+                            radio_obj.id,
+                            resolved_brand,
+                            model,
+                            fcc_id,
+                            validation.get('status', ''),
+                            overwrite,
+                        )
                     else:
                         updated_count += 1
+                        logger.info(
+                            "FCC ingest update source=xml_import actor=%s radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s overwrite=%s",
+                            _actor_label(request),
+                            radio_obj.id,
+                            resolved_brand,
+                            model,
+                            fcc_id,
+                            validation.get('status', ''),
+                            overwrite,
+                        )
                 else:
-                    if not Radio.objects.filter(brand=brand, model=model).exists():
-                        Radio.objects.create(brand=brand, model=model, fcc_id=fcc_id)
+                    if not Radio.objects.filter(brand=resolved_brand, model=model).exists():
+                        created_radio = Radio.objects.create(brand=resolved_brand, model=model, fcc_id=fcc_id)
                         created_count += 1
+                        logger.info(
+                            "FCC ingest create source=xml_import actor=%s radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s overwrite=%s",
+                            _actor_label(request),
+                            created_radio.id,
+                            resolved_brand,
+                            model,
+                            fcc_id,
+                            validation.get('status', ''),
+                            overwrite,
+                        )
                     else:
                         skipped_count += 1
+                        logger.info(
+                            "FCC ingest skip source=xml_import actor=%s brand=%s model=%s fcc_id=%s reason=exists validation_status=%s overwrite=%s",
+                            _actor_label(request),
+                            resolved_brand,
+                            model,
+                            fcc_id,
+                            validation.get('status', ''),
+                            overwrite,
+                        )
+
+            logger.info(
+                "XML import confirmation result actor=%s total=%s created=%s updated=%s skipped=%s overwrite=%s",
+                _actor_label(request),
+                total_records,
+                created_count,
+                updated_count,
+                skipped_count,
+                overwrite,
+            )
             
             # Build detailed success message
             msg_parts = [f"Grantee {grantee_code} ({grantee_name}): Processed {total_records} records"]
@@ -158,6 +241,13 @@ def import_grantee_radios(request):
         if form.is_valid():
             xml_file = form.cleaned_data['xml_file']
             overwrite = form.cleaned_data.get('overwrite_records', False)
+            logger.info(
+                "XML upload attempt actor=%s filename=%s size=%s overwrite=%s",
+                _actor_label(request),
+                getattr(xml_file, 'name', ''),
+                getattr(xml_file, 'size', 0),
+                overwrite,
+            )
             
             # Read and sanitize XML content
             try:
@@ -171,6 +261,7 @@ def import_grantee_radios(request):
             try:
                 root = ET.fromstring(xml_content)
             except ET.ParseError as e:
+                logger.exception("XML parse error actor=%s filename=%s", _actor_label(request), getattr(xml_file, 'name', ''))
                 messages.error(request, f"XML parsing error: {e}")
                 return render(request, 'radios/import_grantee_radios.html', {'form': form})
             
@@ -202,6 +293,7 @@ def import_grantee_radios(request):
             
             # Show preview with radio data stored as base64-encoded JSON for confirmation
             preview = list(radio_data.values())
+            logger.info("XML preview generated actor=%s records=%s", _actor_label(request), len(preview))
             radio_data_json = json.dumps(preview)
             radio_data_b64 = base64.b64encode(radio_data_json.encode('utf-8')).decode('ascii')
             return render(request, 'radios/import_grantee_radios.html', {
@@ -211,5 +303,6 @@ def import_grantee_radios(request):
                 'radio_data_b64': radio_data_b64,
             })
     else:
+        logger.info("User action xml_import view actor=%s", _actor_label(request))
         form = ImportGranteeXMLForm()
     return render(request, 'radios/import_grantee_radios.html', {'form': form})

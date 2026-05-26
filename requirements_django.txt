@@ -3,3 +3,7 @@ psycopg2-binary>=2.9.9
 django-tailwind>=3.8.0
 beautifulsoup4>=4.12.3
 requests>=2.31.0
+pypdf>=5.0,<6
+pillow>=10.0,<12
+pypdfium2>=4.30,<5
+pytesseract>=0.3.10,<0.4

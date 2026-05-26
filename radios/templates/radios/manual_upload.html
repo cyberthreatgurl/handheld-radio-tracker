@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Manual Upload - Ham Radio Database{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <a href="{% url 'dashboard' %}" class="text-sm text-indigo-600 hover:text-indigo-900">← Back to Dashboard</a>
+        <h1 class="text-2xl font-bold text-gray-900 mt-2">Upload Radio Manual</h1>
+        <p class="text-sm text-gray-600">Upload a PDF manual, extract specs, then link to an existing model or add a new one.</p>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Step 1: Upload PDF</h2>
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            {{ upload_form.non_field_errors }}
+            <div>
+                <label class="block text-sm font-medium text-gray-700">{{ upload_form.manual_pdf.label }}</label>
+                <div class="mt-1">{{ upload_form.manual_pdf }}</div>
+                {% if upload_form.manual_pdf.errors %}<p class="text-sm text-red-600 mt-1">{{ upload_form.manual_pdf.errors.0 }}</p>{% endif %}
+                <p class="text-xs text-gray-500 mt-1">{{ upload_form.manual_pdf.help_text }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">{{ upload_form.product_url.label }}</label>
+                <div class="mt-1">{{ upload_form.product_url }}</div>
+                {% if upload_form.product_url.errors %}<p class="text-sm text-red-600 mt-1">{{ upload_form.product_url.errors.0 }}</p>{% endif %}
+                <p class="text-xs text-gray-500 mt-1">{{ upload_form.product_url.help_text }}</p>
+            </div>
+            <button type="submit" class="inline-flex items-center px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700">Upload and Extract</button>
+        </form>
+    </div>
+
+    {% if review_form %}
+    <div class="bg-white shadow rounded-lg p-6 space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Step 2: Review and Match</h2>
+            {% if confidence_pct is not None %}
+            <span class="text-sm font-medium text-gray-700">Extraction confidence: {{ confidence_pct }}%</span>
+            {% endif %}
+        </div>
+
+        {% if manual %}
+        <p class="text-sm text-gray-600">Uploaded manual: <span class="font-medium">{{ manual.manual_pdf.name }}</span></p>
+        {% endif %}
+        {% if extraction_method %}
+        <p class="text-sm text-gray-600">Extraction method: <span class="font-medium">{{ extraction_method }}</span></p>
+        {% endif %}
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="confirm">
+            {{ review_form.manual_id }}
+            {{ review_form.selected_radio_id }}
+
+            <div>
+                <p class="text-sm font-medium text-gray-700 mb-2">Choose action</p>
+                {{ review_form.action }}
+            </div>
+
+            {% if candidates %}
+            <div>
+                <p class="text-sm font-medium text-gray-700 mb-2">Top candidate matches</p>
+                <div class="space-y-2">
+                    {% for item in candidates %}
+                    <label class="flex items-center justify-between border rounded-md p-3 hover:bg-gray-50 cursor-pointer">
+                        <span>
+                            <input type="radio" name="candidate_select" value="{{ item.radio.id }}" {% if forloop.first %}checked{% endif %} onchange="document.getElementById('id_selected_radio_id').value=this.value; document.querySelector('input[name=action][value=existing]').checked=true;">
+                            <span class="ml-2 font-medium text-gray-900">{{ item.radio.brand }} {{ item.radio.model }}</span>
+                            {% if item.radio.fcc_id %}
+                            <span class="ml-2 text-xs text-gray-500">FCC ID: {{ item.radio.fcc_id }}</span>
+                            {% endif %}
+                        </span>
+                        <span class="text-sm text-gray-700">{{ item.score|floatformat:2 }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-3">No close matches were found. Choose Add new model and review fields below.</p>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Brand</label>
+                    {{ review_form.brand }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Manufacturer</label>
+                    {{ review_form.manufacturer }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Model</label>
+                    {{ review_form.model }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">FCC ID</label>
+                    {{ review_form.fcc_id }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Frequency Bands</label>
+                    {{ review_form.freq_bands_tx }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Power</label>
+                    {{ review_form.power_watts }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">APRS</label>
+                    {{ review_form.aprs }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">GPS</label>
+                    {{ review_form.gps }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Cost (Approx)</label>
+                    {{ review_form.cost_approx }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Website</label>
+                    {{ review_form.website }}
+                </div>
+            </div>
+
+            <button type="submit" class="inline-flex items-center px-4 py-2 rounded-md text-white bg-green-600 hover:bg-green-700">Confirm and Save</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

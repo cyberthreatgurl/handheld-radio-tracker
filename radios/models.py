@@ -1,4 +1,9 @@
 from django.db import models
+from django.conf import settings
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class Brand(models.Model):
@@ -154,8 +159,84 @@ class Radio(models.Model):
                     if b_lower != m_name and (not m_alias or b_lower != m_alias):
                         self.is_a_whitelabel = True
 
+        # Validation telemetry to catch suspicious FCC/brand assignments from any ingestion path.
+        if self.fcc_id and self.brand:
+            from .fcc_validation import validate_fcc_brand_assignment
+            validation = validate_fcc_brand_assignment(self.fcc_id, self.brand)
+            if validation.get('status') == 'white_label_possible':
+                logger.info(
+                    "FCC validation white-label candidate source=radio_model_save radio_id=%s brand=%s fcc_id=%s inferred_grantee=%s grantee_brand=%s resolved_brand=%s",
+                    self.pk,
+                    self.brand,
+                    self.fcc_id,
+                    validation.get('inferred_grantee_code', ''),
+                    validation.get('grantee_brand_name', ''),
+                    validation.get('resolved_brand_name', ''),
+                )
+            elif validation.get('status') == 'unknown_grantee':
+                logger.warning(
+                    "FCC validation unknown grantee source=radio_model_save radio_id=%s brand=%s fcc_id=%s inferred_grantee=%s",
+                    self.pk,
+                    self.brand,
+                    self.fcc_id,
+                    validation.get('inferred_grantee_code', ''),
+                )
+            elif validation.get('status') == 'invalid_fcc_id':
+                logger.warning(
+                    "FCC validation invalid id source=radio_model_save radio_id=%s brand=%s fcc_id=%s",
+                    self.pk,
+                    self.brand,
+                    self.fcc_id,
+                )
+
         super().save(*args, **kwargs)
         
         # Automatically create Brand entry if it doesn't exist
         if self.brand:
             Brand.objects.get_or_create(name=self.brand)
+
+
+def manual_upload_to(instance, filename):
+    manuals_dir = getattr(settings, 'MANUALS_DIR', 'artifacts/manuals').strip('/ ')
+    return f"{manuals_dir}/{filename}"
+
+
+class RadioManual(models.Model):
+    """Uploaded manual PDFs and extraction artifacts."""
+
+    class ProcessingStatus(models.TextChoices):
+        UPLOADED = 'uploaded', 'Uploaded'
+        REVIEW = 'review', 'Needs Review'
+        LINKED = 'linked', 'Linked'
+        ERROR = 'error', 'Error'
+
+    radio = models.ForeignKey(
+        Radio,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='manuals',
+    )
+    manual_pdf = models.FileField(upload_to=manual_upload_to)
+    source_url = models.URLField(max_length=500, blank=True)
+    extraction_confidence = models.FloatField(default=0.0)
+    extracted_data = models.JSONField(default=dict, blank=True)
+    extracted_text = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=ProcessingStatus.choices,
+        default=ProcessingStatus.UPLOADED,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        linked = f" -> {self.radio}" if self.radio else ''
+        return f"Manual {self.id}{linked}"

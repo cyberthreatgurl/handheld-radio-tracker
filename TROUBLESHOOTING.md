@@ -56,3 +56,19 @@ This command will:
 2. Copy over the `grantee_code` to the primary brand if it is currently empty.
 3. Store the secondary name as the primary brand's `alias` (if the primary brand doesn't already have one).
 4. Safely delete the secondary duplicate brand.
+
+## FCC Link Errors / FCC Website Error
+
+If a radio FCC link opens an "FCC Website Error" page, this is often an upstream outage on the legacy FCC EAS reports endpoint (`apps.fcc.gov`) rather than a malformed FCC ID in this project.
+
+Current app behavior:
+
+1. FCC links use the official FCC domain endpoint:
+   - `https://www.fcc.gov/oet/ea/fccid?id=<FCC_ID>`
+2. FCC ID splitting/normalization is centralized in `radios/fcc_id_utils.py`.
+3. Parsing follows FCC rules:
+   - Leading `A-Z` => 3-character grantee code.
+   - Leading `2-9` => 5-character grantee code.
+   - Product code is the remaining characters and may contain dashes.
+
+If search results still fail from `fcc.gov`, verify the FCC ID value itself and retry later in case of FCC service degradation.

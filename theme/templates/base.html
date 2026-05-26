@@ -24,13 +24,24 @@
                         <a href="{% url 'radio_list' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                             All Radios
                         </a>
+                        <a href="{% url 'brand_list' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Brands
+                        </a>
                         <a href="{% url 'radio_add' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                             Add Radio
                         </a>
-                        <a href="/admin/" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
-                            Admin
+                        <a href="{% url 'brand_list' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Manage Brands
+                        </a>
+                        <a href="{% url 'import_grantee_radios' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Import Data
                         </a>
                     </div>
+                </div>
+                <div class="flex items-center">
+                    <a href="/admin/" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                        Admin
+                    </a>
                 </div>
             </div>
         </div>

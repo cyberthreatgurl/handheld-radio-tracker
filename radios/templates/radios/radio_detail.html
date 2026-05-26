@@ -67,10 +67,11 @@
                     <dt class="text-sm font-medium text-gray-500">FCC ID</dt>
                     <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                         {% if radio.fcc_id %}
-                            {% if fcc_grantee and fcc_product %}
-                                <a href="https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm?fcc_id={{ fcc_grantee }}{{ fcc_product }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
+                            {% if fcc_lookup_id %}
+                                <a href="https://www.fcc.gov/oet/ea/fccid?id={{ fcc_lookup_id|urlencode }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
                                     {{ radio.fcc_id }} ↗
                                 </a>
+                                <p class="mt-1 text-xs text-gray-500">Official FCC lookup. If unavailable, the FCC site may be experiencing a temporary outage.</p>
                             {% else %}
                                 <span>{{ radio.fcc_id }}</span>
                             {% endif %}
@@ -151,6 +152,21 @@
                 <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Notes</dt>
                     <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ radio.notes|linebreaks }}</dd>
+                </div>
+                {% endif %}
+                {% if radio.manuals.all %}
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Manuals</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <ul class="space-y-2">
+                            {% for manual in radio.manuals.all %}
+                            <li>
+                                <a href="{{ manual.manual_pdf.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ manual.manual_pdf.name }} ↗</a>
+                                <span class="text-xs text-gray-500 ml-2">Confidence: {{ manual.extraction_confidence|floatformat:2 }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </dd>
                 </div>
                 {% endif %}
                 {% if radio.review_url %}

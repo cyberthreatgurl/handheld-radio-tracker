@@ -12,6 +12,8 @@ A Django web application for managing and browsing ham radio specifications with
 - 📱 **Mobile Friendly**: Works on all device sizes
 - 🗄️ **PostgreSQL**: Robust database with proper indexing
 - 📥 **CSV Import**: Import your existing radio data from CSV files
+- 🧭 **FCC ID Normalization**: Shared parser applies FCC grantee/product rules for 3-char and 5-char grantee codes
+- 🔗 **Official FCC Links**: Radio detail page links to official FCC ID search on fcc.gov
 
 ## Prerequisites
 
@@ -132,6 +134,17 @@ The application will be available at:
 5. **Edit Radio** (`/radios/<id>/edit/`): Update radio information
 6. **Delete Radio** (`/radios/<id>/delete/`): Remove a radio entry
 
+### FCC ID Behavior (Current)
+
+- FCC IDs are parsed using shared logic in `radios/fcc_id_utils.py`.
+- Parsing follows FCC syntax rules:
+    - If FCC ID starts with a letter (`A-Z`), grantee code is 3 characters.
+    - If FCC ID starts with a number (`2-9`), grantee code is 5 characters.
+    - Product code is the remaining portion and may include dashes.
+- If a brand has a known `grantee_code`, that code is preferred when splitting compact FCC IDs.
+- Radio detail links use the official FCC ID search endpoint:
+    - `https://www.fcc.gov/oet/ea/fccid?id=<FCC_ID>`
+
 ### Admin Interface
 
 Access the Django admin at `/admin/` for advanced database management:
@@ -176,13 +189,13 @@ radio_database/
 - **brand**: Manufacturer/brand name (indexed)
 - **model**: Model name/number (indexed with brand)
 - **fcc_id**: FCC ID (e.g., 2AJGM-UV5R)
-- **grantee_code**: FCC Grantee Code
-- **frequency_range**: Operating frequency range
-- **power_output**: Transmit power
-- **modulation**: Modulation types (FM, AM, SSB, etc.)
-- **bands**: Band support (VHF/UHF, etc.)
-- **digital_modes**: Digital modes (DMR, D-STAR, etc.)
-- **channels**: Number of memory channels
+- **radio_type**: Base, Mobile, or Portable
+- **manufacturer**: Linked canonical `Brand` manufacturer (for white-label mapping)
+- **is_a_whitelabel**: Indicates white-label/rebadge status
+- **freq_bands_tx**: Operating frequency bands (TX)
+- **power_watts**: Transmit power
+- **satellite_tracking / harmonic_suppression / gps / aprs / air_band / dmr**: Feature fields
+- **display / battery_mah / cost_approx**: Hardware and pricing details
 - **notes**: Additional notes
 - **review_url**: Link to eHam.net or other reviews
 - **created_at**: Creation timestamp
