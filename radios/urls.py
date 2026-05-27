@@ -15,6 +15,7 @@ urlpatterns = [
     path('sync-fcc/', views.sync_fcc_view, name='sync_fcc_id'),
     path('sync-all-grantees/', views.sync_all_grantees_view, name='sync_all_grantees'),
     path('processing-logs/', views.processing_logs_view, name='processing_logs'),
+    path('nodal-visualization/', views.nodal_visualization_view, name='nodal_visualization'),
     
     path('brands/', views.BrandListView.as_view(), name='brand_list'),
     path('brands/add/', views.BrandCreateView.as_view(), name='brand_add'),

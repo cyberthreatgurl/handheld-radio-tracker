@@ -2,17 +2,19 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.db.models import Q, Count, Max
+from django.db.models import Q, Count, Max, Prefetch
 from django.conf import settings
 import logging
 import os
 import re
+import json
 from collections import Counter
 from pathlib import Path
 from .models import Radio, Brand, RadioManual
 from .forms import RadioForm, RadioSearchForm, BrandForm
 from .fcc_utils import fetch_and_sync_fcc_id
 from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
+from .nodal_graph import build_nodal_graph_data
 from .manual_extraction import (
     extract_text_from_pdf_with_metadata,
     extract_specs_from_text,
@@ -26,6 +28,60 @@ logger = logging.getLogger(__name__)
 
 def _normalize_brand_key(value):
     return re.sub(r'[^a-z0-9]+', '', (value or '').strip().lower())
+
+
+def _normalize_fcc_key(value):
+    return re.sub(r'[^a-z0-9]+', '', (value or '').strip().lower())
+
+
+def _normalize_model_key(value):
+    return re.sub(r'[^a-z0-9]+', '', (value or '').strip().lower())
+
+
+def _build_brand_display_alias_map():
+    alias_map = {}
+    for brand in Brand.objects.exclude(alias__isnull=True).exclude(alias__exact='').only('name', 'full_name', 'alias'):
+        alias = (brand.alias or '').strip()
+        if not alias:
+            continue
+        for candidate in (brand.name, brand.full_name):
+            key = _normalize_brand_key(candidate)
+            if key and key not in alias_map:
+                alias_map[key] = alias
+    return alias_map
+
+
+def _preferred_brand_display_name(radio, alias_map):
+    manufacturer = getattr(radio, 'manufacturer', None)
+    if manufacturer:
+        manufacturer_alias = (manufacturer.alias or '').strip()
+        if manufacturer_alias:
+            return manufacturer_alias
+
+    brand_value = (getattr(radio, 'brand', '') or '').strip()
+    brand_key = _normalize_brand_key(brand_value)
+    if brand_key and brand_key in alias_map:
+        return alias_map[brand_key]
+    return brand_value
+
+
+def _normalized_query_match_ids(query, radios_qs=None):
+    query_key = _normalize_model_key(query)
+    if not query_key:
+        return []
+
+    source_qs = radios_qs if radios_qs is not None else Radio.objects.all()
+    return [
+        radio.id
+        for radio in source_qs.only('id', 'brand', 'model', 'fcc_id', 'rebadges_clones', 'white_label_vendors')
+        if (
+            query_key in _normalize_model_key(radio.brand)
+            or query_key in _normalize_model_key(radio.model)
+            or query_key in _normalize_model_key(radio.fcc_id)
+            or query_key in _normalize_model_key(radio.rebadges_clones)
+            or query_key in _normalize_model_key(radio.white_label_vendors)
+        )
+    ]
 
 
 def _actor_label(request):
@@ -155,18 +211,25 @@ class RadioListView(ListView):
     }
     
     def get_queryset(self):
-        queryset = Radio.objects.all()
+        manual_prefetch = Prefetch(
+            'manuals',
+            queryset=RadioManual.objects.exclude(manual_pdf='').only('id', 'radio_id', 'manual_pdf', 'updated_at').order_by('-updated_at'),
+            to_attr='available_manuals',
+        )
+        queryset = Radio.objects.all().select_related('manufacturer').prefetch_related(manual_prefetch)
         
         # Search functionality
         query = self.request.GET.get('query')
         if query:
             logger.info("User action radio_search actor=%s query=%s", _actor_label(self.request), query)
+            normalized_match_ids = _normalized_query_match_ids(query, radios_qs=queryset)
             queryset = queryset.filter(
                 Q(brand__icontains=query) |
                 Q(model__icontains=query) |
                 Q(fcc_id__icontains=query) |
                 Q(rebadges_clones__icontains=query) |
-                Q(white_label_vendors__icontains=query)
+                Q(white_label_vendors__icontains=query) |
+                Q(id__in=normalized_match_ids)
             )
         
         # Brand filter
@@ -190,6 +253,10 @@ class RadioListView(ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        alias_map = _build_brand_display_alias_map()
+        for radio in context.get('radios', []):
+            radio.display_brand = _preferred_brand_display_name(radio, alias_map)
+
         context['search_form'] = RadioSearchForm(self.request.GET)
         context['total_count'] = Radio.objects.count()
         context['brands'] = Radio.objects.values('brand').annotate(
@@ -338,6 +405,8 @@ class BrandListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['total_count'] = Brand.objects.count()
+        context['filtered_count'] = context['paginator'].count if context.get('paginator') else 0
         # Build query string for pagination
         query_params = self.request.GET.copy()
         if 'page' in query_params:
@@ -523,10 +592,23 @@ def dashboard_view(request):
 
         row['source_brands'] = sorted(row.get('source_brands', []))
 
+    alias_map = _build_brand_display_alias_map()
+    recent_radios = list(Radio.objects.select_related('manufacturer').order_by('-created_at')[:10])
+    for radio in recent_radios:
+        radio.display_brand = _preferred_brand_display_name(radio, alias_map)
+
+    recent_manual_uploads = list(
+        RadioManual.objects.select_related('radio', 'radio__manufacturer').exclude(manual_pdf='').order_by('-created_at')[:25]
+    )
+    for manual in recent_manual_uploads:
+        if manual.radio:
+            manual.radio.display_brand = _preferred_brand_display_name(manual.radio, alias_map)
+
     context = {
         'total_radios': Radio.objects.count(),
         'total_brands': Radio.objects.values('brand').distinct().count(),
-        'recent_radios': Radio.objects.order_by('-created_at')[:10],
+        'recent_radios': recent_radios,
+        'recent_manual_uploads': recent_manual_uploads,
         'top_brands': top_brands,
     }
     return render(request, 'radios/dashboard.html', context)
@@ -570,3 +652,79 @@ def processing_logs_view(request):
         'log_file_exists': log_file.exists(),
     }
     return render(request, 'radios/processing_logs.html', context)
+
+
+def nodal_visualization_view(request):
+    """Interactive node graph for brand, model, FCC, and OEM relationships."""
+    brand_query = (request.GET.get('brand') or '').strip()
+    model_query = (request.GET.get('model') or '').strip()
+    fcc_query = (request.GET.get('fcc_id') or '').strip()
+
+    logger.info(
+        "User action nodal_visualization_view actor=%s brand=%s model=%s fcc_id=%s",
+        _actor_label(request),
+        brand_query,
+        model_query,
+        fcc_query,
+    )
+
+    radios = Radio.objects.all()
+    if brand_query:
+        radios = radios.filter(
+            Q(brand__icontains=brand_query)
+            | Q(manufacturer__name__icontains=brand_query)
+            | Q(manufacturer__alias__icontains=brand_query)
+        )
+    if model_query:
+        # Normalize punctuation so UV5R and UV-5R match the same model family.
+        requested_model_key = _normalize_model_key(model_query)
+        if requested_model_key:
+            candidate_ids = [
+                radio.id
+                for radio in radios.only('id', 'model')
+                if requested_model_key in _normalize_model_key(radio.model)
+            ]
+            radios = radios.filter(id__in=candidate_ids)
+    if fcc_query:
+        # Exact normalized match to avoid broad captures like all 2AJGM-* records.
+        requested_fcc_key = _normalize_fcc_key(fcc_query)
+        grantee_code, product_code = split_fcc_id(fcc_query)
+
+        candidate_qs = radios.exclude(fcc_id='')
+        if grantee_code:
+            candidate_qs = candidate_qs.filter(fcc_id__istartswith=grantee_code)
+        if product_code:
+            candidate_qs = candidate_qs.filter(fcc_id__icontains=product_code)
+
+        candidate_ids = [
+            radio.id
+            for radio in candidate_qs.only('id', 'fcc_id')
+            if _normalize_fcc_key(radio.fcc_id) == requested_fcc_key
+        ]
+        radios = radios.filter(id__in=candidate_ids)
+
+    is_filtered = bool(brand_query or model_query or fcc_query)
+    if not is_filtered:
+        radios = radios.filter(
+            Q(is_a_whitelabel=True)
+            | Q(manufacturer__isnull=False)
+            | ~Q(fcc_id='')
+        )
+
+    graph_data = build_nodal_graph_data(radios_queryset=radios, max_radios=500)
+    graph_stats = graph_data.get('stats', {})
+
+    context = {
+        'graph_nodes': graph_data.get('nodes', []),
+        'graph_edges': graph_data.get('edges', []),
+        'graph_stats': graph_stats,
+        'brand_query': brand_query,
+        'model_query': model_query,
+        'fcc_query': fcc_query,
+        'is_filtered': is_filtered,
+        'node_total': len(graph_data.get('nodes', [])),
+        'edge_total': len(graph_data.get('edges', [])),
+        'graph_nodes_json': json.dumps(graph_data.get('nodes', [])),
+        'graph_edges_json': json.dumps(graph_data.get('edges', [])),
+    }
+    return render(request, 'radios/nodal_visualization.html', context)

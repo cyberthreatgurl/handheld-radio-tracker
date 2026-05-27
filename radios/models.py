@@ -66,6 +66,11 @@ class Radio(models.Model):
         help_text="Type of radio (Base, Mobile, Portable)"
     )
     fcc_id = models.CharField(max_length=50, blank=True, help_text="FCC ID (e.g., 2AJGM-UV5R)")
+    last_fccid_lookup_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp of the last FCC ID lookup attempt for this radio",
+    )
     intro_year = models.IntegerField(null=True, blank=True, help_text="Year introduced")
     
     # Technical specifications
@@ -201,6 +206,11 @@ def manual_upload_to(instance, filename):
     return f"{manuals_dir}/{filename}"
 
 
+def test_report_upload_to(instance, filename):
+    reports_dir = getattr(settings, 'FCC_TEST_REPORTS_DIR', 'artifacts/test_reports').strip('/ ')
+    return f"{reports_dir}/{filename}"
+
+
 class RadioManual(models.Model):
     """Uploaded manual PDFs and extraction artifacts."""
 
@@ -240,3 +250,35 @@ class RadioManual(models.Model):
     def __str__(self):
         linked = f" -> {self.radio}" if self.radio else ''
         return f"Manual {self.id}{linked}"
+
+
+class RadioFCCTestReport(models.Model):
+    """FCC test report PDFs linked to a radio record."""
+
+    radio = models.ForeignKey(
+        Radio,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='fcc_test_reports',
+    )
+    fcc_id = models.CharField(max_length=50, db_index=True)
+    report_pdf = models.FileField(upload_to=test_report_upload_to)
+    source_url = models.URLField(max_length=1000, blank=True)
+    report_title = models.CharField(max_length=500, blank=True)
+    product_designation = models.CharField(max_length=300, blank=True)
+    extracted_data = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['fcc_id']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        linked = f" -> {self.radio}" if self.radio else ''
+        label = self.report_title or self.report_pdf.name
+        return f"FCC Test Report {self.id}: {label}{linked}"

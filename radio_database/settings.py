@@ -132,6 +132,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media/manual uploads
 MANUALS_DIR = os.environ.get('MANUALS_DIR', 'artifacts/manuals').strip('/ ')
+FCC_TEST_REPORTS_DIR = os.environ.get('FCC_TEST_REPORTS_DIR', 'artifacts/test_reports').strip('/ ')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR
 

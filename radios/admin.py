@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Radio, Brand, RadioManual
+from .models import Radio, Brand, RadioManual, RadioFCCTestReport
 
 
 @admin.register(Brand)
@@ -39,14 +39,14 @@ class BrandAdmin(admin.ModelAdmin):
 
 @admin.register(Radio)
 class RadioAdmin(admin.ModelAdmin):
-    list_display = ['brand', 'model', 'intro_year', 'freq_bands_tx', 'power_watts', 'cost_approx']
-    list_filter = ['brand', 'intro_year', 'dmr', 'gps', 'aprs']
+    list_display = ['brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'intro_year', 'freq_bands_tx', 'power_watts', 'cost_approx']
+    list_filter = ['brand', 'last_fccid_lookup_at', 'intro_year', 'dmr', 'gps', 'aprs']
     search_fields = ['brand', 'model', 'fcc_id']
     ordering = ['brand', 'model']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('brand', 'model', 'fcc_id', 'intro_year')
+            'fields': ('brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'intro_year')
         }),
         ('Technical Specifications', {
             'fields': ('freq_bands_tx', 'power_watts')
@@ -71,4 +71,12 @@ class RadioManualAdmin(admin.ModelAdmin):
     list_display = ['id', 'radio', 'status', 'extraction_confidence', 'created_at']
     list_filter = ['status', 'created_at']
     search_fields = ['radio__brand', 'radio__model', 'source_url']
+    ordering = ['-created_at']
+
+
+@admin.register(RadioFCCTestReport)
+class RadioFCCTestReportAdmin(admin.ModelAdmin):
+    list_display = ['id', 'radio', 'fcc_id', 'report_title', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['radio__brand', 'radio__model', 'fcc_id', 'report_title', 'source_url', 'product_designation']
     ordering = ['-created_at']

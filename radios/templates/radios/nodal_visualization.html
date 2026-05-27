@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+
+{% block title %}Nodal Visualization - Ham Radio Database{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Nodal Visualization</h1>
+            <p class="mt-1 text-sm text-gray-600">Explore brand hierarchies, white-label chains, manufacturers, and FCC-linked model clusters.</p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Back to Dashboard
+        </a>
+    </div>
+
+    <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <form method="get" class="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <div>
+                <label for="brand" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Brand</label>
+                <input id="brand" name="brand" value="{{ brand_query }}" class="w-full rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Baofeng" />
+            </div>
+            <div>
+                <label for="model" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Model</label>
+                <input id="model" name="model" value="{{ model_query }}" class="w-full rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="UV-5R" />
+            </div>
+            <div>
+                <label for="fcc_id" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">FCC ID</label>
+                <input id="fcc_id" name="fcc_id" value="{{ fcc_query }}" class="w-full rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="2AJGM-UV-5R" />
+            </div>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="inline-flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+                    Build Graph
+                </button>
+                <a href="{% url 'nodal_visualization' %}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-4">
+        <div class="xl:col-span-3 rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div class="border-b border-gray-200 px-4 py-3 text-sm text-gray-600">
+                <span class="font-medium text-gray-900">Graph:</span>
+                {{ node_total }} nodes, {{ edge_total }} edges
+                {% if is_filtered %}
+                <span class="ml-2 rounded bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700">Filtered view</span>
+                {% else %}
+                <span class="ml-2 rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">Relationship-focused default view</span>
+                {% endif %}
+            </div>
+            <div class="h-[620px] w-full">
+                <canvas id="graph-canvas" class="h-full w-full"></canvas>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Node Size</h2>
+                <p class="mt-1 text-xs text-gray-500">Adjust node circle size for readability.</p>
+                <div id="size-controls" class="mt-3 grid grid-cols-3 gap-2">
+                    <button type="button" data-size="small" class="node-size-btn rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Small</button>
+                    <button type="button" data-size="medium" class="node-size-btn rounded-md border border-gray-300 bg-indigo-600 px-2 py-1.5 text-xs font-medium text-white">Medium</button>
+                    <button type="button" data-size="large" class="node-size-btn rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Large</button>
+                </div>
+            </div>
+
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Legend</h2>
+                <ul class="mt-3 space-y-2 text-sm text-gray-700">
+                    <li><span class="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-indigo-600"></span>Brand</li>
+                    <li><span class="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-emerald-600"></span>Radio model</li>
+                    <li><span class="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-amber-500"></span>Shared FCC cluster</li>
+                </ul>
+            </div>
+
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Stats</h2>
+                <dl class="mt-3 space-y-2 text-sm">
+                    <div class="flex justify-between"><dt class="text-gray-500">Brand nodes</dt><dd class="font-medium text-gray-900">{{ graph_stats.brand_nodes }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Radio nodes</dt><dd class="font-medium text-gray-900">{{ graph_stats.radio_nodes }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">FCC nodes</dt><dd class="font-medium text-gray-900">{{ graph_stats.fcc_nodes }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Edges</dt><dd class="font-medium text-gray-900">{{ graph_stats.total_edges }}</dd></div>
+                </dl>
+            </div>
+
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Relationships</h2>
+                <ul class="mt-3 space-y-1 text-sm text-gray-700">
+                    <li>parent_brand: OEM ownership hierarchy</li>
+                    <li>manufactures: true manufacturer to model</li>
+                    <li>markets: marketed brand to model</li>
+                    <li>white_label_chain: OEM to marketed brand mapping</li>
+                    <li>shares_fcc: model to shared FCC cluster</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ graph_nodes|json_script:"graph-nodes" }}
+{{ graph_edges|json_script:"graph-edges" }}
+
+<script>
+(() => {
+    const canvas = document.getElementById('graph-canvas');
+    const ctx = canvas.getContext('2d');
+    const nodes = JSON.parse(document.getElementById('graph-nodes').textContent || '[]');
+    const edges = JSON.parse(document.getElementById('graph-edges').textContent || '[]');
+    const sizeControlButtons = Array.from(document.querySelectorAll('.node-size-btn'));
+
+    const SIZE_PRESETS = {
+        small: { radiusMult: 0.78, spacingX: 112, spacingY: 112, chargeMult: 0.85 },
+        medium: { radiusMult: 1.0, spacingX: 140, spacingY: 140, chargeMult: 1.0 },
+        large: { radiusMult: 1.28, spacingX: 172, spacingY: 172, chargeMult: 1.18 },
+    };
+    let currentSizePreset = 'medium';
+
+    function resizeCanvas() {
+        const ratio = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.floor(rect.width * ratio);
+        canvas.height = Math.floor(rect.height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const nodeById = new Map();
+    const width = () => canvas.getBoundingClientRect().width;
+    const height = () => canvas.getBoundingClientRect().height;
+
+    function buildNodeLines(node) {
+        if (node.type === 'radio') {
+            const primary = (node.brand || '').trim();
+            const secondary = (node.model || '').trim();
+            return [primary, secondary].filter(Boolean);
+        }
+        if (node.type === 'brand') {
+            const lines = [String(node.label || '').trim()];
+            if (node.grantee_code) {
+                lines.push(`FCC ${node.grantee_code}`);
+            }
+            return lines.filter(Boolean);
+        }
+        return [String(node.label || '').trim()].filter(Boolean);
+    }
+
+    function computeNodeRadius(node) {
+        const maxLineLength = (node.textLines || []).reduce((max, line) => Math.max(max, line.length), 0);
+        const base = node.type === 'radio' ? 52 : (node.type === 'brand' ? 58 : 46);
+        const charBonus = Math.min(28, maxLineLength * 1.0);
+        const lineBonus = Math.max(0, (node.textLines || []).length - 1) * 8;
+        return Math.min(90, base + charBonus + lineBonus);
+    }
+
+    function setButtonState(activePreset) {
+        sizeControlButtons.forEach(button => {
+            const isActive = button.dataset.size === activePreset;
+            button.classList.toggle('bg-indigo-600', isActive);
+            button.classList.toggle('text-white', isActive);
+            button.classList.toggle('hover:bg-indigo-700', isActive);
+            button.classList.toggle('bg-white', !isActive);
+            button.classList.toggle('text-gray-700', !isActive);
+            button.classList.toggle('hover:bg-gray-50', !isActive);
+        });
+    }
+
+    function applyNodeSizePreset(presetName, reflow = false) {
+        const preset = SIZE_PRESETS[presetName] || SIZE_PRESETS.medium;
+        currentSizePreset = presetName in SIZE_PRESETS ? presetName : 'medium';
+
+        nodes.forEach((node, index) => {
+            node.radius = Math.min(112, Math.max(28, node.baseRadius * preset.radiusMult));
+            if (reflow) {
+                const column = index % 10;
+                const row = Math.floor(index / 10);
+                node.x = column * preset.spacingX + 130;
+                node.y = row * preset.spacingY + 130;
+                node.vx = 0;
+                node.vy = 0;
+            }
+        });
+
+        setButtonState(currentSizePreset);
+    }
+
+    nodes.forEach((node, index) => {
+        node.x = (index % 10) * SIZE_PRESETS.medium.spacingX + 130;
+        node.y = Math.floor(index / 10) * SIZE_PRESETS.medium.spacingY + 130;
+        node.vx = 0;
+        node.vy = 0;
+        node.textLines = buildNodeLines(node);
+        node.baseRadius = computeNodeRadius(node);
+        node.radius = node.baseRadius;
+        nodeById.set(node.id, node);
+    });
+
+    applyNodeSizePreset(currentSizePreset, false);
+
+    sizeControlButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const nextPreset = button.dataset.size || 'medium';
+            applyNodeSizePreset(nextPreset, true);
+        });
+    });
+
+    const validEdges = edges
+        .map(edge => ({ source: nodeById.get(edge.source), target: nodeById.get(edge.target), relation: edge.relation }))
+        .filter(edge => edge.source && edge.target);
+
+    const relationColor = {
+        parent_brand: '#4338ca',
+        manufactures: '#0f766e',
+        markets: '#6b7280',
+        shares_fcc: '#d97706',
+        white_label_chain: '#7c3aed'
+    };
+
+    let hovered = null;
+    canvas.addEventListener('mousemove', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = event.clientX - rect.left;
+        const my = event.clientY - rect.top;
+        hovered = null;
+
+        for (const node of nodes) {
+            const dx = node.x - mx;
+            const dy = node.y - my;
+            if ((dx * dx) + (dy * dy) <= (node.radius + 4) * (node.radius + 4)) {
+                hovered = node;
+                break;
+            }
+        }
+    });
+
+    canvas.addEventListener('click', () => {
+        if (!hovered) {
+            return;
+        }
+        if (hovered.type === 'radio') {
+            const idValue = hovered.id.split(':')[1];
+            const radioUrlTemplate = "{% url 'radio_detail' 0 %}";
+            window.location.href = radioUrlTemplate.replace('/0/', `/${idValue}/`);
+        }
+        if (hovered.type === 'brand') {
+            const brand = encodeURIComponent(hovered.label || '');
+            const brandUrlTemplate = "{% url 'brand_list' %}";
+            window.location.href = `${brandUrlTemplate}?query=${brand}`;
+        }
+    });
+
+    function tick() {
+        const w = width();
+        const h = height();
+
+        // Repulsion force between all nodes.
+        for (let i = 0; i < nodes.length; i += 1) {
+            const a = nodes[i];
+            for (let j = i + 1; j < nodes.length; j += 1) {
+                const b = nodes[j];
+                let dx = b.x - a.x;
+                let dy = b.y - a.y;
+                let dist2 = (dx * dx) + (dy * dy);
+                if (dist2 < 0.01) {
+                    dx = (Math.random() - 0.5) * 0.1;
+                    dy = (Math.random() - 0.5) * 0.1;
+                    dist2 = (dx * dx) + (dy * dy);
+                }
+                const chargeMult = (SIZE_PRESETS[currentSizePreset] || SIZE_PRESETS.medium).chargeMult;
+                const force = (1100 * chargeMult) / dist2;
+                const fx = force * dx;
+                const fy = force * dy;
+                a.vx -= fx;
+                a.vy -= fy;
+                b.vx += fx;
+                b.vy += fy;
+            }
+        }
+
+        // Spring force along edges.
+        validEdges.forEach(edge => {
+            const dx = edge.target.x - edge.source.x;
+            const dy = edge.target.y - edge.source.y;
+            const distance = Math.sqrt((dx * dx) + (dy * dy)) || 1;
+            const desired = edge.relation === 'shares_fcc'
+                ? (edge.source.radius + edge.target.radius + 38)
+                : (edge.source.radius + edge.target.radius + 62);
+            const force = (distance - desired) * 0.0025;
+            const fx = (dx / distance) * force;
+            const fy = (dy / distance) * force;
+            edge.source.vx += fx;
+            edge.source.vy += fy;
+            edge.target.vx -= fx;
+            edge.target.vy -= fy;
+        });
+
+        nodes.forEach(node => {
+            node.vx *= 0.86;
+            node.vy *= 0.86;
+            node.x += node.vx;
+            node.y += node.vy;
+
+            // Keep within viewport bounds.
+            const margin = node.radius + 10;
+            node.x = Math.max(margin, Math.min(w - margin, node.x));
+            node.y = Math.max(margin, Math.min(h - margin, node.y));
+        });
+    }
+
+    function draw() {
+        const w = width();
+        const h = height();
+        ctx.clearRect(0, 0, w, h);
+
+        validEdges.forEach(edge => {
+            ctx.beginPath();
+            ctx.moveTo(edge.source.x, edge.source.y);
+            ctx.lineTo(edge.target.x, edge.target.y);
+            ctx.strokeStyle = relationColor[edge.relation] || '#d1d5db';
+            ctx.globalAlpha = edge.relation === 'shares_fcc' ? 0.35 : 0.45;
+            ctx.lineWidth = edge.relation === 'parent_brand' ? 1.8 : 1.2;
+            ctx.stroke();
+        });
+
+        ctx.globalAlpha = 1;
+        nodes.forEach(node => {
+            const color = node.type === 'brand'
+                ? '#4f46e5'
+                : (node.type === 'fcc' ? '#d97706' : '#059669');
+
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            const lines = node.textLines || [];
+            if (lines.length) {
+                const fontSize = node.type === 'fcc' ? 11 : 12;
+                const lineHeight = fontSize + 3;
+                const maxLines = node.type === 'fcc' ? 1 : 3;
+                const visible = lines.slice(0, maxLines);
+                const startY = node.y - ((visible.length - 1) * lineHeight) / 2;
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `600 ${fontSize}px sans-serif`;
+
+                visible.forEach((line, idx) => {
+                    let text = line;
+                    const maxChars = node.type === 'fcc' ? 18 : 20;
+                    if (text.length > maxChars) {
+                        text = `${text.slice(0, maxChars - 1)}...`;
+                    }
+                    ctx.fillText(text, node.x, startY + (idx * lineHeight));
+                });
+            }
+
+            if (hovered && hovered.id === node.id) {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius + 3, 0, Math.PI * 2);
+                ctx.strokeStyle = '#111827';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+        });
+
+        if (hovered) {
+            const text = hovered.label || hovered.id;
+            ctx.font = '12px sans-serif';
+            const textWidth = ctx.measureText(text).width;
+            const x = Math.min(Math.max(hovered.x + 12, 8), w - textWidth - 20);
+            const y = Math.max(hovered.y - 12, 16);
+
+            ctx.fillStyle = 'rgba(17, 24, 39, 0.9)';
+            ctx.fillRect(x - 6, y - 14, textWidth + 12, 20);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(text, x, y);
+        }
+    }
+
+    function loop() {
+        tick();
+        draw();
+        window.requestAnimationFrame(loop);
+    }
+
+    if (!nodes.length) {
+        ctx.font = '14px sans-serif';
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('No graph data for the current filters.', 24, 36);
+        return;
+    }
+
+    loop();
+})();
+</script>
+{% endblock %}

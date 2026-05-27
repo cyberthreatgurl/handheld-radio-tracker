@@ -127,8 +127,27 @@
                       <input type="checkbox" name="radio_ids" value="{{ radio.pk }}" class="select-radio">
                     </td>
                     <td class="px-6 py-4 whitespace-normal break-words">
-                        <div class="text-sm font-medium text-gray-900">{{ radio.brand }}</div>
-                        <div class="text-sm text-gray-500">{{ radio.model }}</div>
+                        <div class="flex items-start gap-2">
+                            {% if radio.available_manuals %}
+                            <a
+                                href="{{ radio.available_manuals.0.manual_pdf.url }}"
+                                download
+                                title="Download manual PDF"
+                                aria-label="Download manual PDF"
+                                class="mt-0.5 text-indigo-600 hover:text-indigo-800"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M4 3a1 1 0 011-1h6.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V17a1 1 0 01-1 1H5a1 1 0 01-1-1V3zm3 7a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h4a1 1 0 100-2H7z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                            {% else %}
+                            <span class="mt-0.5 h-4 w-4" aria-hidden="true"></span>
+                            {% endif %}
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">{{ radio.display_brand|default:radio.brand }}</div>
+                                <div class="text-sm text-gray-500">{{ radio.model }}</div>
+                            </div>
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {{ radio.intro_year|default:"-" }}

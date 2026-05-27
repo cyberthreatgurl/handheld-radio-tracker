@@ -13,6 +13,9 @@
             <h1 class="text-3xl font-bold text-gray-900">{{ radio.brand }} {{ radio.model }}</h1>
         </div>
         <div class="flex space-x-3">
+            <a href="{% url 'nodal_visualization' %}?brand={{ radio.brand|urlencode }}&model={{ radio.model|urlencode }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                Nodal View
+            </a>
             <a href="{% url 'radio_edit' radio.pk %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
                 Edit
             </a>
@@ -163,6 +166,23 @@
                             <li>
                                 <a href="{{ manual.manual_pdf.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ manual.manual_pdf.name }} ↗</a>
                                 <span class="text-xs text-gray-500 ml-2">Confidence: {{ manual.extraction_confidence|floatformat:2 }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </dd>
+                </div>
+                {% endif %}
+                {% if radio.fcc_test_reports.all %}
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">FCC Test Reports</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <ul class="space-y-2">
+                            {% for report in radio.fcc_test_reports.all %}
+                            <li>
+                                <a href="{{ report.report_pdf.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ report.report_pdf.name }} ↗</a>
+                                {% if report.product_designation %}
+                                <span class="text-xs text-gray-500 ml-2">Designation: {{ report.product_designation }}</span>
+                                {% endif %}
                             </li>
                             {% endfor %}
                         </ul>

@@ -6,7 +6,12 @@
 <div class="mb-6 flex justify-between items-center sm:flex-row flex-col gap-4">
     <div>
         <h1 class="text-3xl font-bold text-gray-900">Radio Brands</h1>
-        <p class="mt-2 text-sm text-gray-700">A catalog of {{ total_count }} radio manufacturers and brands.</p>
+        <p class="mt-2 text-sm text-gray-700">
+            A catalog of {{ total_count }} radio manufacturers and brands.
+            {% if filtered_count != total_count %}
+            Showing {{ filtered_count }} matching brands.
+            {% endif %}
+        </p>
     </div>
     
     <div class="flex space-x-3">
@@ -40,6 +45,21 @@
 </form>
 
 <div class="flex flex-col">
+    {% if is_paginated %}
+    <div class="mb-3 flex items-center justify-between text-sm text-gray-600">
+        <p>
+            Showing
+            <span class="font-medium text-gray-900">{{ page_obj.start_index }}</span>
+            to
+            <span class="font-medium text-gray-900">{{ page_obj.end_index }}</span>
+            of
+            <span class="font-medium text-gray-900">{{ page_obj.paginator.count }}</span>
+            brands
+        </p>
+        <p>Page <span class="font-medium text-gray-900">{{ page_obj.number }}</span> of <span class="font-medium text-gray-900">{{ page_obj.paginator.num_pages }}</span></p>
+    </div>
+    {% endif %}
+
     <!-- Rest of layout for brand list -->
     <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
@@ -109,5 +129,30 @@
             </div>
         </div>
     </div>
+
+    {% if is_paginated %}
+    <div class="mt-4 flex items-center justify-between">
+        <div class="text-sm text-gray-600">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </div>
+        <nav class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page=1{{ query_string }}" class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">First</a>
+            <a href="?page={{ page_obj.previous_page_number }}{{ query_string }}" class="relative inline-flex items-center border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+            {% else %}
+            <span class="relative inline-flex items-center rounded-l-md border border-gray-200 bg-gray-100 px-3 py-2 text-sm font-medium text-gray-400">First</span>
+            <span class="relative inline-flex items-center border border-gray-200 bg-gray-100 px-3 py-2 text-sm font-medium text-gray-400">Previous</span>
+            {% endif %}
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{{ query_string }}" class="relative inline-flex items-center border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{{ query_string }}" class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Last</a>
+            {% else %}
+            <span class="relative inline-flex items-center border border-gray-200 bg-gray-100 px-3 py-2 text-sm font-medium text-gray-400">Next</span>
+            <span class="relative inline-flex items-center rounded-r-md border border-gray-200 bg-gray-100 px-3 py-2 text-sm font-medium text-gray-400">Last</span>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
