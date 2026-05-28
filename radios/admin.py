@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Radio, Brand, RadioManual, RadioFCCTestReport
+from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument
 
 
 @admin.register(Brand)
@@ -58,7 +58,7 @@ class RadioAdmin(admin.ModelAdmin):
             'fields': ('display', 'battery_mah')
         }),
         ('Pricing & Related', {
-            'fields': ('cost_approx', 'rebadges_clones', 'website')
+            'fields': ('cost_approx', 'rebadges_clones', 'website', 'review_url', 'youtube_video_urla')
         }),
         ('Additional Details', {
             'fields': ('notes',)
@@ -80,3 +80,11 @@ class RadioFCCTestReportAdmin(admin.ModelAdmin):
     list_filter = ['created_at']
     search_fields = ['radio__brand', 'radio__model', 'fcc_id', 'report_title', 'source_url', 'product_designation']
     ordering = ['-created_at']
+
+
+@admin.register(RadioOETDocument)
+class RadioOETDocumentAdmin(admin.ModelAdmin):
+    list_display = ['id', 'radio', 'fcc_id', 'view_attachment', 'exhibit_type', 'date_submitted_to_fcc', 'display_type', 'date_available']
+    list_filter = ['exhibit_type', 'display_type', 'date_submitted_to_fcc', 'date_available']
+    search_fields = ['radio__brand', 'radio__model', 'fcc_id', 'view_attachment', 'exhibit_type', 'document_url']
+    ordering = ['fcc_id', 'exhibit_type', 'view_attachment']

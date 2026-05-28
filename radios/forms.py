@@ -1,4 +1,6 @@
 from django import forms
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 from .models import Radio, Brand
 
 
@@ -42,7 +44,7 @@ class RadioForm(forms.ModelForm):
             'gps', 'aprs', 'air_band', 'dmr',
             'display', 'battery_mah',
             'cost_approx', 'rebadges_clones', 'white_label_vendors', 'website', 'review_url',
-            'notes'
+            'youtube_video_urla', 'notes'
         ]
         widgets = {
             'is_a_whitelabel': forms.CheckboxInput(attrs={
@@ -127,6 +129,11 @@ class RadioForm(forms.ModelForm):
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'https://eham.net/reviews/...'
             }),
+            'youtube_video_urla': forms.Textarea(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'rows': 4,
+                'placeholder': 'https://youtube.com/watch?v=...\nhttps://youtu.be/...'
+            }),
             'notes': forms.Textarea(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'rows': 4,
@@ -146,6 +153,24 @@ class RadioForm(forms.ModelForm):
         if manual_pdf and not manual_pdf.name.lower().endswith('.pdf'):
             raise forms.ValidationError('Only PDF files are supported for manual uploads.')
         return manual_pdf
+
+    def clean_youtube_video_urla(self):
+        value = (self.cleaned_data.get('youtube_video_urla') or '').strip()
+        if not value:
+            return ''
+
+        validator = URLValidator(schemes=['http', 'https'])
+        cleaned_urls = []
+        for line in value.splitlines():
+            url = line.strip()
+            if not url:
+                continue
+            try:
+                validator(url)
+            except ValidationError as exc:
+                raise forms.ValidationError(f'Invalid URL in YouTube Video URLs: {url}') from exc
+            cleaned_urls.append(url)
+        return '\n'.join(cleaned_urls)
 
 
 class BrandForm(forms.ModelForm):

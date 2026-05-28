@@ -14,6 +14,8 @@ fix*.py
 *.pot
 *.mo
 .env
+debug/
+artifacts/
 .venv
 data/*.xmnl
 db.sqlite3

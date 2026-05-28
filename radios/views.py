@@ -72,14 +72,14 @@ def _normalized_query_match_ids(query, radios_qs=None):
 
     source_qs = radios_qs if radios_qs is not None else Radio.objects.all()
     return [
-        radio.id
-        for radio in source_qs.only('id', 'brand', 'model', 'fcc_id', 'rebadges_clones', 'white_label_vendors')
+        radio['id']
+        for radio in source_qs.values('id', 'brand', 'model', 'fcc_id', 'rebadges_clones', 'white_label_vendors')
         if (
-            query_key in _normalize_model_key(radio.brand)
-            or query_key in _normalize_model_key(radio.model)
-            or query_key in _normalize_model_key(radio.fcc_id)
-            or query_key in _normalize_model_key(radio.rebadges_clones)
-            or query_key in _normalize_model_key(radio.white_label_vendors)
+            query_key in _normalize_model_key(radio.get('brand'))
+            or query_key in _normalize_model_key(radio.get('model'))
+            or query_key in _normalize_model_key(radio.get('fcc_id'))
+            or query_key in _normalize_model_key(radio.get('rebadges_clones'))
+            or query_key in _normalize_model_key(radio.get('white_label_vendors'))
         )
     ]
 

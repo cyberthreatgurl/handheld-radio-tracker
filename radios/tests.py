@@ -5,6 +5,7 @@ from urllib.parse import quote_plus
 from .models import Radio
 from .models import Brand
 from .fcc_id_utils import split_fcc_id, normalize_fcc_id_for_lookup
+from .fcc_utils import _extract_original_equipment_summary, _extract_secondary_metadata_from_generic_search_html
 
 
 class RadioModelTest(TestCase):
@@ -92,3 +93,109 @@ class FCCIDUtilsTest(TestCase):
             response,
             f'https://www.fcc.gov/oet/ea/fccid?id={expected_lookup}',
         )
+
+
+class FCCOriginalEquipmentSummaryTest(TestCase):
+    def test_summary_derives_intro_year_and_uses_narrowest_frequency_range(self):
+        primary_record = {
+            'applicationPurpose': 'Original Equipment',
+            'grantDate': '12/06/2020',
+        }
+        secondary_metadata = {
+            'original_equipment_rows': [
+                {
+                    'grant_date': '12/06/2020',
+                    'application_purpose': 'Original Equipment',
+                    'lower_freq_mhz': '150.00000000',
+                    'upper_freq_mhz': '174.00000000',
+                },
+                {
+                    'grant_date': '12/06/2020',
+                    'application_purpose': 'Original Equipment',
+                    'lower_freq_mhz': '400.00000000',
+                    'upper_freq_mhz': '480.00000000',
+                },
+                {
+                    'grant_date': '12/06/2020',
+                    'application_purpose': 'Original Equipment',
+                    'lower_freq_mhz': '136.00000000',
+                    'upper_freq_mhz': '174.00000000',
+                },
+                {
+                    'grant_date': '12/06/2020',
+                    'application_purpose': 'Original Equipment',
+                    'lower_freq_mhz': '400.00000000',
+                    'upper_freq_mhz': '520.00000000',
+                },
+            ],
+        }
+
+        summary = _extract_original_equipment_summary(primary_record, secondary_metadata)
+
+        self.assertEqual(summary['intro_year'], 2020)
+        self.assertEqual(summary['freq_bands_tx'], '150.00000000-174.00000000 MHz')
+
+    def test_summary_ignores_non_original_equipment_data(self):
+        primary_record = {
+            'applicationPurpose': 'Change in Identification',
+            'grantDate': '12/06/2020',
+        }
+        secondary_metadata = {
+            'original_equipment_rows': [],
+        }
+
+        summary = _extract_original_equipment_summary(primary_record, secondary_metadata)
+
+        self.assertIsNone(summary['intro_year'])
+        self.assertEqual(summary['freq_bands_tx'], '')
+
+
+class FCCGenericSearchHtmlParsingTest(TestCase):
+        def test_parses_rendered_generic_search_rows_for_target_fcc_id(self):
+                html = """
+                <table>
+                    <tbody id=\"offTblBdy\">
+                        <tr class=\"rowalternate\">
+                            <td></td><td></td>
+                            <td>
+                                <a href=\"/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&application_id=ABC&fcc_id=2AJTBD500\">Detail</a>
+                            </td>
+                            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                            <td>2AJTBD500</td>
+                            <td>Original Equipment</td>
+                            <td>11/19/2025</td>
+                            <td>136.0</td>
+                            <td>174.0</td>
+                        </tr>
+                        <tr class=\"rowprimary\">
+                            <td></td><td></td>
+                            <td>
+                                <a href=\"/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&application_id=XYZ&fcc_id=2AJTB-MINI9\">Detail</a>
+                            </td>
+                            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                            <td>2AJTB-MINI9</td>
+                            <td>Change in Identification</td>
+                            <td>07/03/2018</td>
+                            <td>400.0</td>
+                            <td>406.0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                """
+
+                parsed = _extract_secondary_metadata_from_generic_search_html(
+                        html,
+                        base_url='https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm',
+                        fcc_id='2AJTBD500',
+                )
+
+                self.assertEqual(parsed['record_count'], 1)
+                self.assertIn('2AJTBD500', parsed['text_blob'])
+                self.assertIn('application_purpose', parsed['matched_keys'])
+                self.assertEqual(len(parsed['original_equipment_rows']), 1)
+                self.assertEqual(parsed['original_equipment_rows'][0]['grant_date'], '11/19/2025')
+                self.assertEqual(parsed['original_equipment_rows'][0]['lower_freq_mhz'], '136.0')
+                self.assertEqual(parsed['original_equipment_rows'][0]['upper_freq_mhz'], '174.0')
+                self.assertTrue(
+                        any('ViewExhibitReport.cfm' in url for url in parsed['candidate_exhibit_urls'])
+                )

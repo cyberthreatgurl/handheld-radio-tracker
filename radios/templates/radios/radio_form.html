@@ -155,6 +155,12 @@
                             <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700">Website</label>
                             {{ form.website }}
                         </div>
+                        <div class="sm:col-span-2">
+                            <label for="{{ form.youtube_video_urla.id_for_label }}" class="block text-sm font-medium text-gray-700">YouTube Video URLs</label>
+                            {{ form.youtube_video_urla }}
+                            <p class="mt-1 text-xs text-gray-500">Enter one URL per line.</p>
+                            {% if form.youtube_video_urla.errors %}<p class="mt-2 text-sm text-red-600">{{ form.youtube_video_urla.errors.0 }}</p>{% endif %}
+                        </div>
                     </div>
                 </div>
 
@@ -205,6 +211,24 @@
                             </div>
                             {% endif %}
                         </div>
+                        {% if form.instance.pk and form.instance.oet_documents.all %}
+                        <div class="border rounded-md p-4 bg-gray-50">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">OET Documents</h4>
+                            <ul class="space-y-1">
+                                {% for doc in form.instance.oet_documents.all|slice:":8" %}
+                                <li class="text-xs text-gray-700">
+                                    {% if doc.document_url %}
+                                    <a href="{{ doc.document_url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ doc.view_attachment|default:doc.exhibit_type }} (open)</a>
+                                    {% else %}
+                                    <span>{{ doc.view_attachment|default:doc.exhibit_type }}</span>
+                                    {% endif %}
+                                    <span class="ml-2 text-gray-500">{{ doc.exhibit_type }}{% if doc.display_type %} · {{ doc.display_type }}{% endif %}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <p class="mt-2 text-xs text-gray-500">OET documents are synced from FCC data using the radio FCC ID.</p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 

@@ -95,6 +95,10 @@ class Radio(models.Model):
     white_label_vendors = models.CharField(max_length=500, blank=True, help_text="Comma-separated list of white label vendors")
     website = models.URLField(max_length=500, blank=True, help_text="Manufacturer website")
     review_url = models.URLField(max_length=500, blank=True, help_text="Link to review (e.g., eHam.net)")
+    youtube_video_urla = models.TextField(
+        blank=True,
+        help_text="One YouTube URL per line.",
+    )
     
     # Additional notes
     notes = models.TextField(blank=True, help_text="Additional notes or specifications")
@@ -282,3 +286,40 @@ class RadioFCCTestReport(models.Model):
         linked = f" -> {self.radio}" if self.radio else ''
         label = self.report_title or self.report_pdf.name
         return f"FCC Test Report {self.id}: {label}{linked}"
+
+
+class RadioOETDocument(models.Model):
+    """FCC OET exhibit/document row linked to an FCC ID and optional radio."""
+
+    radio = models.ForeignKey(
+        Radio,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='oet_documents',
+    )
+    fcc_id = models.CharField(max_length=50, db_index=True)
+    view_attachment = models.CharField(max_length=500, blank=True)
+    exhibit_type = models.CharField(max_length=200, blank=True)
+    date_submitted_to_fcc = models.DateField(null=True, blank=True)
+    display_type = models.CharField(max_length=100, blank=True)
+    date_available = models.DateField(null=True, blank=True)
+    document_url = models.URLField(max_length=1000, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['exhibit_type', 'view_attachment', 'id']
+        indexes = [
+            models.Index(fields=['fcc_id']),
+            models.Index(fields=['exhibit_type']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['radio', 'fcc_id', 'document_url', 'view_attachment'],
+                name='uniq_oet_document_per_radio_fcc',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.fcc_id} - {self.view_attachment or self.exhibit_type}"
