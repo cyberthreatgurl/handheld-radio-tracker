@@ -1,5 +1,9 @@
 # Ham Radio Database - Django Web Application
 
+## Version
+
+Current application version: 1.0
+
 A Django web application for managing and browsing ham radio specifications with PostgreSQL database and Tailwind CSS styling.
 
 ## Features

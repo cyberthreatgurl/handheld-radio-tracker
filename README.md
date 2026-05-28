@@ -1,5 +1,9 @@
 # Web Scraper for eHam.net Product Names
 
+## Version
+
+Current project version: 1.0
+
 This script scrapes product names from the eHam.net reviews page.
 
 ## Setup
