@@ -6,9 +6,15 @@
 <div class="max-w-3xl mx-auto">
     <div class="space-y-6">
         <div>
+            {% if request.GET.from_brand %}
+            <a href="{% url 'brand_edit' request.GET.from_brand %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
+                ← Back to brand
+            </a>
+            {% else %}
             <a href="{% url 'radio_list' %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
                 ← Back to all radios
             </a>
+            {% endif %}
             <h1 class="text-3xl font-bold text-gray-900">{{ radio.brand }} {{ radio.model }}</h1>
         </div>
 
@@ -216,10 +222,10 @@
                                         {% for doc in radio.oet_documents.all %}
                                         <tr class="border-t border-gray-200">
                                             <td class="pr-4 py-1 align-top">
-                                                {% if doc.document_url %}
-                                                <a href="{{ doc.document_url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ doc.view_attachment|default:"Open Document" }} ↗</a>
+                                                {% if doc.document_file %}
+                                                <a href="{{ doc.document_file.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ doc.view_attachment|default:"Open Document" }} ↗</a>
                                                 {% else %}
-                                                {{ doc.view_attachment|default:"N/A" }}
+                                                <span class="text-gray-500">Not downloaded</span>
                                                 {% endif %}
                                             </td>
                                             <td class="pr-4 py-1 align-top">{{ doc.exhibit_type|default:"N/A" }}</td>
@@ -233,6 +239,40 @@
                             </div>
                             {% else %}
                             <p class="text-sm text-gray-600">No OET documents synced.</p>
+                            {% endif %}
+                        </div>
+                        <div class="border rounded-md p-4 bg-gray-50">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Firmware</h4>
+                            {% if radio.firmware_versions.all %}
+                            <div class="space-y-3">
+                                {% for fw in radio.firmware_versions.all %}
+                                <div class="{% if not forloop.last %}border-b border-gray-200 pb-3{% endif %}">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            {% if fw.label %}
+                                            <p class="text-sm font-medium text-gray-900">{{ fw.label }}</p>
+                                            {% endif %}
+                                            {% if fw.version %}
+                                            <p class="text-xs text-gray-600 mt-0.5">Version: <span class="font-mono">{{ fw.version }}</span></p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex space-x-3 ml-4 shrink-0">
+                                            {% if fw.download_url %}
+                                            <a href="{{ fw.download_url }}" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-900">Download Page ↗</a>
+                                            {% endif %}
+                                            {% if fw.firmware_file %}
+                                            <a href="{{ fw.firmware_file.url }}" class="text-xs text-green-600 hover:text-green-900">Download File ↓</a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if fw.notes %}
+                                    <p class="text-xs text-gray-500 mt-1">{{ fw.notes }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-sm text-gray-600">No firmware versions recorded.</p>
                             {% endif %}
                         </div>
                     </div>

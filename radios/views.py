@@ -10,8 +10,8 @@ import re
 import json
 from collections import Counter
 from pathlib import Path
-from .models import Radio, Brand, RadioManual
-from .forms import RadioForm, RadioSearchForm, BrandForm
+from .models import Radio, Brand, RadioManual, RadioFirmware
+from .forms import RadioForm, RadioSearchForm, BrandForm, RadioFirmwareFormSet
 from .fcc_utils import fetch_and_sync_fcc_id
 from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from .nodal_graph import build_nodal_graph_data
@@ -216,7 +216,12 @@ class RadioListView(ListView):
             queryset=RadioManual.objects.exclude(manual_pdf='').only('id', 'radio_id', 'manual_pdf', 'updated_at').order_by('-updated_at'),
             to_attr='available_manuals',
         )
-        queryset = Radio.objects.all().select_related('manufacturer').prefetch_related(manual_prefetch)
+        firmware_prefetch = Prefetch(
+            'firmware_versions',
+            queryset=RadioFirmware.objects.only('id', 'radio_id', 'label', 'version', 'download_url').order_by('label'),
+            to_attr='prefetched_firmware',
+        )
+        queryset = Radio.objects.all().select_related('manufacturer').prefetch_related(manual_prefetch, firmware_prefetch)
         
         # Search functionality
         query = self.request.GET.get('query')
@@ -315,8 +320,29 @@ class RadioCreateView(CreateView):
     model = Radio
     form_class = RadioForm
     template_name = 'radios/radio_form.html'
-    success_url = reverse_lazy('radio_list')
-    
+
+    def get_success_url(self):
+        return reverse_lazy('radio_edit', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if 'firmware_formset' not in context:
+            context['firmware_formset'] = RadioFirmwareFormSet()
+        context['brand_name_to_pk'] = {b.name: b.pk for b in Brand.objects.only('id', 'name').all()}
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form = self.get_form()
+        firmware_formset = RadioFirmwareFormSet(request.POST, request.FILES)
+        if form.is_valid() and firmware_formset.is_valid():
+            response = self.form_valid(form)
+            firmware_formset.instance = self.object
+            firmware_formset.save()
+            return response
+        context = self.get_context_data(form=form, firmware_formset=firmware_formset)
+        return self.render_to_response(context)
+
     def form_valid(self, form):
         logger.info("User action radio_create submit actor=%s brand=%s model=%s", _actor_label(self.request), form.instance.brand, form.instance.model)
         messages.success(self.request, f'Radio {form.instance} has been created successfully!')
@@ -330,7 +356,16 @@ class RadioUpdateView(UpdateView):
     model = Radio
     form_class = RadioForm
     template_name = 'radios/radio_form.html'
-    success_url = reverse_lazy('radio_list')
+
+    def get_success_url(self):
+        return reverse_lazy('radio_edit', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if 'firmware_formset' not in context:
+            context['firmware_formset'] = RadioFirmwareFormSet(instance=self.object)
+        context['brand_name_to_pk'] = {b.name: b.pk for b in Brand.objects.only('id', 'name').all()}
+        return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -345,7 +380,6 @@ class RadioUpdateView(UpdateView):
                 if form.cleaned_data.get('manual_pdf'):
                     _process_manual_upload_from_radio_form(request, form, self.object)
                     messages.success(request, f"Manual processed for {self.object} without changing radio fields.")
-                    return redirect('radio_detail', pk=self.object.pk)
                 else:
                     messages.warning(request, "Select a PDF manual before using Process Manual Only.")
                 return redirect('radio_edit', pk=self.object.pk)
@@ -356,16 +390,21 @@ class RadioUpdateView(UpdateView):
             )
             messages.error(request, "Manual processing could not run. Fix the form errors and try again.")
             return self.form_invalid(form)
-        return super().post(request, *args, **kwargs)
+        # Normal update — validate main form and firmware formset together
+        form = self.get_form()
+        firmware_formset = RadioFirmwareFormSet(request.POST, request.FILES, instance=self.object)
+        if form.is_valid() and firmware_formset.is_valid():
+            response = self.form_valid(form)
+            firmware_formset.save()
+            return response
+        context = self.get_context_data(form=form, firmware_formset=firmware_formset)
+        return self.render_to_response(context)
     
     def form_valid(self, form):
         logger.info("User action radio_update submit actor=%s radio_id=%s brand=%s model=%s", _actor_label(self.request), form.instance.pk, form.instance.brand, form.instance.model)
-        manual_uploaded = bool(form.cleaned_data.get('manual_pdf'))
         messages.success(self.request, f'Radio {form.instance} has been updated successfully!')
         response = super().form_valid(form)
         _process_manual_upload_from_radio_form(self.request, form, self.object)
-        if manual_uploaded:
-            return redirect('radio_detail', pk=self.object.pk)
         return response
 
 
@@ -389,9 +428,16 @@ class BrandListView(ListView):
     context_object_name = 'brands'
     paginate_by = 50
     ordering = ['name']
+    SORT_FIELDS = {
+        'name': 'name',
+        'grantee_code': 'grantee_code',
+        'country': 'country',
+        'parent_brand': 'parent_brand__name',
+        'last_modified_date': 'last_modified_date',
+    }
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related('parent_brand')
         query = self.request.GET.get('query')
         if query:
             queryset = queryset.filter(
@@ -401,12 +447,23 @@ class BrandListView(ListView):
                 Q(grantee_code__icontains=query) |
                 Q(white_label_vendors__icontains=query)
             )
+
+        sort = self.request.GET.get('sort', 'name')
+        order = self.request.GET.get('order', 'asc')
+        if sort in self.SORT_FIELDS:
+            sort_field = self.SORT_FIELDS[sort]
+            if order == 'desc':
+                sort_field = f'-{sort_field}'
+            queryset = queryset.order_by(sort_field)
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['total_count'] = Brand.objects.count()
         context['filtered_count'] = context['paginator'].count if context.get('paginator') else 0
+        context['current_sort'] = self.request.GET.get('sort', 'name')
+        context['current_order'] = self.request.GET.get('order', 'asc')
         # Build query string for pagination
         query_params = self.request.GET.copy()
         if 'page' in query_params:
@@ -419,13 +476,17 @@ class BrandCreateView(CreateView):
     model = Brand
     form_class = BrandForm
     template_name = 'radios/brand_form.html'
-    success_url = reverse_lazy('brand_list')
-    
+
+    def get_success_url(self):
+        return reverse_lazy('brand_edit', kwargs={'pk': self.object.pk})
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['all_brands'] = Brand.objects.all().order_by('name')
+        brands_qs = Brand.objects.only('id', 'name').order_by('name')
+        context['all_brands'] = brands_qs
+        context['brand_name_to_pk'] = {b.name: b.pk for b in brands_qs}
         return context
-    
+
     def form_valid(self, form):
         logger.info("User action brand_create submit actor=%s brand=%s", _actor_label(self.request), form.instance.name)
         messages.success(self.request, f'Brand {form.instance} has been created successfully!')
@@ -437,13 +498,23 @@ class BrandUpdateView(UpdateView):
     model = Brand
     form_class = BrandForm
     template_name = 'radios/brand_form.html'
-    success_url = reverse_lazy('brand_list')
-    
+
+    def get_success_url(self):
+        return reverse_lazy('brand_edit', kwargs={'pk': self.object.pk})
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['all_brands'] = Brand.objects.all().order_by('name')
+        brands_qs = Brand.objects.only('id', 'name').order_by('name')
+        context['all_brands'] = brands_qs
+        context['brand_name_to_pk'] = {b.name: b.pk for b in brands_qs}
+        brand = self.object
+        context['brand_radios'] = (
+            Radio.objects.filter(brand__iexact=brand.name)
+            .only('id', 'brand', 'model')
+            .order_by('model')
+        )
         return context
-    
+
     def form_valid(self, form):
         logger.info("User action brand_update submit actor=%s brand_id=%s brand=%s", _actor_label(self.request), form.instance.pk, form.instance.name)
         messages.success(self.request, f'Brand {form.instance} has been updated successfully!')

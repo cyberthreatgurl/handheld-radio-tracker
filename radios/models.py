@@ -22,6 +22,7 @@ class Brand(models.Model):
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    last_modified_date = models.DateTimeField(auto_now=True, null=True, blank=True, db_index=True)
     
     class Meta:
         ordering = ['name']
@@ -215,6 +216,16 @@ def test_report_upload_to(instance, filename):
     return f"{reports_dir}/{filename}"
 
 
+def oet_document_upload_to(instance, filename):
+    oet_dir = getattr(settings, 'OET_DOCUMENTS_DIR', 'artifacts/oet_documents').strip('/ ')
+    return f"{oet_dir}/{filename}"
+
+
+def firmware_upload_to(instance, filename):
+    firmware_dir = getattr(settings, 'FIRMWARE_DIR', 'artifacts/firmware').strip('/ ')
+    return f"{firmware_dir}/{filename}"
+
+
 class RadioManual(models.Model):
     """Uploaded manual PDFs and extraction artifacts."""
 
@@ -305,6 +316,7 @@ class RadioOETDocument(models.Model):
     display_type = models.CharField(max_length=100, blank=True)
     date_available = models.DateField(null=True, blank=True)
     document_url = models.URLField(max_length=1000, blank=True)
+    document_file = models.FileField(upload_to=oet_document_upload_to, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -323,3 +335,53 @@ class RadioOETDocument(models.Model):
 
     def __str__(self):
         return f"{self.fcc_id} - {self.view_attachment or self.exhibit_type}"
+
+
+class RadioFirmware(models.Model):
+    """Firmware versions for a radio (up to two per radio, e.g. main firmware and APRS module firmware)."""
+
+    radio = models.ForeignKey(
+        Radio,
+        on_delete=models.CASCADE,
+        related_name='firmware_versions',
+    )
+    label = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Component label, e.g. 'Main Radio' or 'APRS Module'",
+    )
+    version = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Firmware version string, e.g. 'v1.23'",
+    )
+    download_url = models.URLField(
+        max_length=500,
+        blank=True,
+        help_text="Official firmware download page URL",
+    )
+    firmware_file = models.FileField(
+        upload_to=firmware_upload_to,
+        blank=True,
+        null=True,
+        help_text="Optional: upload a copy of the firmware file for local download",
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text="Additional notes about this firmware version",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['radio', 'label']
+        verbose_name = 'Radio Firmware'
+        verbose_name_plural = 'Radio Firmware Versions'
+
+    def __str__(self):
+        parts = [str(self.radio)]
+        if self.label:
+            parts.append(self.label)
+        if self.version:
+            parts.append(self.version)
+        return ' \u2013 '.join(parts)

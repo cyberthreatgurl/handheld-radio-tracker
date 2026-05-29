@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument
+from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware
 
 
 @admin.register(Brand)
@@ -88,3 +88,11 @@ class RadioOETDocumentAdmin(admin.ModelAdmin):
     list_filter = ['exhibit_type', 'display_type', 'date_submitted_to_fcc', 'date_available']
     search_fields = ['radio__brand', 'radio__model', 'fcc_id', 'view_attachment', 'exhibit_type', 'document_url']
     ordering = ['fcc_id', 'exhibit_type', 'view_attachment']
+
+
+@admin.register(RadioFirmware)
+class RadioFirmwareAdmin(admin.ModelAdmin):
+    list_display = ['id', 'radio', 'label', 'version', 'download_url', 'firmware_file', 'created_at']
+    list_filter = ['created_at', 'updated_at']
+    search_fields = ['radio__brand', 'radio__model', 'label', 'version']
+    ordering = ['radio', 'label']

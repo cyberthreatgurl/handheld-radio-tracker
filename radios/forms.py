@@ -1,7 +1,8 @@
 from django import forms
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
-from .models import Radio, Brand
+from django.forms import inlineformset_factory
+from .models import Radio, Brand, RadioFirmware
 
 
 class RadioForm(forms.ModelForm):
@@ -231,7 +232,7 @@ class BrandForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk and self.instance.parent_brand:
-            self.fields['parent_brand'].initial = self.instance.parent_brand.name
+            self.initial['parent_brand'] = self.instance.parent_brand.name
 
     def clean_parent_brand(self):
         brand_name = self.cleaned_data.get('parent_brand')
@@ -321,3 +322,46 @@ class ManualReviewForm(forms.Form):
     power_watts = forms.CharField(max_length=100, required=False)
     cost_approx = forms.CharField(max_length=100, required=False)
     website = forms.URLField(max_length=500, required=False)
+
+
+_FIELD_CSS = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+
+
+class RadioFirmwareForm(forms.ModelForm):
+    """Inline form for a single firmware version entry."""
+
+    class Meta:
+        model = RadioFirmware
+        fields = ['label', 'version', 'download_url', 'firmware_file', 'notes']
+        widgets = {
+            'label': forms.TextInput(attrs={
+                'class': _FIELD_CSS,
+                'placeholder': "e.g., Main Radio or APRS Module",
+            }),
+            'version': forms.TextInput(attrs={
+                'class': _FIELD_CSS,
+                'placeholder': "e.g., v1.23",
+            }),
+            'download_url': forms.URLInput(attrs={
+                'class': _FIELD_CSS,
+                'placeholder': 'https://manufacturer.com/firmware',
+            }),
+            'firmware_file': forms.ClearableFileInput(attrs={
+                'class': 'mt-1 block w-full text-sm text-gray-700',
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': _FIELD_CSS,
+                'rows': 2,
+                'placeholder': 'Optional notes about this firmware version...',
+            }),
+        }
+
+
+RadioFirmwareFormSet = inlineformset_factory(
+    Radio,
+    RadioFirmware,
+    form=RadioFirmwareForm,
+    extra=2,
+    max_num=2,
+    can_delete=True,
+)

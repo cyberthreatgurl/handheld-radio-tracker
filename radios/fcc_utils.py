@@ -6,8 +6,9 @@ from decimal import Decimal, InvalidOperation
 from html import unescape
 from datetime import datetime, time as datetime_time, timezone as datetime_timezone
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from curl_cffi import requests
+from bs4 import BeautifulSoup
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
@@ -17,6 +18,7 @@ from radios.fcc_validation import validate_fcc_brand_assignment
 
 URL = "https://apps.fcc.gov/OETLabServices/getFCCIDList?"
 GENERIC_SEARCH_URL = "https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm"
+GENERIC_SEARCH_FORM_URL = "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm"
 OET_EXHIBITS_URL = "https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm"
 logger = logging.getLogger(__name__)
 
@@ -351,18 +353,24 @@ def _extract_oet_documents_from_html(html_text, base_url):
 
     for row_html in re.findall(r'<tr[^>]*>(.*?)</tr>', html_text or '', flags=re.IGNORECASE | re.DOTALL):
         cells = re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', row_html, flags=re.IGNORECASE | re.DOTALL)
-        if len(cells) < 5:
-            continue
-
-        first_cell = cells[0]
+        first_cell = cells[0] if cells else row_html
         link_match = re.search(r'href=["\']([^"\']+)["\']', first_cell, flags=re.IGNORECASE)
+
+        # FCC exhibit pages sometimes embed links in JS instead of href attributes.
+        if not link_match:
+            link_match = re.search(
+                r'(?:["\'])(/oetcf/eas/reports/[^"\'\s)]+)(?:["\'])',
+                row_html,
+                flags=re.IGNORECASE,
+            )
+
         document_url = urljoin(base_url, link_match.group(1).strip()) if link_match else ''
 
         view_attachment = _strip_html_tags(first_cell)
-        exhibit_type = _strip_html_tags(cells[1])
-        date_submitted = _strip_html_tags(cells[2])
-        display_type = _strip_html_tags(cells[3])
-        date_available = _strip_html_tags(cells[4])
+        exhibit_type = _strip_html_tags(cells[1]) if len(cells) > 1 else ''
+        date_submitted = _strip_html_tags(cells[2]) if len(cells) > 2 else ''
+        display_type = _strip_html_tags(cells[3]) if len(cells) > 3 else ''
+        date_available = _strip_html_tags(cells[4]) if len(cells) > 4 else ''
 
         if not any((view_attachment, exhibit_type, date_submitted, display_type, date_available, document_url)):
             continue
@@ -381,6 +389,41 @@ def _extract_oet_documents_from_html(html_text, base_url):
                 'date_submitted_to_fcc': date_submitted,
                 'display_type': display_type,
                 'date_available': date_available,
+                'document_url': document_url,
+            }
+        )
+
+    return documents
+
+
+def _extract_oet_documents_from_attachment_html(html_text, base_url):
+    documents = []
+    seen = set()
+
+    soup = BeautifulSoup(html_text or '', 'html.parser')
+    for link in soup.find_all('a', href=True):
+        href = str(link.get('href') or '').strip()
+        if not href:
+            continue
+
+        lower_href = href.lower()
+        if 'getattachment.cfm' not in lower_href and 'genericexhibit.cfm' not in lower_href:
+            continue
+
+        document_url = urljoin(base_url, href)
+        view_attachment = _strip_html_tags(link.get_text(' ', strip=True) or '') or 'FCC Attachment'
+        key = (document_url, view_attachment)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        documents.append(
+            {
+                'view_attachment': view_attachment,
+                'exhibit_type': '',
+                'date_submitted_to_fcc': '',
+                'display_type': 'pdf',
+                'date_available': '',
                 'document_url': document_url,
             }
         )
@@ -528,6 +571,12 @@ def _fetch_oet_documents_from_html(fcc_id, candidate_urls=None):
         seen.add(url)
         deduped_urls.append(url)
 
+    logger.info(
+        "FCC OET fetch start fcc_id=%s candidate_url_count=%s",
+        fcc_id,
+        len(deduped_urls),
+    )
+
     for url in deduped_urls:
         try:
             response = requests.get(url, impersonate='chrome124', timeout=15)
@@ -541,17 +590,275 @@ def _fetch_oet_documents_from_html(fcc_id, candidate_urls=None):
 
         documents = _extract_oet_documents_from_html(response.text or '', base_url=url)
         if documents:
+            sample_names = [
+                (doc.get('view_attachment') or doc.get('document_url') or '').strip()
+                for doc in documents[:5]
+            ]
+            logger.info(
+                "FCC OET fetch success fcc_id=%s source_url=%s document_count=%s sample_docs=%s",
+                fcc_id,
+                url,
+                len(documents),
+                sample_names,
+            )
             return documents
+
+    fallback_docs = _fetch_oet_documents_via_generic_search_form(fcc_id)
+    if fallback_docs:
+        logger.info(
+            "FCC OET form fallback success fcc_id=%s document_count=%s",
+            fcc_id,
+            len(fallback_docs),
+        )
+        return fallback_docs
 
     return []
 
 
+def _fetch_oet_documents_via_generic_search_form(fcc_id):
+    grantee_code, product_code = split_fcc_id(fcc_id)
+    if not grantee_code or not product_code:
+        return []
+
+    payload = {
+        'grantee_code': grantee_code,
+        'product_code': product_code,
+        'product_exact_match': 'on',
+        'application_status': 'NC',
+        'show_records': '25',
+        'fetchfrom': '0',
+        'calledFromFrame': 'N',
+        'eas_apps_only': 'Y',
+    }
+
+    headers = {
+        'User-Agent': (
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/124.0.0.0 Safari/537.36'
+        ),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': GENERIC_SEARCH_FORM_URL,
+    }
+
+    session = requests.Session()
+
+    try:
+        # Seed session/cookies similar to a real browser form flow.
+        session.get(
+            GENERIC_SEARCH_FORM_URL,
+            headers=headers,
+            impersonate='chrome124',
+            timeout=20,
+        )
+    except Exception:
+        logger.exception("FCC OET form fallback seed fetch failed fcc_id=%s", fcc_id)
+
+    try:
+        response = session.post(
+            GENERIC_SEARCH_FORM_URL,
+            data=payload,
+            headers=headers,
+            impersonate='chrome124',
+            timeout=20,
+        )
+    except Exception:
+        logger.exception("FCC OET form fallback search failed fcc_id=%s", fcc_id)
+        return []
+
+    if response.status_code != 200:
+        logger.info(
+            "FCC OET form fallback non-200 fcc_id=%s status=%s",
+            fcc_id,
+            response.status_code,
+        )
+        return []
+
+    base_url = "https://apps.fcc.gov/oetcf/eas/reports/"
+    soup = BeautifulSoup(response.text or '', 'html.parser')
+
+    detail_urls = []
+    direct_docs = []
+    seen_detail = set()
+    seen_direct = set()
+    for link in soup.find_all('a', href=True):
+        href = str(link.get('href') or '').strip()
+        if not href:
+            continue
+
+        lower_href = href.lower()
+        absolute = urljoin(base_url, href)
+        if 'viewattachment.cfm' in lower_href or 'viewexhibitreport.cfm' in lower_href:
+            if absolute not in seen_detail:
+                seen_detail.add(absolute)
+                detail_urls.append(absolute)
+        elif 'getattachment.cfm' in lower_href or 'genericexhibit.cfm' in lower_href:
+            if absolute not in seen_direct:
+                seen_direct.add(absolute)
+                direct_docs.append(
+                    {
+                        'view_attachment': _strip_html_tags(link.get_text(' ', strip=True) or '') or 'FCC Attachment',
+                        'exhibit_type': '',
+                        'date_submitted_to_fcc': '',
+                        'display_type': 'pdf',
+                        'date_available': '',
+                        'document_url': absolute,
+                    }
+                )
+
+    documents = []
+    seen_docs = set()
+    for doc in direct_docs:
+        key = (doc.get('document_url', ''), doc.get('view_attachment', ''))
+        if key in seen_docs:
+            continue
+        seen_docs.add(key)
+        documents.append(doc)
+
+    for detail_url in detail_urls[:20]:
+        try:
+            detail_response = requests.get(detail_url, impersonate='chrome124', timeout=20)
+        except Exception:
+            logger.exception("FCC OET form fallback detail fetch failed fcc_id=%s url=%s", fcc_id, detail_url)
+            continue
+
+        if detail_response.status_code != 200:
+            logger.info(
+                "FCC OET form fallback detail non-200 fcc_id=%s status=%s url=%s",
+                fcc_id,
+                detail_response.status_code,
+                detail_url,
+            )
+            continue
+
+        extracted = _extract_oet_documents_from_html(detail_response.text or '', base_url=detail_url)
+        extracted += _extract_oet_documents_from_attachment_html(detail_response.text or '', base_url=detail_url)
+        for doc in extracted:
+            key = (doc.get('document_url', ''), doc.get('view_attachment', ''))
+            if key in seen_docs:
+                continue
+            seen_docs.add(key)
+            documents.append(doc)
+
+    return documents
+
+
+def _is_fcc_authoritative_url(url):
+    host = (urlparse(url).hostname or '').lower()
+    return host.endswith('fcc.gov')
+
+
+def _build_oet_document_filename(fcc_id, view_attachment, document_url, display_type):
+    parsed = urlparse(document_url or '')
+    path_name = Path(parsed.path).name
+    stem = path_name or _safe_filename(view_attachment or '') or 'oet_document'
+    stem = _safe_filename(stem) or 'oet_document'
+
+    display = (display_type or '').strip().lower()
+    display_ext = f'.{display}' if display in {'pdf', 'doc', 'docx', 'txt'} else '.pdf'
+
+    suffix = Path(stem).suffix.lower()
+    if not suffix:
+        candidate = f"{stem}{display_ext}"
+    elif suffix in {'.cfm', '.php', '.asp', '.aspx'}:
+        candidate = f"{Path(stem).stem}{display_ext}"
+    else:
+        candidate = stem
+
+    prefix = _safe_filename(fcc_id or 'fccid') or 'fccid'
+    final_name = f"{prefix}_{candidate}"
+    return final_name[:220]
+
+
+def _download_oet_document_bytes(url):
+    if not _is_fcc_authoritative_url(url):
+        logger.warning("FCC OET download skipped non-authoritative url=%s", url)
+        return b''
+
+    try:
+        response = requests.get(url, impersonate='chrome124', timeout=25)
+    except Exception:
+        logger.exception("FCC OET document download failed url=%s", url)
+        return b''
+
+    if response.status_code != 200:
+        logger.info("FCC OET document download non-200 url=%s status=%s", url, response.status_code)
+        return b''
+
+    content = response.content or b''
+    if not content:
+        return b''
+
+    return content
+
+
 def _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata):
     documents = secondary_metadata.get('oet_documents', []) if secondary_metadata else []
+    logger.info(
+        "FCC OET sync start radio_id=%s radio_fcc_id=%s requested_fcc_id=%s metadata_doc_count=%s",
+        getattr(radio, 'id', None),
+        (getattr(radio, 'fcc_id', '') or '').strip(),
+        fcc_id,
+        len(documents),
+    )
+
     if not documents:
-        return 0
+        synced = 0
+        copied_names = []
+        existing_docs = RadioOETDocument.objects.filter(fcc_id__iexact=fcc_id).exclude(radio=radio)
+        for existing in existing_docs:
+            copied_doc, created = RadioOETDocument.objects.update_or_create(
+                radio=radio,
+                fcc_id=fcc_id,
+                document_url=existing.document_url,
+                view_attachment=existing.view_attachment,
+                defaults={
+                    'exhibit_type': existing.exhibit_type,
+                    'date_submitted_to_fcc': existing.date_submitted_to_fcc,
+                    'display_type': existing.display_type,
+                    'date_available': existing.date_available,
+                    'document_file': existing.document_file.name if existing.document_file else '',
+                },
+            )
+
+            if (
+                not copied_doc.document_file
+                and existing.document_url
+                and _is_fcc_authoritative_url(existing.document_url)
+            ):
+                content = _download_oet_document_bytes(existing.document_url)
+                if content:
+                    filename = _build_oet_document_filename(
+                        fcc_id=fcc_id,
+                        view_attachment=existing.view_attachment,
+                        document_url=existing.document_url,
+                        display_type=existing.display_type,
+                    )
+                    copied_doc.document_file.save(filename, ContentFile(content), save=True)
+                    logger.info(
+                        "FCC OET fallback document downloaded radio_id=%s fcc_id=%s oet_doc_id=%s filename=%s source_url=%s",
+                        getattr(radio, 'id', None),
+                        fcc_id,
+                        copied_doc.id,
+                        filename,
+                        existing.document_url,
+                    )
+
+            if created:
+                synced += 1
+                copied_names.append((existing.view_attachment or existing.document_url or '').strip())
+        logger.info(
+            "FCC OET sync fallback copy radio_id=%s fcc_id=%s copied_count=%s copied_docs=%s",
+            getattr(radio, 'id', None),
+            fcc_id,
+            synced,
+            copied_names[:10],
+        )
+        return synced
 
     synced = 0
+    synced_names = []
     for document in documents:
         view_attachment = (document.get('view_attachment') or '').strip()
         document_url = (document.get('document_url') or '').strip()
@@ -564,14 +871,43 @@ def _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata):
             'display_type': (document.get('display_type') or '').strip(),
             'date_available': _parse_date_only(document.get('date_available')),
         }
-        RadioOETDocument.objects.update_or_create(
+        oet_doc, _ = RadioOETDocument.objects.update_or_create(
             radio=radio,
             fcc_id=fcc_id,
             document_url=document_url,
             view_attachment=view_attachment,
             defaults=defaults,
         )
+
+        if document_url and not oet_doc.document_file and _is_fcc_authoritative_url(document_url):
+            content = _download_oet_document_bytes(document_url)
+            if content:
+                filename = _build_oet_document_filename(
+                    fcc_id=fcc_id,
+                    view_attachment=view_attachment,
+                    document_url=document_url,
+                    display_type=defaults.get('display_type', ''),
+                )
+                oet_doc.document_file.save(filename, ContentFile(content), save=True)
+                logger.info(
+                    "FCC OET document downloaded radio_id=%s fcc_id=%s oet_doc_id=%s filename=%s source_url=%s",
+                    getattr(radio, 'id', None),
+                    fcc_id,
+                    oet_doc.id,
+                    filename,
+                    document_url,
+                )
+
         synced += 1
+        synced_names.append((view_attachment or document_url or '').strip())
+
+    logger.info(
+        "FCC OET sync complete radio_id=%s fcc_id=%s synced_count=%s synced_docs=%s",
+        getattr(radio, 'id', None),
+        fcc_id,
+        synced,
+        synced_names[:10],
+    )
 
     return synced
 
@@ -614,6 +950,7 @@ def _attach_test_reports_to_radio(radio, fcc_id, secondary_metadata):
         return 0
 
     attached = 0
+    attached_files = []
     for candidate in candidates:
         source_url = (candidate.get('url') or '').strip()
         if not source_url:
@@ -641,6 +978,7 @@ def _attach_test_reports_to_radio(radio, fcc_id, secondary_metadata):
         report.report_pdf.save(filename, ContentFile(content), save=False)
         report.save()
         attached += 1
+        attached_files.append(filename)
         logger.info(
             "FCC test report attached radio_id=%s fcc_id=%s report_id=%s url=%s title=%s designation=%s",
             radio.id,
@@ -650,6 +988,14 @@ def _attach_test_reports_to_radio(radio, fcc_id, secondary_metadata):
             report.report_title,
             report.product_designation,
         )
+
+    logger.info(
+        "FCC test report sync complete radio_id=%s fcc_id=%s attached_count=%s files=%s",
+        getattr(radio, 'id', None),
+        fcc_id,
+        attached,
+        attached_files[:10],
+    )
 
     return attached
 
@@ -1034,7 +1380,15 @@ def fetch_and_sync_fcc_id(fcc_id_query):
             has_processable_radio = True
 
         if not has_processable_radio:
+            # Even when metadata is unchanged, retry OET doc sync so missing exhibit links
+            # can be backfilled on previously processed radios.
+            secondary_metadata = metadata_cache.get(fcc_id)
+            if secondary_metadata is None:
+                secondary_metadata = fetch_fcc_secondary_metadata(fcc_id)
+                metadata_cache[fcc_id] = secondary_metadata
+
             for radio in existing_radios_with_fcc:
+                synced_oet_documents += _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata)
                 _stamp_lookup_timestamp(radio, lookup_started_at)
                 skipped_stale_lookup += 1
                 _, record_last_modified = stale_lookup_radios.get(radio.id, (False, None))
@@ -1049,6 +1403,7 @@ def fetch_and_sync_fcc_id(fcc_id_query):
                     radio.last_fccid_lookup_at.isoformat() if radio.last_fccid_lookup_at else '',
                 )
             if existing_radio_by_brand_model:
+                synced_oet_documents += _sync_oet_documents_for_radio(existing_radio_by_brand_model, fcc_id, secondary_metadata)
                 _stamp_lookup_timestamp(existing_radio_by_brand_model, lookup_started_at)
                 skipped_stale_lookup += 1
                 _, record_last_modified = stale_lookup_radios.get(existing_radio_by_brand_model.id, (False, None))

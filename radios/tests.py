@@ -4,8 +4,17 @@ from urllib.parse import quote_plus
 
 from .models import Radio
 from .models import Brand
+from .models import RadioOETDocument
 from .fcc_id_utils import split_fcc_id, normalize_fcc_id_for_lookup
-from .fcc_utils import _extract_original_equipment_summary, _extract_secondary_metadata_from_generic_search_html
+from .fcc_utils import (
+    _build_oet_document_filename,
+    _extract_oet_documents_from_attachment_html,
+    _extract_oet_documents_from_html,
+    _is_fcc_authoritative_url,
+    _extract_original_equipment_summary,
+    _extract_secondary_metadata_from_generic_search_html,
+    _sync_oet_documents_for_radio,
+)
 
 
 class RadioModelTest(TestCase):
@@ -199,3 +208,111 @@ class FCCGenericSearchHtmlParsingTest(TestCase):
                 self.assertTrue(
                         any('ViewExhibitReport.cfm' in url for url in parsed['candidate_exhibit_urls'])
                 )
+
+
+class FCCOETHtmlParsingTest(TestCase):
+    def test_extracts_oet_documents_from_standard_href_rows(self):
+        html = """
+        <table>
+            <tr>
+                <th>View Attachment</th><th>Exhibit Type</th><th>Date Submitted to FCC</th><th>Display Type</th><th>Date Available</th>
+            </tr>
+            <tr>
+                <td><a href="/oetcf/eas/reports/GenericExhibit.cfm?foo=1">Cover Letter</a></td>
+                <td>Cover Letter</td>
+                <td>12/01/2025</td>
+                <td>pdf</td>
+                <td>12/02/2025</td>
+            </tr>
+        </table>
+        """
+
+        docs = _extract_oet_documents_from_html(
+            html,
+            base_url='https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm',
+        )
+
+        self.assertEqual(len(docs), 1)
+        self.assertEqual(docs[0]['view_attachment'], 'Cover Letter')
+        self.assertIn('/oetcf/eas/reports/GenericExhibit.cfm', docs[0]['document_url'])
+
+    def test_extracts_oet_documents_when_link_is_embedded_in_js(self):
+        html = """
+        <table>
+            <tr>
+                <td onclick="window.open('/oetcf/eas/reports/GenericExhibit.cfm?mode=doc&x=1')">External Photos</td>
+                <td>External Photos</td>
+                <td>01/03/2024</td>
+                <td>pdf</td>
+                <td>01/04/2024</td>
+            </tr>
+        </table>
+        """
+
+        docs = _extract_oet_documents_from_html(
+            html,
+            base_url='https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm',
+        )
+
+        self.assertEqual(len(docs), 1)
+        self.assertEqual(docs[0]['view_attachment'], 'External Photos')
+        self.assertIn('/oetcf/eas/reports/GenericExhibit.cfm', docs[0]['document_url'])
+
+    def test_extracts_oet_documents_from_attachment_page_links(self):
+        html = """
+        <html>
+            <body>
+                <a href="GetAttachment.cfm?id_file_num=12345">Test Report</a>
+                <a href="/oetcf/eas/reports/GenericExhibit.cfm?foo=bar">User Manual</a>
+            </body>
+        </html>
+        """
+
+        docs = _extract_oet_documents_from_attachment_html(
+            html,
+            base_url='https://apps.fcc.gov/oetcf/eas/reports/ViewAttachment.cfm?foo=1',
+        )
+
+        self.assertEqual(len(docs), 2)
+        self.assertTrue(any('GetAttachment.cfm' in doc['document_url'] for doc in docs))
+        self.assertTrue(any('GenericExhibit.cfm' in doc['document_url'] for doc in docs))
+
+    def test_is_fcc_authoritative_url(self):
+        self.assertTrue(_is_fcc_authoritative_url('https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm'))
+        self.assertTrue(_is_fcc_authoritative_url('https://transition.fcc.gov/oet/reports/sample.pdf'))
+        self.assertFalse(_is_fcc_authoritative_url('https://fcc.report/FCC-ID/2AJGM-UV82/5137067.pdf'))
+
+    def test_build_oet_document_filename_prefers_safe_name(self):
+        filename = _build_oet_document_filename(
+            fcc_id='2AJGM-UV82',
+            view_attachment='User Manual',
+            document_url='https://apps.fcc.gov/oetcf/eas/reports/GenericExhibit.cfm?foo=1',
+            display_type='pdf',
+        )
+        self.assertTrue(filename.startswith('2AJGM-UV82_'))
+        self.assertTrue(filename.endswith('.pdf'))
+
+
+class FCCOETSyncFallbackTest(TestCase):
+    def test_sync_uses_existing_fcc_docs_when_secondary_metadata_empty(self):
+        source_radio = Radio.objects.create(brand='BrandA', model='M1', fcc_id='2AJGM-UV82')
+        target_radio = Radio.objects.create(brand='BrandB', model='M2', fcc_id='2AJGM-UV82')
+
+        RadioOETDocument.objects.create(
+            radio=source_radio,
+            fcc_id='2AJGM-UV82',
+            view_attachment='User Manual',
+            exhibit_type='Users Manual',
+            document_url='https://apps.fcc.gov/oetcf/eas/reports/GenericExhibit.cfm?doc=abc',
+        )
+
+        synced = _sync_oet_documents_for_radio(target_radio, '2AJGM-UV82', {'oet_documents': []})
+
+        self.assertEqual(synced, 1)
+        self.assertTrue(
+            RadioOETDocument.objects.filter(
+                radio=target_radio,
+                fcc_id__iexact='2AJGM-UV82',
+                view_attachment='User Manual',
+            ).exists()
+        )

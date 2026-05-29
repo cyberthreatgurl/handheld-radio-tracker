@@ -44,6 +44,10 @@
                                 Brand <span class="text-red-500">*</span>
                             </label>
                             {{ form.brand }}
+                            <a id="brand-record-link" href="#" target="_blank"
+                               data-url-template="{% url 'brand_edit' pk=0 %}"
+                               class="mt-1 text-xs text-indigo-600 hover:text-indigo-900"
+                               style="display:none;">View brand record →</a>
                             {% if form.brand.errors %}
                             <p class="mt-2 text-sm text-red-600">{{ form.brand.errors.0 }}</p>
                             {% endif %}
@@ -66,6 +70,10 @@
                         <div>
                             <label for="{{ form.manufacturer.id_for_label }}" class="block text-sm font-medium text-gray-700">Original Manufacturer</label>
                             {{ form.manufacturer }}
+                            <a id="manufacturer-record-link" href="#" target="_blank"
+                               data-url-template="{% url 'brand_edit' pk=0 %}"
+                               class="mt-1 text-xs text-indigo-600 hover:text-indigo-900"
+                               style="display:none;">View brand record →</a>
                             {% if form.manufacturer.help_text %}
                             <p class="mt-1 text-sm text-gray-500">{{ form.manufacturer.help_text }}</p>
                             {% endif %}
@@ -165,6 +173,63 @@
                 </div>
 
 
+                <!-- Firmware Versions -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Firmware Versions</h3>
+                    <p class="text-sm text-gray-500 mb-4">Add up to 2 firmware versions (e.g., Main Radio and APRS Module).</p>
+                    {{ firmware_formset.management_form }}
+                    {% if firmware_formset.non_form_errors %}
+                    <div class="mb-3 rounded-md bg-red-50 p-3">
+                        <p class="text-sm text-red-700">{{ firmware_formset.non_form_errors }}</p>
+                    </div>
+                    {% endif %}
+                    {% for fw_form in firmware_formset %}
+                    <div class="border rounded-md p-4 mb-4 bg-gray-50">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-semibold text-gray-900">Firmware {{ forloop.counter }}</h4>
+                            {% if fw_form.instance.pk %}
+                            <label class="flex items-center text-xs text-red-600 cursor-pointer">
+                                {{ fw_form.DELETE }}
+                                <span class="ml-1">Delete this firmware</span>
+                            </label>
+                            {% endif %}
+                        </div>
+                        {{ fw_form.id }}
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Label</label>
+                                {{ fw_form.label }}
+                                <p class="mt-1 text-xs text-gray-500">e.g., "Main Radio" or "APRS Module"</p>
+                                {% if fw_form.label.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.label.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Version</label>
+                                {{ fw_form.version }}
+                                <p class="mt-1 text-xs text-gray-500">e.g., v1.23</p>
+                                {% if fw_form.version.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.version.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Download URL</label>
+                                {{ fw_form.download_url }}
+                                <p class="mt-1 text-xs text-gray-500">Link to the official firmware download page.</p>
+                                {% if fw_form.download_url.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.download_url.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Firmware File</label>
+                                {{ fw_form.firmware_file }}
+                                <p class="mt-1 text-xs text-gray-500">Optional: upload a local copy of the firmware file for users to download.</p>
+                                {% if fw_form.firmware_file.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.firmware_file.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Notes</label>
+                                {{ fw_form.notes }}
+                                {% if fw_form.notes.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.notes.errors.0 }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
                 <!-- Additional Details -->
                 <div class="pb-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Details</h3>
@@ -217,10 +282,10 @@
                             <ul class="space-y-1">
                                 {% for doc in form.instance.oet_documents.all|slice:":8" %}
                                 <li class="text-xs text-gray-700">
-                                    {% if doc.document_url %}
-                                    <a href="{{ doc.document_url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ doc.view_attachment|default:doc.exhibit_type }} (open)</a>
+                                    {% if doc.document_file %}
+                                    <a href="{{ doc.document_file.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ doc.view_attachment|default:doc.exhibit_type }} (open)</a>
                                     {% else %}
-                                    <span>{{ doc.view_attachment|default:doc.exhibit_type }}</span>
+                                    <span class="text-gray-500">{{ doc.view_attachment|default:doc.exhibit_type }} (not downloaded)</span>
                                     {% endif %}
                                     <span class="ml-2 text-gray-500">{{ doc.exhibit_type }}{% if doc.display_type %} · {{ doc.display_type }}{% endif %}</span>
                                 </li>
@@ -255,4 +320,50 @@
         </div>
     </div>
 </div>
+
+{{ brand_name_to_pk|json_script:"brand-pk-data" }}
+<script>
+(function () {
+    var brandMap = JSON.parse(document.getElementById('brand-pk-data').textContent);
+
+    function buildEditUrl(linkEl, pk) {
+        // data-url-template is e.g. "/radios/brands/0/edit/"
+        return linkEl.dataset.urlTemplate.replace('/0/', '/' + pk + '/');
+    }
+
+    // Brand field (ChoiceField – value is the brand name string)
+    var brandSelect = document.getElementById('id_brand');
+    var brandLink   = document.getElementById('brand-record-link');
+
+    function updateBrandLink() {
+        var pk = brandMap[brandSelect.value];
+        if (pk) {
+            brandLink.href = buildEditUrl(brandLink, pk);
+            brandLink.style.display = '';
+        } else {
+            brandLink.style.display = 'none';
+        }
+    }
+
+    brandSelect.addEventListener('change', updateBrandLink);
+    updateBrandLink();
+
+    // Manufacturer field (FK select – value is the Brand pk)
+    var mfgSelect = document.getElementById('id_manufacturer');
+    var mfgLink   = document.getElementById('manufacturer-record-link');
+
+    function updateMfgLink() {
+        var pk = mfgSelect.value;
+        if (pk) {
+            mfgLink.href = buildEditUrl(mfgLink, pk);
+            mfgLink.style.display = '';
+        } else {
+            mfgLink.style.display = 'none';
+        }
+    }
+
+    mfgSelect.addEventListener('change', updateMfgLink);
+    updateMfgLink();
+})();
+</script>
 {% endblock %}
