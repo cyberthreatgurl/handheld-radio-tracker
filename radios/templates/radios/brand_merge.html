@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Merge Brand: {{ source.name }} - Ham Radio Database{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+
+    <div>
+        <a href="{% url 'brand_edit' source.pk %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
+            ← Back to {{ source.name }}
+        </a>
+        <h1 class="text-2xl font-bold text-gray-900 mt-1">Merge Brand</h1>
+        <p class="text-sm text-gray-600 mt-1">
+            Merge <strong>{{ source.name }}</strong> into another brand. All records are re-pointed to the target brand,
+            then this brand is permanently deleted.
+        </p>
+    </div>
+
+    {% if messages %}
+    <div class="space-y-2">
+        {% for message in messages %}
+        <div class="p-3 rounded-md {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-amber-50 text-amber-800 border border-amber-200{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- What will be moved -->
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-5 space-y-2">
+        <h2 class="text-sm font-semibold text-amber-900">Records that will be re-pointed to the target brand:</h2>
+        <ul class="text-sm text-amber-800 space-y-1 list-disc list-inside">
+            <li><strong>{{ radio_count }}</strong> radio model{{ radio_count|pluralize }} with brand name "{{ source.name }}"</li>
+            {% if child_brands %}
+            <li>
+                <strong>{{ child_brands|length }}</strong> child brand{{ child_brands|length|pluralize }} using this as parent:
+                {% for b in child_brands %}<em>{{ b.name }}</em>{% if not forloop.last %}, {% endif %}{% endfor %}
+            </li>
+            {% endif %}
+        </ul>
+        <p class="text-xs text-amber-700 mt-2 font-medium">This brand record will be permanently deleted after merging.</p>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            <div>
+                <label for="id_target_brand" class="block text-sm font-medium text-gray-700">
+                    Merge <strong>{{ source.name }}</strong> into:
+                </label>
+                <select id="id_target_brand" name="target_brand" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="">— Select target brand —</option>
+                    {% for brand in other_brands %}
+                    <option value="{{ brand.pk }}">{{ brand.name }}{% if brand.alias %} ({{ brand.alias }}){% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                <input type="checkbox" id="id_confirm" name="confirm" value="yes"
+                       class="h-4 w-4 mt-0.5 text-red-600 border-gray-300 rounded">
+                <label for="id_confirm" class="text-sm text-red-800">
+                    I understand this will permanently delete <strong>{{ source.name }}</strong> and cannot be undone.
+                </label>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-2 border-t">
+                <a href="{% url 'brand_edit' source.pk %}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">
+                    Merge and Delete "{{ source.name }}"
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

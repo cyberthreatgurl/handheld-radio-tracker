@@ -16,6 +16,20 @@
             </a>
             {% endif %}
             <h1 class="text-3xl font-bold text-gray-900">{{ radio.brand }} {{ radio.model }}</h1>
+            <div class="flex justify-end space-x-3 mt-3">
+                <a href="{% url 'nodal_visualization' %}?brand={{ radio.brand|urlencode }}&model={{ radio.model|urlencode }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Nodal View
+                </a>
+                <a href="{% url 'radio_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Back
+                </a>
+                <a href="{% url 'radio_delete' radio.pk %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">
+                    Delete
+                </a>
+                <a href="{% url 'radio_edit' radio.pk %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                    Edit Radio
+                </a>
+            </div>
         </div>
 
         <div class="bg-white shadow rounded-lg">
@@ -43,7 +57,7 @@
                         </div>
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Original Manufacturer</p>
-                            <p class="mt-1 text-sm text-gray-900">{{ radio.manufacturer.name|default:"Not specified" }}</p>
+                            <p class="mt-1 text-sm text-gray-900">{{ radio.manufacturer|default:"Not specified" }}</p>
                         </div>
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Type</p>
@@ -173,18 +187,25 @@
                             </p>
                         </div>
                         <div class="border rounded-md p-4 bg-gray-50">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Manuals</h4>
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-gray-900">Documents</h4>
+                                <a href="{% url 'manual_upload' %}?radio={{ radio.pk }}"
+                                   class="text-xs text-indigo-600 hover:underline">Upload / View all</a>
+                            </div>
                             {% if radio.manuals.all %}
                             <ul class="space-y-2">
-                                {% for manual in radio.manuals.all %}
-                                <li class="text-sm text-gray-700">
-                                    <a href="{{ manual.manual_pdf.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ manual.manual_pdf.name }} ↗</a>
-                                    <span class="text-xs text-gray-500 ml-2">Confidence: {{ manual.extraction_confidence|floatformat:2 }}</span>
+                                {% for doc in radio.manuals.all %}
+                                {% if doc.manual_pdf %}
+                                <li class="text-sm text-gray-700 flex items-center gap-2">
+                                    <span class="inline-block text-xs font-medium bg-gray-200 text-gray-700 rounded px-1.5 py-0.5">{{ doc.get_doc_type_display }}</span>
+                                    <a href="{{ doc.manual_pdf.url }}" target="_blank"
+                                       class="text-indigo-600 hover:underline break-all">{{ doc.manual_pdf.name|cut:"manuals/" }} ↗</a>
                                 </li>
+                                {% endif %}
                                 {% endfor %}
                             </ul>
                             {% else %}
-                            <p class="text-sm text-gray-600">No manuals linked.</p>
+                            <p class="text-sm text-gray-600">No documents linked. <a href="{% url 'manual_upload' %}?radio={{ radio.pk }}" class="text-indigo-600 hover:underline">Upload one</a>.</p>
                             {% endif %}
                         </div>
                         <div class="border rounded-md p-4 bg-gray-50">
@@ -315,11 +336,11 @@
             <div class="flex justify-center overflow-x-auto">
                 <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8 min-w-max">
                     {% if manufacturer %}
-                    <a href="{% url 'brand_list' %}?query={{ manufacturer.name }}" class="w-56 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 rounded-lg p-4 text-center shadow-sm transition-all">
+                    <a href="{% url 'manufacturer_edit' manufacturer.pk %}" class="w-56 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 rounded-lg p-4 text-center shadow-sm transition-all">
                         <div class="text-xs text-indigo-500 font-semibold uppercase tracking-wider mb-1">Manufacturer</div>
-                        <div class="font-bold text-gray-900">{{ manufacturer.name }}</div>
+                        <div class="font-bold text-gray-900">{{ manufacturer.alias|default:manufacturer.full_name }}</div>
                         {% if manufacturer.alias %}
-                        <div class="text-sm text-indigo-700 font-medium mt-1">Brand: {{ manufacturer.alias }}</div>
+                        <div class="text-sm text-indigo-700 font-medium mt-1">{{ manufacturer.full_name }}</div>
                         {% endif %}
                     </a>
                     <div class="hidden md:block text-gray-300">

@@ -70,7 +70,7 @@ def extract_text_from_pdf_with_metadata(file_path):
         logger.info("Manual parse attempt file=%s pages=%s", file_path, len(reader.pages))
         for page in reader.pages:
             text_chunks.append(page.extract_text() or '')
-    except (OSError, ValueError):
+    except Exception:
         logger.exception("Manual direct PDF parse failed file=%s", file_path)
         return '', {'method': 'none', 'reason': 'pdf_parse_error'}
 
@@ -131,6 +131,9 @@ def extract_specs_from_text(text, source_name=''):
 
     aprs = 'Yes' if 'aprs' in lowered else ''
     gps = 'Yes' if (' gps' in lowered or 'gnss' in lowered) else ''
+    dmr = 'Yes' if re.search(r'\bdmr\b', lowered) else ''
+    air_band = 'Yes' if ('air band' in lowered or 'airband' in lowered or 'aviation band' in lowered) else ''
+    battery = _extract_first(r'(\d{3,5})\s*m\s*ah', text)
     cost = _extract_first(r'\$\s*(\d{2,5}(?:\.\d{1,2})?)', text)
     cost_approx = f'${cost}' if cost else ''
     freq_bands_tx = _detect_bands(text)
@@ -147,7 +150,10 @@ def extract_specs_from_text(text, source_name=''):
         'freq_bands_tx': _clean_text(freq_bands_tx),
         'aprs': aprs,
         'gps': gps,
+        'dmr': dmr,
+        'air_band': air_band,
         'power_watts': _clean_text(power_watts),
+        'battery_mah': int(battery) if battery else None,
         'cost_approx': _clean_text(cost_approx),
     }
     logger.info("Spec parse result source=%s model=%s fcc_id=%s bands=%s", source_name, extracted.get('model', ''), extracted.get('fcc_id', ''), extracted.get('freq_bands_tx', ''))

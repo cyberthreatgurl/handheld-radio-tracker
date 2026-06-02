@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware
+from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware, Manufacturer
 
 
 @admin.register(Brand)
@@ -37,6 +37,18 @@ class BrandAdmin(admin.ModelAdmin):
     rename_brand_globally.short_description = "Globally rename selected brand (Brand & Radio)"
 
 
+@admin.register(Manufacturer)
+class ManufacturerAdmin(admin.ModelAdmin):
+    list_display = ['full_name', 'alias', 'country', 'brand_count']
+    search_fields = ['full_name', 'alias', 'country']
+    filter_horizontal = ['brands']
+    ordering = ['full_name']
+
+    def brand_count(self, obj):
+        return obj.brands.count()
+    brand_count.short_description = 'Brands'
+
+
 @admin.register(Radio)
 class RadioAdmin(admin.ModelAdmin):
     list_display = ['brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'intro_year', 'freq_bands_tx', 'power_watts', 'cost_approx']
@@ -46,7 +58,7 @@ class RadioAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'intro_year')
+            'fields': ('brand', 'model', 'radio_type', 'is_a_whitelabel', 'manufacturer', 'fcc_id', 'last_fccid_lookup_at', 'intro_year')
         }),
         ('Technical Specifications', {
             'fields': ('freq_bands_tx', 'power_watts')
@@ -58,7 +70,7 @@ class RadioAdmin(admin.ModelAdmin):
             'fields': ('display', 'battery_mah')
         }),
         ('Pricing & Related', {
-            'fields': ('cost_approx', 'rebadges_clones', 'website', 'review_url', 'youtube_video_urla')
+            'fields': ('cost_approx', 'rebadges_clones', 'white_label_vendors', 'website', 'review_url', 'youtube_video_urla')
         }),
         ('Additional Details', {
             'fields': ('notes',)

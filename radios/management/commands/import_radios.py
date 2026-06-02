@@ -70,12 +70,6 @@ class Command(BaseCommand):
                                 'intro_year': intro_year,
                                 'freq_bands_tx': row.get('Freq. Bands (TX)', '').strip(),
                                 'power_watts': row.get('Power (W)', '').strip(),
-                                'frequency_range': row.get('Frequency Range', '').strip(),
-                                'power_output': row.get('Power Output', '').strip(),
-                                'modulation': row.get('Modulation', '').strip(),
-                                'bands': row.get('Bands', '').strip(),
-                                'digital_modes': row.get('Digital Modes', '').strip(),
-                                'channels': row.get('Channels', '').strip(),
                                 'satellite_tracking': row.get('Satellite Tracking', '').strip(),
                                 'harmonic_suppression': row.get('Harmonic Suppression Status', '').strip(),
                                 'gps': row.get('GPS', '').strip(),
@@ -87,7 +81,6 @@ class Command(BaseCommand):
                                 'cost_approx': row.get('Cost (Approx)', '').strip(),
                                 'rebadges_clones': row.get('Known Rebadges / Clones', '').strip(),
                                 'website': row.get('Website', '').strip(),
-                                'notes': '',
                             }
                         )
                         

@@ -59,7 +59,7 @@ class Radio(models.Model):
     brand = models.CharField(max_length=100, db_index=True, help_text="Radio manufacturer/brand")
     model = models.CharField(max_length=200, help_text="Radio model name/number")
     is_a_whitelabel = models.BooleanField(default=False, help_text="Is this radio a white label model?")
-    manufacturer = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='manufactured_models', help_text="The actual original manufacturer of this radio")
+    manufacturer = models.ForeignKey('Manufacturer', on_delete=models.SET_NULL, null=True, blank=True, related_name='manufactured_models', help_text="The legal manufacturing entity that built this radio")
     radio_type = models.CharField(
         max_length=20,
         choices=RadioType.choices,
@@ -128,9 +128,9 @@ class Radio(models.Model):
     def save(self, *args, **kwargs):
         """Override save to ensure brand exists in Brand table"""
         # If the radio's brand string exactly matches a known brand's alias,
-        # update it to the canonical brand name before saving the Radio
-        if self.brand:
-            # Case-insensitive check if it's the alias of an existing brand
+        # update it to the canonical brand name before saving the Radio.
+        # Skip this if the value is already a canonical Brand.name — that takes priority.
+        if self.brand and not Brand.objects.filter(name__iexact=self.brand).exists():
             alias_match = Brand.objects.filter(alias__iexact=self.brand).first()
             if alias_match and alias_match.name != self.brand:
                 self.brand = alias_match.name
@@ -139,33 +139,37 @@ class Radio(models.Model):
         if self.fcc_id and not self.manufacturer:
             fcc_upper = self.fcc_id.upper().strip()
             grantee_match = None
-            
+
             # Check hyphenated prefix first
             if '-' in fcc_upper:
                 prefix = fcc_upper.split('-')[0]
                 grantee_match = Brand.objects.filter(grantee_code__iexact=prefix).first()
-                
+
             # Fallback to standard 5-char and 3-char grantee codes
             if not grantee_match and len(fcc_upper) >= 5:
                 grantee_match = Brand.objects.filter(grantee_code__iexact=fcc_upper[:5]).first()
             if not grantee_match and len(fcc_upper) >= 3:
                 grantee_match = Brand.objects.filter(grantee_code__iexact=fcc_upper[:3]).first()
-                
+
             if grantee_match:
-                # If the grantee company is essentially a sub-brand or white-label front, 
-                # attribute the manufacturer to the true parent organization
-                true_manufacturer = grantee_match
-                if grantee_match.parent_brand:
-                    true_manufacturer = grantee_match.parent_brand
-                    
-                self.manufacturer = true_manufacturer
-                
-                # If the radio's brand is different from the true manufacturer's name and alias, it's a white label
+                # Walk up to the true parent brand for white-label detection
+                true_brand = grantee_match.parent_brand if grantee_match.parent_brand else grantee_match
+
+                # Resolve the Manufacturer record via the Brand's M2M relation
+                resolved_mfr = true_brand.manufacturers.first()
+                if resolved_mfr is None:
+                    # Fallback: try the raw grantee brand before walking to parent
+                    resolved_mfr = grantee_match.manufacturers.first()
+
+                if resolved_mfr:
+                    self.manufacturer = resolved_mfr
+
+                # If the radio's brand differs from the true brand name/alias it's a white label
                 if self.brand:
                     b_lower = self.brand.lower()
-                    m_name = true_manufacturer.name.lower()
-                    m_alias = true_manufacturer.alias.lower() if true_manufacturer.alias else ''
-                    
+                    m_name = true_brand.name.lower()
+                    m_alias = true_brand.alias.lower() if true_brand.alias else ''
+
                     if b_lower != m_name and (not m_alias or b_lower != m_alias):
                         self.is_a_whitelabel = True
 
@@ -227,13 +231,22 @@ def firmware_upload_to(instance, filename):
 
 
 class RadioManual(models.Model):
-    """Uploaded manual PDFs and extraction artifacts."""
+    """Uploaded document files (manuals, firmware, test reports, etc.) linked to a radio."""
 
     class ProcessingStatus(models.TextChoices):
         UPLOADED = 'uploaded', 'Uploaded'
         REVIEW = 'review', 'Needs Review'
         LINKED = 'linked', 'Linked'
         ERROR = 'error', 'Error'
+
+    class DocType(models.TextChoices):
+        TEST_REPORT = 'test_report', 'Test Report'
+        CHANGE_IN_ID = 'change_in_id', 'Change in Identification'
+        AUTHORIZATION = 'authorization', 'Authorization'
+        MANUAL = 'manual', 'Manual'
+        FIRMWARE = 'firmware', 'Firmware'
+        CPS = 'cps', 'CPS'
+        OTHER = 'other', 'Other'
 
     radio = models.ForeignKey(
         Radio,
@@ -243,6 +256,13 @@ class RadioManual(models.Model):
         related_name='manuals',
     )
     manual_pdf = models.FileField(upload_to=manual_upload_to)
+    doc_type = models.CharField(
+        max_length=20,
+        choices=DocType.choices,
+        default=DocType.MANUAL,
+        db_index=True,
+        verbose_name='Document Type',
+    )
     source_url = models.URLField(max_length=500, blank=True)
     extraction_confidence = models.FloatField(default=0.0)
     extracted_data = models.JSONField(default=dict, blank=True)
@@ -259,12 +279,13 @@ class RadioManual(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['status']),
+            models.Index(fields=['doc_type']),
             models.Index(fields=['created_at']),
         ]
 
     def __str__(self):
         linked = f" -> {self.radio}" if self.radio else ''
-        return f"Manual {self.id}{linked}"
+        return f"{self.get_doc_type_display()} {self.id}{linked}"
 
 
 class RadioFCCTestReport(models.Model):
@@ -385,3 +406,69 @@ class RadioFirmware(models.Model):
         if self.version:
             parts.append(self.version)
         return ' \u2013 '.join(parts)
+
+
+class Manufacturer(models.Model):
+    """A legal manufacturing entity that may sell under one or more brand labels."""
+
+    full_name = models.CharField(
+        max_length=500,
+        unique=True,
+        help_text="Full legal company name, e.g. 'Hiroyasu Electronics (Hong Kong) Co., Ltd'",
+    )
+    alias = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Common short name used commercially, e.g. 'Hiroyasu'",
+    )
+    brands = models.ManyToManyField(
+        Brand,
+        blank=True,
+        related_name='manufacturers',
+        help_text="Brand labels this manufacturer sells under",
+    )
+    website = models.URLField(max_length=500, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['full_name']
+        verbose_name = 'Manufacturer'
+        verbose_name_plural = 'Manufacturers'
+
+    def __str__(self):
+        if self.alias:
+            return f"{self.alias} ({self.full_name})"
+        return self.full_name
+
+
+class FCCSyncState(models.Model):
+    """Singleton model that tracks the last time 'Update All Known Grantees' was run.
+
+    Only one row (pk=1) should ever exist.  Use ``FCCSyncState.get_instance()``
+    to retrieve or lazily create it.
+    """
+
+    last_grantee_sync_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp of the last successful 'Update All Known Grantees' FCC sync. "
+                  "Used as the start-date filter on subsequent runs to avoid re-fetching the full history.",
+    )
+
+    class Meta:
+        verbose_name = 'FCC Sync State'
+        verbose_name_plural = 'FCC Sync State'
+
+    @classmethod
+    def get_instance(cls):
+        """Return the singleton FCCSyncState row, creating it if it does not exist."""
+        instance, _ = cls.objects.get_or_create(pk=1)
+        return instance
+
+    def __str__(self):
+        if self.last_grantee_sync_at:
+            return f"Last grantee sync: {self.last_grantee_sync_at.strftime('%Y-%m-%d %H:%M UTC')}"
+        return "Never synced"

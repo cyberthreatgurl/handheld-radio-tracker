@@ -32,8 +32,14 @@ def split_fcc_id(fcc_id: Optional[str], preferred_grantee_code: Optional[str] = 
         return '', ''
 
     if '-' in cleaned:
-        grantee_code, product_code = cleaned.split('-', 1)
-        return grantee_code.strip(), product_code.strip()
+        hyphen_prefix, hyphen_suffix = cleaned.split('-', 1)
+        # Apply FCC grantee length rules to the prefix: letter-start → 3 chars,
+        # digit-start → 5 chars. The prefix may be longer than the grantee code
+        # (e.g. Y23DM-568 where grantee=Y23, product=DM-568).
+        inferred_len = _infer_grantee_len(hyphen_prefix)
+        if inferred_len and len(hyphen_prefix) > inferred_len:
+            return hyphen_prefix[:inferred_len], hyphen_prefix[inferred_len:] + '-' + hyphen_suffix
+        return hyphen_prefix.strip(), hyphen_suffix.strip()
 
     if preferred and cleaned.startswith(preferred) and len(cleaned) > len(preferred):
         return preferred, cleaned[len(preferred):]

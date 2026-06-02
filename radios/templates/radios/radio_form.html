@@ -71,9 +71,9 @@
                             <label for="{{ form.manufacturer.id_for_label }}" class="block text-sm font-medium text-gray-700">Original Manufacturer</label>
                             {{ form.manufacturer }}
                             <a id="manufacturer-record-link" href="#" target="_blank"
-                               data-url-template="{% url 'brand_edit' pk=0 %}"
+                               data-url-template="{% url 'manufacturer_edit' pk=0 %}"
                                class="mt-1 text-xs text-indigo-600 hover:text-indigo-900"
-                               style="display:none;">View brand record →</a>
+                               style="display:none;">View manufacturer record →</a>
                             {% if form.manufacturer.help_text %}
                             <p class="mt-1 text-sm text-gray-500">{{ form.manufacturer.help_text }}</p>
                             {% endif %}
@@ -118,34 +118,42 @@
                         <div>
                             <label for="{{ form.satellite_tracking.id_for_label }}" class="block text-sm font-medium text-gray-700">Satellite Tracking</label>
                             {{ form.satellite_tracking }}
+                            {% if form.satellite_tracking.errors %}<p class="mt-2 text-sm text-red-600">{{ form.satellite_tracking.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.harmonic_suppression.id_for_label }}" class="block text-sm font-medium text-gray-700">Harmonic Suppression</label>
                             {{ form.harmonic_suppression }}
+                            {% if form.harmonic_suppression.errors %}<p class="mt-2 text-sm text-red-600">{{ form.harmonic_suppression.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.gps.id_for_label }}" class="block text-sm font-medium text-gray-700">GPS</label>
                             {{ form.gps }}
+                            {% if form.gps.errors %}<p class="mt-2 text-sm text-red-600">{{ form.gps.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.aprs.id_for_label }}" class="block text-sm font-medium text-gray-700">APRS</label>
                             {{ form.aprs }}
+                            {% if form.aprs.errors %}<p class="mt-2 text-sm text-red-600">{{ form.aprs.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.air_band.id_for_label }}" class="block text-sm font-medium text-gray-700">Air Band</label>
                             {{ form.air_band }}
+                            {% if form.air_band.errors %}<p class="mt-2 text-sm text-red-600">{{ form.air_band.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.dmr.id_for_label }}" class="block text-sm font-medium text-gray-700">DMR</label>
                             {{ form.dmr }}
+                            {% if form.dmr.errors %}<p class="mt-2 text-sm text-red-600">{{ form.dmr.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.display.id_for_label }}" class="block text-sm font-medium text-gray-700">Display</label>
                             {{ form.display }}
+                            {% if form.display.errors %}<p class="mt-2 text-sm text-red-600">{{ form.display.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.battery_mah.id_for_label }}" class="block text-sm font-medium text-gray-700">Battery (mAh)</label>
                             {{ form.battery_mah }}
+                            {% if form.battery_mah.errors %}<p class="mt-2 text-sm text-red-600">{{ form.battery_mah.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.cost_approx.id_for_label }}" class="block text-sm font-medium text-gray-700">Cost (Approx)</label>
@@ -173,63 +181,6 @@
                 </div>
 
 
-                <!-- Firmware Versions -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">Firmware Versions</h3>
-                    <p class="text-sm text-gray-500 mb-4">Add up to 2 firmware versions (e.g., Main Radio and APRS Module).</p>
-                    {{ firmware_formset.management_form }}
-                    {% if firmware_formset.non_form_errors %}
-                    <div class="mb-3 rounded-md bg-red-50 p-3">
-                        <p class="text-sm text-red-700">{{ firmware_formset.non_form_errors }}</p>
-                    </div>
-                    {% endif %}
-                    {% for fw_form in firmware_formset %}
-                    <div class="border rounded-md p-4 mb-4 bg-gray-50">
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="text-sm font-semibold text-gray-900">Firmware {{ forloop.counter }}</h4>
-                            {% if fw_form.instance.pk %}
-                            <label class="flex items-center text-xs text-red-600 cursor-pointer">
-                                {{ fw_form.DELETE }}
-                                <span class="ml-1">Delete this firmware</span>
-                            </label>
-                            {% endif %}
-                        </div>
-                        {{ fw_form.id }}
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Label</label>
-                                {{ fw_form.label }}
-                                <p class="mt-1 text-xs text-gray-500">e.g., "Main Radio" or "APRS Module"</p>
-                                {% if fw_form.label.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.label.errors.0 }}</p>{% endif %}
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Version</label>
-                                {{ fw_form.version }}
-                                <p class="mt-1 text-xs text-gray-500">e.g., v1.23</p>
-                                {% if fw_form.version.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.version.errors.0 }}</p>{% endif %}
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Download URL</label>
-                                {{ fw_form.download_url }}
-                                <p class="mt-1 text-xs text-gray-500">Link to the official firmware download page.</p>
-                                {% if fw_form.download_url.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.download_url.errors.0 }}</p>{% endif %}
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Firmware File</label>
-                                {{ fw_form.firmware_file }}
-                                <p class="mt-1 text-xs text-gray-500">Optional: upload a local copy of the firmware file for users to download.</p>
-                                {% if fw_form.firmware_file.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.firmware_file.errors.0 }}</p>{% endif %}
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Notes</label>
-                                {{ fw_form.notes }}
-                                {% if fw_form.notes.errors %}<p class="mt-1 text-xs text-red-600">{{ fw_form.notes.errors.0 }}</p>{% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-
                 <!-- Additional Details -->
                 <div class="pb-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Details</h3>
@@ -247,33 +198,28 @@
                             {{ form.review_url }}
                         </div>
                         <div class="border rounded-md p-4 bg-gray-50">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Manual Upload</h4>
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label for="{{ form.manual_pdf.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ form.manual_pdf.label }}</label>
-                                    {{ form.manual_pdf }}
-                                    {% if form.manual_pdf.errors %}<p class="mt-2 text-sm text-red-600">{{ form.manual_pdf.errors.0 }}</p>{% endif %}
-                                    <p class="mt-1 text-xs text-gray-500">{{ form.manual_pdf.help_text }}</p>
-                                </div>
-                                <div>
-                                    <label for="{{ form.manual_product_url.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ form.manual_product_url.label }}</label>
-                                    {{ form.manual_product_url }}
-                                    {% if form.manual_product_url.errors %}<p class="mt-2 text-sm text-red-600">{{ form.manual_product_url.errors.0 }}</p>{% endif %}
-                                    <p class="mt-1 text-xs text-gray-500">{{ form.manual_product_url.help_text }}</p>
-                                </div>
-                            </div>
-                            {% if form.instance.pk and form.instance.manuals.all %}
-                            <div class="mt-4">
-                                <p class="text-xs font-semibold text-gray-700 mb-2">Existing linked manuals:</p>
-                                <ul class="space-y-1">
-                                    {% for manual in form.instance.manuals.all|slice:":5" %}
-                                    <li class="text-xs text-gray-700">
-                                        <a href="{{ manual.manual_pdf.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ manual.manual_pdf.name }} (open)</a>
-                                        <span class="ml-2 text-gray-500">({{ manual.get_status_display }}, {{ manual.extraction_confidence|floatformat:2 }})</span>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 mb-2">Documents</h4>
+                            {% if form.instance.pk %}
+                            <p class="text-sm text-gray-600 mb-3">
+                                Upload test reports, manuals, firmware, and other files in the
+                                <a href="{% url 'manual_upload' %}?radio={{ form.instance.pk }}"
+                                   class="text-indigo-600 hover:underline">Document Library</a>.
+                            </p>
+                            {% if form.instance.manuals.exists %}
+                            <ul class="space-y-1">
+                                {% for doc in form.instance.manuals.all|slice:":5" %}
+                                <li class="text-xs text-gray-700">
+                                    <span class="font-medium text-gray-500">{{ doc.get_doc_type_display }}:</span>
+                                    {% if doc.manual_pdf %}
+                                    <a href="{{ doc.manual_pdf.url }}" target="_blank"
+                                       class="text-indigo-600 hover:underline">{{ doc.manual_pdf.name|cut:"manuals/" }}</a>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% else %}
+                            <p class="text-sm text-gray-500">Save the radio first, then you can add documents.</p>
                             {% endif %}
                         </div>
                         {% if form.instance.pk and form.instance.oet_documents.all %}
@@ -299,16 +245,6 @@
 
                 <!-- Actions -->
                 <div class="flex justify-end space-x-3 pt-6 border-t">
-                    {% if form.instance.pk %}
-                    <p class="mr-auto text-xs text-gray-500 self-center">
-                        Process Manual Only uploads/parses the manual without saving other field changes.
-                    </p>
-                    {% endif %}
-                    {% if form.instance.pk %}
-                    <button type="submit" name="manual_only" value="1" class="inline-flex items-center px-4 py-2 border border-indigo-300 text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100">
-                        Process Manual Only
-                    </button>
-                    {% endif %}
                     <a href="{% url 'radio_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         Cancel
                     </a>

@@ -1,27 +1,21 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.http import Http404
 from django.db.models import Q, Count, Max, Prefetch
 from django.conf import settings
 import logging
-import os
 import re
 import json
 from collections import Counter
 from pathlib import Path
-from .models import Radio, Brand, RadioManual, RadioFirmware
-from .forms import RadioForm, RadioSearchForm, BrandForm, RadioFirmwareFormSet
+from django.utils import timezone
+from .models import Radio, Brand, RadioManual, RadioFirmware, Manufacturer, FCCSyncState
+from .forms import RadioForm, RadioSearchForm, BrandForm, ManufacturerForm
 from .fcc_utils import fetch_and_sync_fcc_id
 from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from .nodal_graph import build_nodal_graph_data
-from .manual_extraction import (
-    extract_text_from_pdf_with_metadata,
-    extract_specs_from_text,
-    enrich_specs_from_product_url,
-    merge_extractions,
-    extraction_confidence,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -52,16 +46,22 @@ def _build_brand_display_alias_map():
 
 
 def _preferred_brand_display_name(radio, alias_map):
+    # Prefer the radio's own brand field (the market/retail brand) over manufacturer alias
+    # (which is the OEM). For white-label radios the brand IS the correct display name.
+    brand_value = (getattr(radio, 'brand', '') or '').strip()
+    if brand_value:
+        brand_key = _normalize_brand_key(brand_value)
+        if brand_key and brand_key in alias_map:
+            return alias_map[brand_key]
+        return brand_value
+
+    # Fall back to manufacturer alias only when brand is absent
     manufacturer = getattr(radio, 'manufacturer', None)
     if manufacturer:
         manufacturer_alias = (manufacturer.alias or '').strip()
         if manufacturer_alias:
             return manufacturer_alias
 
-    brand_value = (getattr(radio, 'brand', '') or '').strip()
-    brand_key = _normalize_brand_key(brand_value)
-    if brand_key and brand_key in alias_map:
-        return alias_map[brand_key]
     return brand_value
 
 
@@ -91,61 +91,6 @@ def _actor_label(request):
     return 'anonymous'
 
 
-def _process_manual_upload_from_radio_form(request, form, radio):
-    """Attach and process a manual uploaded from the radio create/edit form."""
-    manual_pdf = form.cleaned_data.get('manual_pdf')
-    if not manual_pdf:
-        return
-
-    product_url = form.cleaned_data.get('manual_product_url', '')
-    logger.info(
-        "User action radio_form_manual_upload submit actor=%s radio_id=%s filename=%s size=%s",
-        _actor_label(request),
-        radio.pk,
-        getattr(manual_pdf, 'name', ''),
-        getattr(manual_pdf, 'size', 0),
-    )
-
-    manual = RadioManual.objects.create(
-        radio=radio,
-        manual_pdf=manual_pdf,
-        source_url=product_url,
-        status=RadioManual.ProcessingStatus.UPLOADED,
-    )
-
-    manual_path = manual.manual_pdf.path
-    extracted_text, extraction_meta = extract_text_from_pdf_with_metadata(manual_path)
-    manual_data = extract_specs_from_text(extracted_text, source_name=os.path.basename(manual_path))
-    web_data = enrich_specs_from_product_url(product_url)
-    merged_data = merge_extractions(manual_data, web_data)
-    confidence = extraction_confidence(merged_data)
-
-    manual.extracted_text = extracted_text
-    manual.extracted_data = {
-        'extraction_meta': extraction_meta,
-        'manual_extraction': manual_data,
-        'web_enrichment': web_data,
-        'merged_extraction': merged_data,
-        'attached_from': 'radio_form',
-    }
-    manual.extraction_confidence = confidence
-    manual.status = RadioManual.ProcessingStatus.LINKED
-    manual.save(update_fields=['extracted_text', 'extracted_data', 'extraction_confidence', 'status', 'updated_at'])
-
-    logger.info(
-        "User action radio_form_manual_upload processed actor=%s radio_id=%s manual_id=%s method=%s confidence=%s",
-        _actor_label(request),
-        radio.pk,
-        manual.pk,
-        extraction_meta.get('method', 'unknown'),
-        confidence,
-    )
-
-    messages.info(
-        request,
-        f"Manual uploaded and linked. Extraction method: {extraction_meta.get('method', 'unknown')} (confidence {int(confidence * 100)}%).",
-    )
-
 def sync_fcc_view(request):
     """View to handle fetching and syncing an FCC ID from the dashboard."""
     if request.method == 'POST':
@@ -169,25 +114,66 @@ def sync_fcc_view(request):
 
 
 def sync_all_grantees_view(request):
-    """View to update all existing grantees by iterating through Brand records."""
+    """View to update all existing grantees by iterating through Brand records.
+
+    By default, only queries the FCC API for grants issued since the last
+    successful run (stored in FCCSyncState).  On the very first run, no date
+    filter is applied and the full history is fetched.
+    """
     if request.method == 'POST':
         logger.info("User action sync_all_grantees submit actor=%s", _actor_label(request))
         try:
+            sync_state = FCCSyncState.get_instance()
+            start_date = sync_state.last_grantee_sync_at  # None on first run → no filter
+            end_date = timezone.now()
+
+            if start_date:
+                logger.info(
+                    "User action sync_all_grantees date_filter actor=%s start_date=%s end_date=%s",
+                    _actor_label(request), start_date.isoformat(), end_date.isoformat(),
+                )
+            else:
+                logger.info(
+                    "User action sync_all_grantees date_filter actor=%s start_date=none (full history)",
+                    _actor_label(request),
+                )
+
             grantees = Brand.objects.exclude(grantee_code__isnull=True).exclude(grantee_code='')
             total_added = 0
             total_updated = 0
-            
+
             for brand in grantees:
-                added, updated, _ = fetch_and_sync_fcc_id(brand.grantee_code)
+                added, updated, _ = fetch_and_sync_fcc_id(
+                    brand.grantee_code,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
                 total_added += added
                 total_updated += updated
-                
-            logger.info("User action sync_all_grantees result actor=%s added=%s updated=%s", _actor_label(request), total_added, total_updated)
-            messages.success(request, f"Successfully processed all grantees. Added {total_added} and updated {total_updated} models overall.")
+
+            # Persist the end_date as the new baseline for future incremental syncs.
+            sync_state.last_grantee_sync_at = end_date
+            sync_state.save(update_fields=['last_grantee_sync_at'])
+
+            logger.info(
+                "User action sync_all_grantees result actor=%s added=%s updated=%s last_sync=%s",
+                _actor_label(request), total_added, total_updated, end_date.isoformat(),
+            )
+            if start_date:
+                messages.success(
+                    request,
+                    f"Updated grantees for grants since {start_date.strftime('%b %d, %Y')}. "
+                    f"Added {total_added}, updated {total_updated} records.",
+                )
+            else:
+                messages.success(
+                    request,
+                    f"Full history sync complete. Added {total_added}, updated {total_updated} records.",
+                )
         except Exception as e:
             logger.exception("User action sync_all_grantees error actor=%s", _actor_label(request))
             messages.error(request, f"Error processing grantees: {e}")
-            
+
     return redirect('dashboard')
 
 
@@ -287,6 +273,13 @@ class RadioDetailView(DetailView):
     template_name = 'radios/radio_detail.html'
     context_object_name = 'radio'
 
+    def get(self, request, *args, **kwargs):
+        try:
+            return super().get(request, *args, **kwargs)
+        except Http404:
+            messages.error(request, f'Radio #{kwargs.get("pk")} no longer exists — it may have been deleted.')
+            return redirect('radio_list')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         radio = context.get('radio')
@@ -326,29 +319,20 @@ class RadioCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if 'firmware_formset' not in context:
-            context['firmware_formset'] = RadioFirmwareFormSet()
         context['brand_name_to_pk'] = {b.name: b.pk for b in Brand.objects.only('id', 'name').all()}
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = None
         form = self.get_form()
-        firmware_formset = RadioFirmwareFormSet(request.POST, request.FILES)
-        if form.is_valid() and firmware_formset.is_valid():
-            response = self.form_valid(form)
-            firmware_formset.instance = self.object
-            firmware_formset.save()
-            return response
-        context = self.get_context_data(form=form, firmware_formset=firmware_formset)
-        return self.render_to_response(context)
+        if form.is_valid():
+            return self.form_valid(form)
+        return self.render_to_response(self.get_context_data(form=form))
 
     def form_valid(self, form):
         logger.info("User action radio_create submit actor=%s brand=%s model=%s", _actor_label(self.request), form.instance.brand, form.instance.model)
         messages.success(self.request, f'Radio {form.instance} has been created successfully!')
-        response = super().form_valid(form)
-        _process_manual_upload_from_radio_form(self.request, form, self.object)
-        return response
+        return super().form_valid(form)
 
 
 class RadioUpdateView(UpdateView):
@@ -362,50 +346,25 @@ class RadioUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if 'firmware_formset' not in context:
-            context['firmware_formset'] = RadioFirmwareFormSet(instance=self.object)
         context['brand_name_to_pk'] = {b.name: b.pk for b in Brand.objects.only('id', 'name').all()}
         return context
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if request.POST.get('manual_only') == '1':
-            form = self.get_form()
-            if form.is_valid():
-                logger.info(
-                    "User action radio_manual_only submit actor=%s radio_id=%s",
-                    _actor_label(request),
-                    self.object.pk,
-                )
-                if form.cleaned_data.get('manual_pdf'):
-                    _process_manual_upload_from_radio_form(request, form, self.object)
-                    messages.success(request, f"Manual processed for {self.object} without changing radio fields.")
-                else:
-                    messages.warning(request, "Select a PDF manual before using Process Manual Only.")
-                return redirect('radio_edit', pk=self.object.pk)
-            logger.info(
-                "User action radio_manual_only validation_error actor=%s radio_id=%s",
-                _actor_label(request),
-                self.object.pk,
-            )
-            messages.error(request, "Manual processing could not run. Fix the form errors and try again.")
-            return self.form_invalid(form)
-        # Normal update — validate main form and firmware formset together
+        try:
+            self.object = self.get_object()
+        except Http404:
+            messages.error(request, f'Radio #{kwargs.get("pk")} no longer exists — it may have been deleted.')
+            return redirect('radio_list')
         form = self.get_form()
-        firmware_formset = RadioFirmwareFormSet(request.POST, request.FILES, instance=self.object)
-        if form.is_valid() and firmware_formset.is_valid():
-            response = self.form_valid(form)
-            firmware_formset.save()
-            return response
-        context = self.get_context_data(form=form, firmware_formset=firmware_formset)
-        return self.render_to_response(context)
-    
+        if form.is_valid():
+            return self.form_valid(form)
+        return self.render_to_response(self.get_context_data(form=form))
+
     def form_valid(self, form):
         logger.info("User action radio_update submit actor=%s radio_id=%s brand=%s model=%s", _actor_label(self.request), form.instance.pk, form.instance.brand, form.instance.model)
+        form.save()
         messages.success(self.request, f'Radio {form.instance} has been updated successfully!')
-        response = super().form_valid(form)
-        _process_manual_upload_from_radio_form(self.request, form, self.object)
-        return response
+        return redirect(self.request.path)
 
 
 class RadioDeleteView(DeleteView):
@@ -516,9 +475,23 @@ class BrandUpdateView(UpdateView):
         return context
 
     def form_valid(self, form):
-        logger.info("User action brand_update submit actor=%s brand_id=%s brand=%s", _actor_label(self.request), form.instance.pk, form.instance.name)
-        messages.success(self.request, f'Brand {form.instance} has been updated successfully!')
-        return super().form_valid(form)
+        old_name = Brand.objects.values_list('name', flat=True).get(pk=form.instance.pk)
+        new_name = form.cleaned_data['name']
+        logger.info("User action brand_update submit actor=%s brand_id=%s brand=%s", _actor_label(self.request), form.instance.pk, new_name)
+        response = super().form_valid(form)
+        if old_name != new_name:
+            updated = Radio.objects.filter(brand__iexact=old_name).update(brand=new_name)
+            logger.info(
+                "Brand rename cascade old=%s new=%s radios_updated=%s",
+                old_name, new_name, updated,
+            )
+            if updated:
+                messages.info(
+                    self.request,
+                    f"Updated {updated} radio record(s) from brand \"{old_name}\" to \"{new_name}\".",
+                )
+        messages.success(self.request, f'Brand {form.instance} has been saved successfully!')
+        return response
 
 
 class BrandDeleteView(DeleteView):
@@ -530,7 +503,7 @@ class BrandDeleteView(DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         brand = context['object']
-        associated_radios = Radio.objects.filter(Q(brand__iexact=brand.name) | Q(manufacturer=brand)).distinct()
+        associated_radios = Radio.objects.filter(brand__iexact=brand.name).distinct()
         context['associated_radio_count'] = associated_radios.count()
         context['associated_manual_count'] = RadioManual.objects.filter(radio__in=associated_radios).count()
         return context
@@ -550,7 +523,7 @@ class BrandDeleteView(DeleteView):
             context = self.get_context_data(object=brand)
             return render(request, self.template_name, context)
 
-        associated_radios = Radio.objects.filter(Q(brand__iexact=brand.name) | Q(manufacturer=brand)).distinct()
+        associated_radios = Radio.objects.filter(brand__iexact=brand.name).distinct()
         associated_manuals = RadioManual.objects.filter(radio__in=associated_radios)
 
         manual_count = associated_manuals.count()
@@ -574,6 +547,161 @@ class BrandDeleteView(DeleteView):
             request,
             f"Deleted brand {brand_name} and associated records ({radio_count} radios, {manual_count} manuals).",
         )
+        return redirect(self.success_url)
+
+
+def brand_merge_view(request, pk):
+    """Merge a source brand into a chosen target brand.
+
+    All radio records, manufacturer FK references, child brand parent_brand
+    pointers, and Manufacturer M2M links are re-pointed from source → target,
+    then the source brand is deleted.
+    """
+    from django.db import transaction
+    from .models import Manufacturer
+
+    source = get_object_or_404(Brand, pk=pk)
+
+    if request.method == 'POST':
+        target_pk = request.POST.get('target_brand')
+        if not target_pk:
+            messages.error(request, 'Please select a target brand to merge into.')
+            return redirect('brand_merge', pk=pk)
+
+        try:
+            target = Brand.objects.exclude(pk=pk).get(pk=target_pk)
+        except Brand.DoesNotExist:
+            messages.error(request, 'Invalid target brand selected.')
+            return redirect('brand_merge', pk=pk)
+
+        if request.POST.get('confirm') != 'yes':
+            messages.error(request, 'Please check the confirmation box before merging.')
+            return redirect('brand_merge', pk=pk)
+
+        logger.warning(
+            "User action brand_merge submit actor=%s source_id=%s source=%s target_id=%s target=%s",
+            _actor_label(request), source.pk, source.name, target.pk, target.name,
+        )
+
+        with transaction.atomic():
+            # 1. Update Radio.brand string
+            r1 = Radio.objects.filter(brand__iexact=source.name).update(brand=target.name)
+            # 2. Update child Brand.parent_brand FK
+            r2 = Brand.objects.filter(parent_brand=source).update(parent_brand=target)
+            # 3. Manufacturer M2M (Manufacturer.brands)
+            r3 = 0
+            for mfr in Manufacturer.objects.filter(brands=source):
+                mfr.brands.add(target)
+                mfr.brands.remove(source)
+                r3 += 1
+            # 4. Delete source
+            source_name = source.name
+            source.delete()
+
+        logger.info(
+            "Brand merge complete source=%s target=%s radios_brand=%s child_brands=%s manufacturers=%s",
+            source_name, target.name, r1, r2, r3,
+        )
+        messages.success(
+            request,
+            f'Merged "{source_name}" into "{target.name}": '
+            f'{r1} radio brand(s), {r2} child brand(s) updated.',
+        )
+        return redirect('brand_edit', pk=target.pk)
+
+    # GET — show merge form
+    radio_count = Radio.objects.filter(brand__iexact=source.name).count()
+    child_brands = Brand.objects.filter(parent_brand=source)
+    other_brands = Brand.objects.exclude(pk=pk).order_by('name')
+
+    return render(request, 'radios/brand_merge.html', {
+        'source': source,
+        'radio_count': radio_count,
+        'child_brands': child_brands,
+        'other_brands': other_brands,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Manufacturer views
+# ---------------------------------------------------------------------------
+
+class ManufacturerListView(ListView):
+    """List all manufacturers with optional search."""
+    model = Manufacturer
+    template_name = 'radios/manufacturer_list.html'
+    context_object_name = 'manufacturers'
+    paginate_by = 50
+    ordering = ['full_name']
+
+    def get_queryset(self):
+        qs = super().get_queryset().prefetch_related('brands')
+        query = self.request.GET.get('query', '').strip()
+        if query:
+            qs = qs.filter(
+                Q(full_name__icontains=query) |
+                Q(alias__icontains=query) |
+                Q(country__icontains=query) |
+                Q(brands__name__icontains=query)
+            ).distinct()
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_count'] = Manufacturer.objects.count()
+        context['filtered_count'] = context['paginator'].count if context.get('paginator') else 0
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        context['query_string'] = f"&{query_params.urlencode()}" if query_params else ""
+        return context
+
+
+class ManufacturerCreateView(CreateView):
+    """Create a new manufacturer record."""
+    model = Manufacturer
+    form_class = ManufacturerForm
+    template_name = 'radios/manufacturer_form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('manufacturer_edit', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        logger.info("User action manufacturer_create actor=%s name=%s", _actor_label(self.request), form.instance.full_name)
+        messages.success(self.request, f'Manufacturer "{form.instance.full_name}" created.')
+        return super().form_valid(form)
+
+
+class ManufacturerUpdateView(UpdateView):
+    """Edit an existing manufacturer record."""
+    model = Manufacturer
+    form_class = ManufacturerForm
+    template_name = 'radios/manufacturer_form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('manufacturer_edit', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['linked_brands'] = self.object.brands.all().order_by('name')
+        return context
+
+    def form_valid(self, form):
+        logger.info("User action manufacturer_update actor=%s pk=%s name=%s", _actor_label(self.request), self.object.pk, form.instance.full_name)
+        messages.success(self.request, f'Manufacturer "{form.instance.full_name}" updated.')
+        return super().form_valid(form)
+
+
+class ManufacturerDeleteView(DeleteView):
+    """Delete a manufacturer record (does not delete linked brands)."""
+    model = Manufacturer
+    template_name = 'radios/manufacturer_confirm_delete.html'
+    success_url = reverse_lazy('manufacturer_list')
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        logger.warning("User action manufacturer_delete actor=%s pk=%s name=%s", _actor_label(request), self.object.pk, self.object.full_name)
+        messages.success(request, f'Manufacturer "{self.object.full_name}" deleted.')
+        self.object.delete()
         return redirect(self.success_url)
 
 
@@ -681,6 +809,7 @@ def dashboard_view(request):
         'recent_radios': recent_radios,
         'recent_manual_uploads': recent_manual_uploads,
         'top_brands': top_brands,
+        'last_grantee_sync_at': FCCSyncState.get_instance().last_grantee_sync_at,
     }
     return render(request, 'radios/dashboard.html', context)
 

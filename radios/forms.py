@@ -2,7 +2,7 @@ from django import forms
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.forms import inlineformset_factory
-from .models import Radio, Brand, RadioFirmware
+from .models import Radio, Brand, RadioFirmware, Manufacturer, RadioManual
 
 
 class RadioForm(forms.ModelForm):
@@ -17,25 +17,17 @@ class RadioForm(forms.ModelForm):
         help_text="Select the radio manufacturer/brand"
     )
 
-    manual_pdf = forms.FileField(
+    # Override manufacturer to use the Manufacturer model (not Brand)
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.order_by('alias', 'full_name'),
         required=False,
-        label='Attach Manual PDF',
-        help_text='Optional: upload a PDF manual to parse and link to this radio.',
-        widget=forms.ClearableFileInput(attrs={
-            'class': 'mt-1 block w-full text-sm text-gray-700'
+        empty_label='— Not specified —',
+        widget=forms.Select(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
         }),
+        help_text="The legal manufacturing entity that built this radio"
     )
 
-    manual_product_url = forms.URLField(
-        required=False,
-        label='Manual Product URL (optional)',
-        help_text='Optional: product/sales URL to enrich specs and pricing while processing the manual.',
-        widget=forms.URLInput(attrs={
-            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-            'placeholder': 'https://...'
-        }),
-    )
-    
     class Meta:
         model = Radio
         fields = [
@@ -50,9 +42,6 @@ class RadioForm(forms.ModelForm):
         widgets = {
             'is_a_whitelabel': forms.CheckboxInput(attrs={
                 'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
-            }),
-            'manufacturer': forms.Select(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
             }),
             'model': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
@@ -149,12 +138,6 @@ class RadioForm(forms.ModelForm):
         brand_choices += [(b.name, b.name) for b in Brand.objects.all().order_by('name')]
         self.fields['brand'].choices = brand_choices
 
-    def clean_manual_pdf(self):
-        manual_pdf = self.cleaned_data.get('manual_pdf')
-        if manual_pdf and not manual_pdf.name.lower().endswith('.pdf'):
-            raise forms.ValidationError('Only PDF files are supported for manual uploads.')
-        return manual_pdf
-
     def clean_youtube_video_urla(self):
         value = (self.cleaned_data.get('youtube_video_urla') or '').strip()
         if not value:
@@ -176,21 +159,41 @@ class RadioForm(forms.ModelForm):
 
 class BrandForm(forms.ModelForm):
     """Form for creating and editing radio brands"""
-    
-    parent_brand = forms.CharField(
+
+    _css = ('mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+            'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm')
+
+    parent_brand = forms.ModelChoiceField(
+        queryset=Brand.objects.none(),  # set dynamically in __init__
         required=False,
-        widget=forms.TextInput(attrs={
+        empty_label='— None —',
+        widget=forms.Select(attrs={'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'}),
+        help_text="Only for subsidiary or shell-company relationships (e.g. EVOTE → Wouxun). Not for OEM.",
+    )
+
+    manufacturer_oem = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.order_by('full_name'),
+        required=False,
+        empty_label='— None —',
+        label='Manufacturer (OEM)',
+        widget=forms.Select(attrs={'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'}),
+        help_text='The legal manufacturing entity (OEM) that produces this brand.',
+    )
+
+    white_label_vendors = forms.MultipleChoiceField(
+        choices=[],  # populated in __init__
+        required=False,
+        widget=forms.SelectMultiple(attrs={
             'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-            'list': 'brand-options',
-            'placeholder': 'Select or type a new parent brand...'
+            'size': '8',
         }),
-        help_text="Select primary brand if this is a subsidiary or shell company"
+        help_text="Hold Ctrl / Cmd to select multiple. Select all brands that sell white-label versions of this radio.",
     )
 
     class Meta:
         model = Brand
         fields = [
-            'name', 'alias', 'grantee_code', 'full_name', 'parent_brand',
+            'name', 'alias', 'grantee_code', 'parent_brand',
             'country', 'website', 'white_label_vendors', 'notes'
         ]
         widgets = {
@@ -206,10 +209,6 @@ class BrandForm(forms.ModelForm):
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., 2AJGM'
             }),
-            'full_name': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'Full legal company name'
-            }),
             'country': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., China, Japan'
@@ -218,34 +217,56 @@ class BrandForm(forms.ModelForm):
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'https://manufacturer.com'
             }),
-            'white_label_vendors': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'e.g., BTech, Retevis'
-            }),
             'notes': forms.Textarea(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'rows': 4,
                 'placeholder': 'Additional notes about the manufacturer...'
             }),
         }
-        
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk and self.instance.parent_brand:
-            self.initial['parent_brand'] = self.instance.parent_brand.name
 
-    def clean_parent_brand(self):
-        brand_name = self.cleaned_data.get('parent_brand')
-        if not brand_name:
-            return None
-            
-        # Get or create the parent brand
-        brand, _ = Brand.objects.get_or_create(name=brand_name)
-        return brand
+        # parent_brand dropdown — exclude self to prevent circular reference
+        qs = Brand.objects.all().order_by('name')
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        self.fields['parent_brand'].queryset = qs
+
+        # manufacturer_oem — pre-select current primary manufacturer from M2M
+        if self.instance and self.instance.pk:
+            self.fields['manufacturer_oem'].initial = self.instance.manufacturers.first()
+
+        # white_label_vendors multi-select — choices are all brand names
+        brand_names = list(Brand.objects.values_list('name', flat=True).order_by('name'))
+        self.fields['white_label_vendors'].choices = [(n, n) for n in brand_names]
+
+        # Pre-select existing comma-separated values
+        if self.instance and self.instance.pk:
+            existing = (self.instance.white_label_vendors or '').strip()
+            if existing:
+                self.initial['white_label_vendors'] = [
+                    v.strip() for v in existing.split(',') if v.strip()
+                ]
+
+    def clean_white_label_vendors(self):
+        """Join multi-select list back to comma-separated string for storage."""
+        values = self.cleaned_data.get('white_label_vendors') or []
+        return ', '.join(values)
+
+    def save(self, commit=True):
+        instance = super().save(commit=commit)
+        if commit:
+            mfr = self.cleaned_data.get('manufacturer_oem')
+            # Replace the brand's manufacturers M2M with the selected OEM (single)
+            instance.manufacturers.clear()
+            if mfr:
+                instance.manufacturers.add(mfr)
+        return instance
 
 class RadioSearchForm(forms.Form):
     """Form for searching radios"""
-    
+
     query = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
@@ -277,51 +298,31 @@ class ImportGranteeXMLForm(forms.Form):
     )
 
 
-class ManualUploadForm(forms.Form):
-    """Upload a manual PDF and optional product URL for enrichment."""
+class DocumentUploadForm(forms.Form):
+    """Simple form for uploading any document file linked to an optional radio."""
 
-    manual_pdf = forms.FileField(
-        label='Manual PDF',
-        help_text='Upload a PDF manual for parsing and model matching.',
-    )
-    product_url = forms.URLField(
+    _css = ('mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+            'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm')
+
+    radio = forms.ModelChoiceField(
+        queryset=Radio.objects.all().order_by('brand', 'model'),
         required=False,
-        label='Product page URL (optional)',
-        help_text='Optional sales/product page used to enrich specs and pricing.',
-        widget=forms.URLInput(attrs={
-            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-            'placeholder': 'https://...'
-        })
+        empty_label='— Not linked to a specific radio —',
+        widget=forms.Select(attrs={'class': _css}),
+        help_text='Optionally link this file to a radio record.',
     )
-
-    def clean_manual_pdf(self):
-        manual_pdf = self.cleaned_data['manual_pdf']
-        if not manual_pdf.name.lower().endswith('.pdf'):
-            raise forms.ValidationError('Only PDF files are supported.')
-        return manual_pdf
-
-
-class ManualReviewForm(forms.Form):
-    """User-reviewed extraction values before linking or creating a radio."""
-
-    manual_id = forms.IntegerField(widget=forms.HiddenInput)
-    selected_radio_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
-    action = forms.ChoiceField(
-        choices=[('existing', 'Attach to selected existing model'), ('new', 'Add new model')],
-        widget=forms.RadioSelect,
-        initial='existing',
+    doc_type = forms.ChoiceField(
+        choices=RadioManual.DocType.choices,
+        label='Document Type',
+        widget=forms.Select(attrs={'class': _css}),
     )
-
-    brand = forms.CharField(max_length=100)
-    manufacturer = forms.CharField(max_length=200, required=False)
-    model = forms.CharField(max_length=200)
-    fcc_id = forms.CharField(max_length=50, required=False)
-    freq_bands_tx = forms.CharField(max_length=200, required=False)
-    aprs = forms.CharField(max_length=100, required=False)
-    gps = forms.CharField(max_length=50, required=False)
-    power_watts = forms.CharField(max_length=100, required=False)
-    cost_approx = forms.CharField(max_length=100, required=False)
-    website = forms.URLField(max_length=500, required=False)
+    document_file = forms.FileField(
+        label='File',
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'mt-1 block w-full text-sm text-gray-700',
+        }),
+        help_text='Select any file to upload (PDF, binary, etc.).',
+    )
 
 
 _FIELD_CSS = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
@@ -365,3 +366,51 @@ RadioFirmwareFormSet = inlineformset_factory(
     max_num=2,
     can_delete=True,
 )
+
+
+class ManufacturerForm(forms.ModelForm):
+    """Form for creating and editing Manufacturer records."""
+
+    brands = forms.ModelMultipleChoiceField(
+        queryset=Brand.objects.all().order_by('name'),
+        required=False,
+        widget=forms.SelectMultiple(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+            'size': '12',
+            'id': 'id_brands',
+        }),
+        help_text="Hold Ctrl / Cmd to select multiple brands.",
+    )
+
+    class Meta:
+        model = Manufacturer
+        fields = ['full_name', 'alias', 'brands', 'website', 'country', 'notes']
+        widgets = {
+            'full_name': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                         'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'placeholder': "e.g. Hiroyasu Electronics (Hong Kong) Co., Ltd",
+            }),
+            'alias': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                         'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'placeholder': "e.g. Hiroyasu",
+            }),
+            'website': forms.URLInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                         'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'placeholder': 'https://manufacturer.com',
+            }),
+            'country': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                         'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'placeholder': 'e.g. China, Japan',
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                         'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'rows': 4,
+                'placeholder': 'Additional notes…',
+            }),
+        }

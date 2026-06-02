@@ -60,27 +60,23 @@
                             {% endif %}
                         </div>
                         <div class="sm:col-span-2">
-                            <label for="{{ form.parent_brand.id_for_label }}" class="block text-sm font-medium text-gray-700">Parent Brand (Original Manufacturer)</label>
+                            <label for="{{ form.manufacturer_oem.id_for_label }}" class="block text-sm font-medium text-gray-700">Manufacturer (OEM)</label>
+                            {{ form.manufacturer_oem }}
+                            <p class="mt-1 text-xs text-gray-500">The legal manufacturing entity (OEM) that produces this brand. Select the full company name.</p>
+                            {% if form.manufacturer_oem.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.manufacturer_oem.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="{{ form.parent_brand.id_for_label }}" class="block text-sm font-medium text-gray-700">Parent Brand <span class="text-gray-400 font-normal">(subsidiaries &amp; shell companies only)</span></label>
                             {{ form.parent_brand }}
-                            <datalist id="brand-options">
-                                {% for b in all_brands %}
-                                <option value="{{ b.name }}"></option>
-                                {% endfor %}
-                            </datalist>
                             <a id="parent-brand-link" href="#" target="_blank"
                                data-url-template="{% url 'brand_edit' pk=0 %}"
                                class="mt-1 text-xs text-indigo-600 hover:text-indigo-900"
                                style="display:none;">View brand record →</a>
-                            <p class="mt-1 text-xs text-gray-500">If this is a white-label arm or shell company, select or type the original manufacturer.</p>
+                            <p class="mt-1 text-xs text-gray-500">Only use this if the brand is a subsidiary or shell company of another brand (e.g. EVOTE → Wouxun). Not for OEM relationships.</p>
                             {% if form.parent_brand.errors %}
                             <p class="mt-2 text-sm text-red-600">{{ form.parent_brand.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Full Name</label>
-                            {{ form.full_name }}
-                            {% if form.full_name.errors %}
-                            <p class="mt-2 text-sm text-red-600">{{ form.full_name.errors.0 }}</p>
                             {% endif %}
                         </div>
                     </div>
@@ -121,13 +117,23 @@
                 </div>
 
                 <!-- Submit Buttons -->
-                <div class="pt-5 border-t border-gray-200 flex justify-end space-x-3">
-                    <a href="{% url 'brand_list' %}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Cancel
+                <div class="pt-5 border-t border-gray-200 flex justify-between items-center">
+                    {% if form.instance.pk %}
+                    <a href="{% url 'brand_merge' form.instance.pk %}"
+                       class="inline-flex items-center py-2 px-4 border border-amber-300 rounded-md shadow-sm text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100">
+                        Merge into another brand…
                     </a>
-                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Save Brand
-                    </button>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                    <div class="flex space-x-3">
+                        <a href="{% url 'brand_list' %}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Save Brand
+                        </button>
+                    </div>
                 </div>
             </form>
             </div>
@@ -160,16 +166,14 @@
     </div><!-- end flex -->
 </div>
 
-{{ brand_name_to_pk|json_script:"brand-pk-data" }}
 <script>
 (function () {
-    var brandMap = JSON.parse(document.getElementById('brand-pk-data').textContent);
-    var input = document.getElementById('id_parent_brand');
-    var link  = document.getElementById('parent-brand-link');
+    var select = document.getElementById('id_parent_brand');
+    var link   = document.getElementById('parent-brand-link');
     var urlTemplate = link.dataset.urlTemplate;
 
     function update() {
-        var pk = brandMap[input.value.trim()];
+        var pk = select.value;
         if (pk) {
             link.href = urlTemplate.replace('/0/', '/' + pk + '/');
             link.style.display = '';
@@ -178,7 +182,7 @@
         }
     }
 
-    input.addEventListener('input', update);
+    select.addEventListener('change', update);
     update();
 })();
 </script>
