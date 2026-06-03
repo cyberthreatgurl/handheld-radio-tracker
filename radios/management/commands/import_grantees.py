@@ -1,7 +1,7 @@
 import os
 import xml.etree.ElementTree as ET
 from django.core.management.base import BaseCommand
-from radios.models import Brand
+from radios.models import Brand, IgnoredGrantee
 
 RESULTS_XML = os.path.join('data', 'results.xml')
 
@@ -16,6 +16,8 @@ class Command(BaseCommand):
             grantee_code = row.findtext('grantee_code', '').strip()
             grantee_name = row.findtext('grantee_name', '').strip()
             if not grantee_code or not grantee_name:
+                continue
+            if IgnoredGrantee.is_ignored(grantee_code):
                 continue
             brand, created = Brand.objects.get_or_create(
                 grantee_code=grantee_code,

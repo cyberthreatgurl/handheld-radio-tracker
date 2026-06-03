@@ -1,6 +1,6 @@
 import csv
 from django.core.management.base import BaseCommand
-from radios.models import Brand
+from radios.models import Brand, IgnoredGrantee
 
 
 class Command(BaseCommand):
@@ -42,6 +42,8 @@ class Command(BaseCommand):
                         grantee_code = row.get('Grantee_Code', '').strip()
                         
                         if not name or not grantee_code:
+                            continue
+                        if IgnoredGrantee.is_ignored(grantee_code):
                             continue
                         
                         # Get or create brand

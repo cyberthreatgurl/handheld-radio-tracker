@@ -17,6 +17,17 @@
             {% endif %}
             <h1 class="text-3xl font-bold text-gray-900">{{ radio.brand }} {{ radio.model }}</h1>
             <div class="flex justify-end space-x-3 mt-3">
+                {% if radio.fcc_id %}
+                <form action="{% url 'sync_radio_fcc' radio.pk %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-indigo-300 text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        FCC Update
+                    </button>
+                </form>
+                {% endif %}
                 <a href="{% url 'nodal_visualization' %}?brand={{ radio.brand|urlencode }}&model={{ radio.model|urlencode }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Nodal View
                 </a>
@@ -39,7 +50,13 @@
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Brand</p>
-                            <p class="mt-1 text-sm text-gray-900">{{ radio.brand }}</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {% if brand_pk %}
+                                <a href="{% url 'brand_edit' brand_pk %}" class="text-indigo-600 hover:text-indigo-900 hover:underline">{{ radio.brand }}</a>
+                                {% else %}
+                                {{ radio.brand }}
+                                {% endif %}
+                            </p>
                         </div>
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Model</p>
@@ -57,7 +74,13 @@
                         </div>
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Original Manufacturer</p>
-                            <p class="mt-1 text-sm text-gray-900">{{ radio.manufacturer|default:"Not specified" }}</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {% if radio.manufacturer %}
+                                <a href="{% url 'manufacturer_edit' radio.manufacturer.pk %}" class="text-indigo-600 hover:text-indigo-900 hover:underline">{{ radio.manufacturer }}</a>
+                                {% else %}
+                                Not specified
+                                {% endif %}
+                            </p>
                         </div>
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Type</p>
@@ -73,11 +96,11 @@
                             <p class="block text-sm font-medium text-gray-700">FCC ID</p>
                             <div class="mt-1 text-sm text-gray-900">
                                 {% if radio.fcc_id %}
-                                    {% if fcc_lookup_id %}
-                                    <a href="https://www.fcc.gov/oet/ea/fccid?id={{ fcc_lookup_id|urlencode }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
+                                    {% if oet_url %}
+                                    <a href="{{ oet_url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
                                         {{ radio.fcc_id }} ↗
                                     </a>
-                                    <p class="mt-1 text-xs text-gray-500">Official FCC lookup. If unavailable, the FCC site may be experiencing a temporary outage.</p>
+                                    <p class="mt-1 text-xs text-gray-500">Links to the FCC OET Equipment Authorization System (EAS). If unavailable, the FCC site may be experiencing a temporary outage.</p>
                                     {% else %}
                                     {{ radio.fcc_id }}
                                     {% endif %}

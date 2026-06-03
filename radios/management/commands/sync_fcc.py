@@ -1,7 +1,7 @@
 import time
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from radios.models import Radio, Brand, FCCSyncState
+from radios.models import Radio, Brand, FCCSyncState, IgnoredGrantee
 from radios.fcc_utils import fetch_and_sync_fcc_id
 
 class Command(BaseCommand):
@@ -85,7 +85,10 @@ class Command(BaseCommand):
                     "No previous sync recorded — fetching full grant history for all known grantees..."
                 )
 
+            ignored_codes = IgnoredGrantee.ignored_codes()
             grantees = Brand.objects.exclude(grantee_code__isnull=True).exclude(grantee_code='')
+            if ignored_codes:
+                grantees = grantees.exclude(grantee_code__in=ignored_codes)
             self.stdout.write(f"Found {grantees.count()} grantees to process.")
 
             total_added = 0

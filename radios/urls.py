@@ -11,6 +11,7 @@ urlpatterns = [
     path('radios/<int:pk>/', views.RadioDetailView.as_view(), name='radio_detail'),
     path('radios/<int:pk>/edit/', views.RadioUpdateView.as_view(), name='radio_edit'),
     path('radios/<int:pk>/delete/', views.RadioDeleteView.as_view(), name='radio_delete'),
+    path('radios/<int:pk>/sync-fcc/', views.sync_radio_fcc_view, name='sync_radio_fcc'),
 
     path('sync-fcc/', views.sync_fcc_view, name='sync_fcc_id'),
     path('sync-all-grantees/', views.sync_all_grantees_view, name='sync_all_grantees'),
@@ -24,6 +25,8 @@ urlpatterns = [
     path('brands/<int:pk>/merge/', views.brand_merge_view, name='brand_merge'),
 
     path('manufacturers/', views.ManufacturerListView.as_view(), name='manufacturer_list'),
+    path('manufacturers/map/', views.manufacturer_map_view, name='manufacturer_map'),
+    path('manufacturers/map/data/', views.manufacturer_map_data_view, name='manufacturer_map_data'),
     path('manufacturers/add/', views.ManufacturerCreateView.as_view(), name='manufacturer_add'),
     path('manufacturers/<int:pk>/edit/', views.ManufacturerUpdateView.as_view(), name='manufacturer_edit'),
     path('manufacturers/<int:pk>/delete/', views.ManufacturerDeleteView.as_view(), name='manufacturer_delete'),

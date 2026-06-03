@@ -29,7 +29,7 @@
     <div class="flex-1">
         <input type="text" name="query" value="{{ request.GET.query|default:'' }}"
                class="focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-               placeholder="Search by full name, alias, country, or brand…">
+               placeholder="Search by full name, alias, country, address, or brand…">
     </div>
     <button type="submit"
             class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
@@ -81,6 +81,9 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ mfr.country|default:"—" }}
+                            {% if mfr.address %}
+                            <div class="text-xs text-gray-400 mt-0.5 max-w-xs truncate" title="{{ mfr.address }}">{{ mfr.address }}</div>
+                            {% endif %}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700">
                             {% for brand in mfr.brands.all %}

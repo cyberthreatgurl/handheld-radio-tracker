@@ -67,6 +67,47 @@
                             <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700">Website</label>
                             {{ form.website }}
                         </div>
+                        <div class="sm:col-span-2">
+                            <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700">Address</label>
+                            {{ form.address }}
+                            <p class="mt-1 text-xs text-gray-500">
+                                Full street/mailing address — used for geo-mapping manufacturing locations.
+                            </p>
+                            {% if form.address.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.instance.pk %}
+                            {% if form.instance.latitude and form.instance.longitude %}
+                            {% if form.instance.geocode_precision == 'full' %}
+                            <p class="mt-1 text-xs text-green-600">
+                                ✓ Geocoded (exact): {{ form.instance.latitude|floatformat:5 }}, {{ form.instance.longitude|floatformat:5 }}
+                            </p>
+                            {% elif form.instance.geocode_precision == 'city' %}
+                            <p class="mt-1 text-xs text-blue-600">
+                                ~ Geocoded (city centre): {{ form.instance.latitude|floatformat:5 }}, {{ form.instance.longitude|floatformat:5 }} — refine address for exact location.
+                            </p>
+                            {% elif form.instance.geocode_precision == 'state' %}
+                            <p class="mt-1 text-xs text-amber-600">
+                                ~ Geocoded (state/province centre): {{ form.instance.latitude|floatformat:5 }}, {{ form.instance.longitude|floatformat:5 }} — refine address for better accuracy.
+                            </p>
+                            {% elif form.instance.geocode_precision == 'country' %}
+                            <p class="mt-1 text-xs text-orange-600">
+                                ~ Geocoded (country centre only): {{ form.instance.latitude|floatformat:5 }}, {{ form.instance.longitude|floatformat:5 }} — add a more specific address.
+                            </p>
+                            {% else %}
+                            <p class="mt-1 text-xs text-green-600">
+                                ✓ Geocoded: {{ form.instance.latitude|floatformat:5 }}, {{ form.instance.longitude|floatformat:5 }}
+                            </p>
+                            {% endif %}
+                            {% elif form.instance.geocode_failed %}
+                            <p class="mt-1 text-xs text-red-600">
+                                ✗ Geocoding failed — address could not be resolved even at country level. Check spelling or try a different format.
+                            </p>
+                            {% elif form.instance.address %}
+                            <p class="mt-1 text-xs text-gray-400">Geocoding pending…</p>
+                            {% endif %}
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 

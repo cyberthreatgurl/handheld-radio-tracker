@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware, Manufacturer
+from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware, Manufacturer, IgnoredGrantee, delete_brand_and_related
 
 
 @admin.register(Brand)
@@ -9,6 +9,13 @@ class BrandAdmin(admin.ModelAdmin):
     ordering = ['name']
 
     actions = ['rename_brand_globally']
+
+    def delete_model(self, request, obj):
+        delete_brand_and_related(obj)
+
+    def delete_queryset(self, request, queryset):
+        for brand in queryset:
+            delete_brand_and_related(brand)
 
     def rename_brand_globally(self, request, queryset):
         if queryset.count() != 1:
@@ -47,6 +54,13 @@ class ManufacturerAdmin(admin.ModelAdmin):
     def brand_count(self, obj):
         return obj.brands.count()
     brand_count.short_description = 'Brands'
+
+
+@admin.register(IgnoredGrantee)
+class IgnoredGranteeAdmin(admin.ModelAdmin):
+    list_display = ['grantee_code', 'reason', 'updated_at']
+    search_fields = ['grantee_code', 'reason', 'notes']
+    ordering = ['grantee_code']
 
 
 @admin.register(Radio)

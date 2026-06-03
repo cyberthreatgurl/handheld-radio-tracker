@@ -1,14 +1,23 @@
 import tempfile
 from unittest.mock import patch
 
+from django.contrib.admin.sites import AdminSite
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
+from django.test.client import RequestFactory
 from urllib.parse import quote_plus
 
+from .admin import BrandAdmin
 from .models import Radio
 from .models import Brand
+from .models import IgnoredGrantee
+from .models import Manufacturer
 from .models import RadioManual
+from .models import RadioFCCTestReport
 from .models import RadioOETDocument
+from .models import RadioFirmware
 from .fcc_id_utils import split_fcc_id, normalize_fcc_id_for_lookup
 from .fcc_utils import (
     _fcc_lookup_variants,
@@ -21,9 +30,12 @@ from .fcc_utils import (
     _is_fcc_authoritative_url,
     _extract_original_equipment_summary,
     _extract_secondary_metadata_from_generic_search_html,
+    _ensure_grantee_brand_and_manufacturer,
+    _resolve_authoritative_radio_brand_name,
+    fetch_and_sync_fcc_id,
     _sync_oet_documents_for_radio,
 )
-from .manual_extraction import extract_specs_from_text
+from .manual_extraction import extract_specs_from_text, extract_text_from_pdf_with_metadata
 
 
 class RadioModelTest(TestCase):
@@ -42,6 +54,80 @@ class RadioModelTest(TestCase):
         radio = Radio.objects.get(model='UV-5R')
         self.assertEqual(radio.brand, 'Baofeng')
         self.assertEqual(radio.fcc_id, '2AJGM-UV5R')
+
+
+@override_settings(MEDIA_ROOT=tempfile.gettempdir())
+class BrandDeletionCleanupTest(TestCase):
+    def _build_brand_fixture(self, brand_name='ScreenCo', manufacturer_name='ScreenCo OEM', extra_brand=None):
+        brand = Brand.objects.create(name=brand_name, grantee_code='XH8')
+        manufacturer = Manufacturer.objects.create(full_name=manufacturer_name)
+        manufacturer.brands.add(brand)
+        if extra_brand is not None:
+            manufacturer.brands.add(extra_brand)
+
+        radio = Radio.objects.create(
+            brand=brand.name,
+            model='Projector Screen 100',
+            manufacturer=manufacturer,
+            fcc_id='XH8-SCREEN100',
+        )
+        RadioManual.objects.create(
+            radio=radio,
+            manual_pdf=SimpleUploadedFile('manual.pdf', b'manual-bytes', content_type='application/pdf'),
+        )
+        RadioFCCTestReport.objects.create(
+            radio=radio,
+            fcc_id=radio.fcc_id,
+            report_pdf=SimpleUploadedFile('report.pdf', b'report-bytes', content_type='application/pdf'),
+        )
+        RadioOETDocument.objects.create(
+            radio=radio,
+            fcc_id=radio.fcc_id,
+            view_attachment='Attachment',
+            document_url='https://example.com/oet.pdf',
+            document_file=SimpleUploadedFile('oet.pdf', b'oet-bytes', content_type='application/pdf'),
+        )
+        RadioFirmware.objects.create(
+            radio=radio,
+            label='Main',
+            version='1.0',
+        )
+        return brand, manufacturer, radio
+
+    def test_brand_delete_removes_brand_radios_documents_and_single_brand_manufacturer(self):
+        brand, manufacturer, radio = self._build_brand_fixture()
+
+        brand.delete()
+
+        self.assertFalse(Brand.objects.filter(pk=brand.pk).exists())
+        self.assertFalse(Radio.objects.filter(pk=radio.pk).exists())
+        self.assertFalse(RadioManual.objects.filter(radio=radio).exists())
+        self.assertFalse(RadioFCCTestReport.objects.filter(radio=radio).exists())
+        self.assertFalse(RadioOETDocument.objects.filter(radio=radio).exists())
+        self.assertFalse(RadioFirmware.objects.filter(radio=radio).exists())
+        self.assertFalse(Manufacturer.objects.filter(pk=manufacturer.pk).exists())
+
+    def test_brand_delete_keeps_manufacturer_when_other_brand_links_remain(self):
+        extra_brand = Brand.objects.create(name='Other Brand', grantee_code='OTHR1')
+        brand, manufacturer, radio = self._build_brand_fixture(extra_brand=extra_brand)
+
+        brand.delete()
+
+        self.assertFalse(Brand.objects.filter(pk=brand.pk).exists())
+        self.assertFalse(Radio.objects.filter(pk=radio.pk).exists())
+        self.assertTrue(Manufacturer.objects.filter(pk=manufacturer.pk).exists())
+        self.assertEqual(list(manufacturer.brands.values_list('name', flat=True)), ['Other Brand'])
+
+    def test_admin_bulk_delete_uses_same_brand_cleanup(self):
+        brand, manufacturer, radio = self._build_brand_fixture()
+        admin_instance = BrandAdmin(Brand, AdminSite())
+        request = RequestFactory().post('/admin/radios/brand/')
+
+        admin_instance.delete_queryset(request, Brand.objects.filter(pk=brand.pk))
+
+        self.assertFalse(Brand.objects.filter(pk=brand.pk).exists())
+        self.assertFalse(Radio.objects.filter(pk=radio.pk).exists())
+        self.assertFalse(Manufacturer.objects.filter(pk=manufacturer.pk).exists())
 
 
 class RadioDetailFCCLinkTest(TestCase):
@@ -127,6 +213,110 @@ class FCCIDUtilsTest(TestCase):
         self.assertEqual(payload['eas_apps_only'], 'Y')
         self.assertNotIn('application_status', payload)
         self.assertNotIn('RequestTimeout', payload)
+
+
+class IgnoredGranteeSyncTest(TestCase):
+    def test_fetch_and_sync_skips_specific_fcc_id_for_ignored_grantee(self):
+        IgnoredGrantee.objects.create(grantee_code='XH8', reason='Out of scope AV devices')
+
+        with patch('radios.fcc_utils._fcc_request_with_retry') as mocked_request:
+            added, updated, messages = fetch_and_sync_fcc_id('XH8-SCREEN100')
+
+        self.assertEqual(added, 0)
+        self.assertEqual(updated, 0)
+        self.assertTrue(any('ignore list' in message.lower() for message in messages))
+        mocked_request.assert_not_called()
+        self.assertFalse(Radio.objects.filter(fcc_id='XH8-SCREEN100').exists())
+
+
+class FCCGranteeBrandManufacturerSyncTest(TestCase):
+    def test_ensure_grantee_brand_and_manufacturer_backfills_existing_brand(self):
+        brand = Brand.objects.create(name='Quanzhou Buxun Electronic Technology Co., Ltd.')
+
+        ensured_brand, ensured_manufacturer = _ensure_grantee_brand_and_manufacturer(
+            '2AYFM',
+            'Quanzhou Buxun Electronic Technology Co., Ltd.',
+        )
+
+        brand.refresh_from_db()
+        self.assertEqual(ensured_brand.id, brand.id)
+        self.assertEqual(brand.grantee_code, '2AYFM')
+        self.assertEqual(brand.full_name, 'Quanzhou Buxun Electronic Technology Co., Ltd.')
+        self.assertIsNotNone(ensured_manufacturer)
+        self.assertEqual(ensured_manufacturer.full_name, 'Quanzhou Buxun Electronic Technology Co., Ltd.')
+        self.assertTrue(ensured_manufacturer.brands.filter(pk=brand.pk).exists())
+
+    def test_ensure_grantee_brand_and_manufacturer_backfills_normalized_blank_code_brand(self):
+        brand = Brand.objects.create(name='Vertex Standard USA, Inc.')
+
+        ensured_brand, ensured_manufacturer = _ensure_grantee_brand_and_manufacturer(
+            'AXI',
+            'Vertex Standard USA Inc',
+        )
+
+        brand.refresh_from_db()
+        self.assertEqual(ensured_brand.id, brand.id)
+        self.assertEqual(brand.grantee_code, 'AXI')
+        self.assertEqual(brand.full_name, 'Vertex Standard USA Inc')
+        self.assertIsNotNone(ensured_manufacturer)
+        self.assertEqual(ensured_manufacturer.full_name, 'Vertex Standard USA Inc')
+        self.assertTrue(ensured_manufacturer.brands.filter(pk=brand.pk).exists())
+
+    def test_ensure_grantee_brand_and_manufacturer_absorbs_blank_code_variant_into_coded_brand(self):
+        coded_brand = Brand.objects.create(
+            name='Tidradio',
+            grantee_code='2AWL3',
+            full_name='Quanzhou longtuo electronic technology co. ,Lt',
+        )
+        blank_variant = Brand.objects.create(
+            name='Quanzhou longtuo electronic technology co. ,Ltd',
+        )
+
+        ensured_brand, ensured_manufacturer = _ensure_grantee_brand_and_manufacturer(
+            '2AWL3',
+            'Quanzhou longtuo electronic technology co. ,Ltd',
+        )
+
+        coded_brand.refresh_from_db()
+        blank_variant.refresh_from_db()
+        self.assertEqual(ensured_brand.id, coded_brand.id)
+        self.assertEqual(coded_brand.grantee_code, '2AWL3')
+        self.assertEqual(coded_brand.full_name, 'Quanzhou longtuo electronic technology co. ,Ltd')
+        self.assertIsNone(blank_variant.grantee_code)
+        self.assertIsNotNone(ensured_manufacturer)
+        self.assertEqual(ensured_manufacturer.full_name, 'Quanzhou longtuo electronic technology co. ,Ltd')
+        self.assertTrue(ensured_manufacturer.brands.filter(pk=coded_brand.pk).exists())
+
+    def test_resolve_authoritative_radio_brand_name_prefers_coded_brand_for_duplicate_variant(self):
+        coded_brand = Brand.objects.create(
+            name='Tidradio',
+            grantee_code='2AWL3',
+            full_name='Quanzhou longtuo electronic technology co. ,Lt',
+        )
+        Brand.objects.create(name='Quanzhou longtuo electronic technology co. ,Ltd')
+
+        resolved = _resolve_authoritative_radio_brand_name(
+            coded_brand,
+            '2AWL3',
+            'Quanzhou longtuo electronic technology co. ,Ltd',
+        )
+
+        self.assertEqual(resolved, 'Tidradio')
+
+    def test_resolve_authoritative_radio_brand_name_leaves_reseller_case_alone_without_duplicate(self):
+        coded_brand = Brand.objects.create(
+            name='Some Canonical Brand',
+            grantee_code='VO6',
+            full_name='FUJIAN NEW CENTURY COMMUNICATIONS CO., LTD',
+        )
+
+        resolved = _resolve_authoritative_radio_brand_name(
+            coded_brand,
+            'VO6',
+            'Kydera',
+        )
+
+        self.assertEqual(resolved, 'Kydera')
 
 
 class FCCOriginalEquipmentSummaryTest(TestCase):
@@ -518,3 +708,30 @@ class FCCPdfSpecExtractionTest(TestCase):
         self.assertEqual(radio.battery_mah, 2500)
         self.assertNotIn('power_watts', changes)
         self.assertIn('gps', changes)
+
+
+class ManualExtractionFallbackTest(TestCase):
+    def test_pdf_crypto_dependency_error_falls_back_to_ocr(self):
+        class FakeDependencyError(Exception):
+            pass
+
+        class FakePages:
+            def __len__(self):
+                raise FakeDependencyError('cryptography required')
+
+            def __iter__(self):
+                return iter(())
+
+        class FakeReader:
+            def __init__(self, _file_path):
+                self.pages = FakePages()
+
+        fake_errors_module = type('FakeErrorsModule', (), {'DependencyError': FakeDependencyError})
+
+        with patch.dict('sys.modules', {'pypdf': type('FakePdfModule', (), {'PdfReader': FakeReader}), 'pypdf.errors': fake_errors_module}):
+            with patch('radios.manual_extraction._extract_text_via_ocr', return_value='Recovered OCR text ' * 10):
+                text, meta = extract_text_from_pdf_with_metadata('/tmp/encrypted.pdf')
+
+        self.assertIn('Recovered OCR text', text)
+        self.assertEqual(meta['method'], 'ocr')
+        self.assertEqual(meta['direct_parse_reason'], 'pdf_crypto_dependency_missing')

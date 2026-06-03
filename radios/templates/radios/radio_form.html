@@ -10,9 +10,22 @@
             <a href="{% url 'radio_list' %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
                 ← Back to all radios
             </a>
-            <h1 class="text-3xl font-bold text-gray-900">
-                {% if form.instance.pk %}Edit Radio{% else %}Add New Radio{% endif %}
-            </h1>
+            <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    {% if form.instance.pk %}Edit Radio{% else %}Add New Radio{% endif %}
+                </h1>
+                {% if form.instance.pk and form.instance.fcc_id %}
+                <form action="{% url 'sync_radio_fcc' form.instance.pk %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-indigo-300 text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        FCC Update
+                    </button>
+                </form>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Form -->
@@ -98,6 +111,12 @@
                         <div>
                             <label for="{{ form.fcc_id.id_for_label }}" class="block text-sm font-medium text-gray-700">FCC ID</label>
                             {{ form.fcc_id }}
+                            {% if form.instance.oet_page_url %}
+                            <a href="{{ form.instance.oet_page_url }}" target="_blank"
+                               class="mt-1 text-xs text-indigo-600 hover:text-indigo-900">View OET documentation ↗</a>
+                            {% elif form.instance.pk and form.instance.fcc_id %}
+                            <p class="mt-1 text-xs text-gray-500">Run FCC Update to fetch the OET documentation link.</p>
+                            {% endif %}
                             {% if form.fcc_id.errors %}<p class="mt-2 text-sm text-red-600">{{ form.fcc_id.errors.0 }}</p>{% endif %}
                         </div>
                         <div>

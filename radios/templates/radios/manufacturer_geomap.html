@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+
+{% block title %}Manufacturer Map - Ham Radio Database{% endblock %}
+
+{% block content %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<!-- MarkerCluster CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" crossorigin=""/>
+
+<div class="space-y-4">
+
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Manufacturer Map</h1>
+      <p class="mt-1 text-sm text-gray-500">
+        {{ total_geocoded }} manufacturer{{ total_geocoded|pluralize }} geocoded.
+        {% if total_ungeocoded %}
+        <span class="text-amber-600">{{ total_ungeocoded }} with address but no coordinates yet — save them to trigger geocoding.</span>
+        {% endif %}
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{% url 'manufacturer_list' %}"
+         class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+        ← List View
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="bg-white shadow rounded-lg px-4 py-3 flex flex-wrap items-end gap-3">
+    <div>
+      <label for="filter-country" class="block text-xs font-medium text-gray-500 mb-1">Country</label>
+      <select id="filter-country"
+              class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        <option value="">All countries</option>
+        {% for c in countries %}
+        <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex-1 min-w-48">
+      <label for="filter-q" class="block text-xs font-medium text-gray-500 mb-1">Search name / address</label>
+      <input id="filter-q" type="text" placeholder="e.g. Shenzhen, Baofeng…"
+             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+    </div>
+    <div class="flex gap-2 items-end">
+      <button id="btn-apply-filters"
+              class="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+        Apply
+      </button>
+      <button id="btn-clear-selection"
+              class="px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hidden">
+        Clear Selection
+      </button>
+    </div>
+    <div class="ml-auto text-xs text-gray-400 self-end">
+      <kbd class="bg-gray-100 border border-gray-300 rounded px-1">Shift</kbd> + drag on the map to select an area
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div id="manufacturer-map" style="height: 550px; width: 100%;"></div>
+  </div>
+
+  <!-- In-view count + table -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+      <p class="text-sm text-gray-700">
+        Showing <span id="in-view-count" class="font-semibold text-indigo-600">0</span>
+        manufacturer<span id="in-view-plural">s</span> in current view
+        <span id="selection-badge" class="ml-2 hidden text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">area selected</span>
+      </p>
+      <p class="text-xs text-gray-400">Click a column header to sort</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th data-col="display_name"
+                class="sort-header cursor-pointer select-none px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hover:bg-gray-100">
+              Name <span class="sort-indicator"></span>
+            </th>
+            <th data-col="country"
+                class="sort-header cursor-pointer select-none px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hover:bg-gray-100">
+              Country <span class="sort-indicator"></span>
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Address
+            </th>
+            <th data-col="geocode_precision"
+                class="sort-header cursor-pointer select-none px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hover:bg-gray-100">
+              Precision <span class="sort-indicator"></span>
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Brands
+            </th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody id="map-table-body" class="bg-white divide-y divide-gray-200">
+          <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /space-y-4 -->
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLs=" crossorigin=""></script>
+<!-- MarkerCluster JS -->
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Precision badge helper ─────────────────────────────────────── */
+  const PRECISION_META = {
+    full:    { label: 'Exact',    cls: 'bg-green-100 text-green-800' },
+    city:    { label: 'City',     cls: 'bg-blue-100 text-blue-800' },
+    state:   { label: 'State',    cls: 'bg-amber-100 text-amber-800' },
+    country: { label: 'Country',  cls: 'bg-orange-100 text-orange-800' },
+  };
+  function precisionBadge(p) {
+    const m = PRECISION_META[p] || { label: p || '?', cls: 'bg-gray-100 text-gray-600' };
+    return `<span class="inline-block text-xs px-2 py-0.5 rounded-full font-medium ${m.cls}">${m.label}</span>`;
+  }
+
+  /* ── Map init ───────────────────────────────────────────────────── */
+  const map = L.map('manufacturer-map', { zoomSnap: 0.5 }).setView([25, 105], 3);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map);
+
+  const clusterGroup = L.markerClusterGroup({ chunkedLoading: true });
+  map.addLayer(clusterGroup);
+
+  /* ── State ──────────────────────────────────────────────────────── */
+  let allData = [];          // full dataset from API
+  let visibleData = [];      // after country/q filters
+  let tableData = [];        // after bbox selection
+  let sortCol = 'display_name';
+  let sortDir = 1;           // 1 asc, -1 desc
+  let selectionRect = null;  // L.rectangle for Shift+drag
+  let selectionBounds = null;// L.latLngBounds of selection
+  let markers = [];          // {mfr, marker} pairs matching visibleData
+
+  /* ── Data fetch ─────────────────────────────────────────────────── */
+  function buildApiUrl() {
+    const params = new URLSearchParams();
+    const country = document.getElementById('filter-country').value.trim();
+    const q = document.getElementById('filter-q').value.trim();
+    if (country) params.set('country', country);
+    if (q)       params.set('q', q);
+    return '/radios/manufacturers/map/data/?' + params.toString();
+  }
+
+  function fetchAndRender() {
+    fetch(buildApiUrl())
+      .then(r => r.json())
+      .then(data => {
+        allData = data.manufacturers || [];
+        visibleData = allData;
+        selectionBounds = null;
+        selectionRect && map.removeLayer(selectionRect);
+        selectionRect = null;
+        document.getElementById('btn-clear-selection').classList.add('hidden');
+        document.getElementById('selection-badge').classList.add('hidden');
+        renderMarkers();
+        renderTable(visibleData);
+      })
+      .catch(err => console.error('Map data fetch error:', err));
+  }
+
+  /* ── Markers ────────────────────────────────────────────────────── */
+  function renderMarkers() {
+    clusterGroup.clearLayers();
+    markers = [];
+
+    visibleData.forEach(mfr => {
+      const marker = L.marker([mfr.lat, mfr.lon]);
+      const brands = mfr.brand_names.length
+        ? `<div class="text-xs text-gray-500 mt-1">${mfr.brand_names.slice(0, 5).join(', ')}${mfr.brand_names.length > 5 ? ' …' : ''}</div>`
+        : '';
+      const websiteLink = mfr.website
+        ? `<a href="${mfr.website}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline text-xs">Website</a> · `
+        : '';
+      marker.bindPopup(`
+        <div style="min-width:200px">
+          <div class="font-semibold text-sm">${escHtml(mfr.display_name)}</div>
+          ${mfr.display_name !== mfr.full_name ? `<div class="text-xs text-gray-500">${escHtml(mfr.full_name)}</div>` : ''}
+          <div class="text-xs text-gray-600 mt-1">${escHtml(mfr.address || mfr.country)}</div>
+          ${brands}
+          <div class="mt-2">${precisionBadge(mfr.geocode_precision)}</div>
+          <div class="mt-2 flex gap-2 text-xs">
+            ${websiteLink}
+            <a href="${mfr.edit_url}" class="text-indigo-600 hover:underline">Edit</a>
+          </div>
+        </div>
+      `);
+      markers.push({ mfr, marker });
+      clusterGroup.addLayer(marker);
+    });
+
+    updateInViewCount();
+  }
+
+  /* ── Table ──────────────────────────────────────────────────────── */
+  function renderTable(data) {
+    tableData = data;
+    const sorted = [...tableData].sort((a, b) => {
+      const va = (a[sortCol] || '').toString().toLowerCase();
+      const vb = (b[sortCol] || '').toString().toLowerCase();
+      return va < vb ? -sortDir : va > vb ? sortDir : 0;
+    });
+
+    const tbody = document.getElementById('map-table-body');
+    if (!sorted.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No manufacturers in this selection.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = sorted.map(mfr => {
+      const brands = mfr.brand_names.slice(0, 4).map(b =>
+        `<span class="inline-block text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded mr-1 mb-1">${escHtml(b)}</span>`
+      ).join('') + (mfr.brand_names.length > 4 ? `<span class="text-xs text-gray-400">+${mfr.brand_names.length - 4}</span>` : '');
+      return `
+        <tr class="hover:bg-gray-50 cursor-pointer" data-id="${mfr.id}">
+          <td class="px-4 py-3 font-medium text-gray-900">
+            ${escHtml(mfr.display_name)}
+            ${mfr.display_name !== mfr.full_name ? `<div class="text-xs text-gray-400 font-normal">${escHtml(mfr.full_name)}</div>` : ''}
+          </td>
+          <td class="px-4 py-3 text-gray-600">${escHtml(mfr.country || '—')}</td>
+          <td class="px-4 py-3 text-gray-500 text-xs max-w-xs">${escHtml(mfr.address || '—')}</td>
+          <td class="px-4 py-3">${precisionBadge(mfr.geocode_precision)}</td>
+          <td class="px-4 py-3">${brands}</td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            <a href="${mfr.edit_url}" class="text-indigo-600 hover:text-indigo-900 text-sm">Edit</a>
+          </td>
+        </tr>`;
+    }).join('');
+
+    // Clicking a row pans the map to that marker
+    tbody.querySelectorAll('tr[data-id]').forEach(row => {
+      row.addEventListener('click', e => {
+        if (e.target.tagName === 'A') return;
+        const id = parseInt(row.dataset.id);
+        const found = markers.find(m => m.mfr.id === id);
+        if (found) {
+          map.setView([found.mfr.lat, found.mfr.lon], Math.max(map.getZoom(), 10));
+          found.marker.openPopup();
+        }
+      });
+    });
+  }
+
+  /* ── In-view count ──────────────────────────────────────────────── */
+  function updateInViewCount() {
+    const bounds = selectionBounds || map.getBounds();
+    const inView = visibleData.filter(m => bounds.contains([m.lat, m.lon]));
+    document.getElementById('in-view-count').textContent = inView.length;
+    document.getElementById('in-view-plural').textContent = inView.length === 1 ? '' : 's';
+
+    // If no selection active, also update the table to reflect current map view
+    if (!selectionBounds) {
+      renderTable(inView);
+    }
+  }
+
+  map.on('moveend zoomend', updateInViewCount);
+
+  /* ── Sorting ────────────────────────────────────────────────────── */
+  document.querySelectorAll('.sort-header').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) {
+        sortDir *= -1;
+      } else {
+        sortCol = col;
+        sortDir = 1;
+      }
+      // Update indicators
+      document.querySelectorAll('.sort-indicator').forEach(el => el.textContent = '');
+      th.querySelector('.sort-indicator').textContent = sortDir === 1 ? ' ↑' : ' ↓';
+      renderTable(tableData);
+    });
+  });
+
+  /* ── Country / text filters ─────────────────────────────────────── */
+  document.getElementById('btn-apply-filters').addEventListener('click', fetchAndRender);
+  document.getElementById('filter-q').addEventListener('keydown', e => {
+    if (e.key === 'Enter') fetchAndRender();
+  });
+
+  /* ── Shift+drag bounding-box selection ─────────────────────────── */
+  let dragStart = null;
+  let dragRect = null;
+
+  map.on('mousedown', e => {
+    if (!e.originalEvent.shiftKey) return;
+    e.originalEvent.preventDefault();
+    map.dragging.disable();
+    dragStart = e.latlng;
+
+    // Remove any previous selection
+    selectionRect && map.removeLayer(selectionRect);
+    dragRect && map.removeLayer(dragRect);
+    selectionRect = null;
+    dragRect = null;
+  });
+
+  map.on('mousemove', e => {
+    if (!dragStart) return;
+    const bounds = L.latLngBounds(dragStart, e.latlng);
+    if (dragRect) {
+      dragRect.setBounds(bounds);
+    } else {
+      dragRect = L.rectangle(bounds, {
+        color: '#4f46e5', weight: 2, fillOpacity: 0.08, dashArray: '6 4',
+      }).addTo(map);
+    }
+  });
+
+  map.on('mouseup', e => {
+    if (!dragStart) return;
+    map.dragging.enable();
+    selectionBounds = L.latLngBounds(dragStart, e.latlng);
+    dragStart = null;
+    selectionRect = dragRect;
+    dragRect = null;
+
+    // Filter table to selection
+    const inSel = visibleData.filter(m => selectionBounds.contains([m.lat, m.lon]));
+    document.getElementById('in-view-count').textContent = inSel.length;
+    document.getElementById('in-view-plural').textContent = inSel.length === 1 ? '' : 's';
+    document.getElementById('selection-badge').classList.remove('hidden');
+    document.getElementById('btn-clear-selection').classList.remove('hidden');
+    renderTable(inSel);
+  });
+
+  /* ── Clear selection ────────────────────────────────────────────── */
+  document.getElementById('btn-clear-selection').addEventListener('click', () => {
+    selectionBounds = null;
+    selectionRect && map.removeLayer(selectionRect);
+    selectionRect = null;
+    document.getElementById('btn-clear-selection').classList.add('hidden');
+    document.getElementById('selection-badge').classList.add('hidden');
+    updateInViewCount();
+  });
+
+  /* ── Utility ────────────────────────────────────────────────────── */
+  function escHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ── Initial load ───────────────────────────────────────────────── */
+  fetchAndRender();
+})();
+</script>
+{% endblock %}

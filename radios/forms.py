@@ -385,7 +385,7 @@ class ManufacturerForm(forms.ModelForm):
 
     class Meta:
         model = Manufacturer
-        fields = ['full_name', 'alias', 'brands', 'website', 'country', 'notes']
+        fields = ['full_name', 'alias', 'brands', 'website', 'country', 'address', 'notes']
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
@@ -406,6 +406,12 @@ class ManufacturerForm(forms.ModelForm):
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
                          'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g. China, Japan',
+            }),
+            'address': forms.Textarea(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                         'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'rows': 3,
+                'placeholder': 'e.g. 123 Industrial Rd, Shenzhen, Guangdong, China 518000',
             }),
             'notes': forms.Textarea(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '

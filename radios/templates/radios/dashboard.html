@@ -67,7 +67,7 @@
                         {% for brand in top_brands %}
                         <li class="py-3 flex justify-between items-center sm:px-2 hover:bg-gray-50 rounded transition">
                             <a href="{% url 'radio_list' %}?brand={{ brand.brand|urlencode }}" class="text-indigo-600 hover:text-indigo-900 font-medium truncate pr-4">
-                                {{ brand.brand }}
+                                {{ brand.display_brand }}
                                 {% if brand.grantee_code %}
                                 <span class="text-xs text-gray-500">({{ brand.grantee_code }})</span>
                                 {% endif %}
@@ -94,7 +94,7 @@
                         <li class="px-3 py-2 hover:bg-gray-50">
                             {% if manual.radio %}
                             <div class="text-sm font-medium text-gray-900">
-                                {{ manual.radio.display_brand|default:manual.radio.brand }} {{ manual.radio.model }}
+                                <a href="{% url 'radio_detail' manual.radio.pk %}" class="text-indigo-600 hover:text-indigo-800 hover:underline">{{ manual.radio.display_brand|default:manual.radio.brand }} {{ manual.radio.model }}</a>
                             </div>
                             {% else %}
                             <div class="text-sm font-medium text-gray-900">Manual uploaded (unlinked)</div>

@@ -10,10 +10,11 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse
 from curl_cffi import requests
 from bs4 import BeautifulSoup
+from django.db.models import Q
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
-from radios.models import Radio, RadioFCCTestReport, RadioManual, RadioOETDocument
+from radios.models import Brand, IgnoredGrantee, Manufacturer, Radio, RadioFCCTestReport, RadioManual, RadioOETDocument, normalize_grantee_code
 from radios.fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from radios.manual_extraction import extract_specs_from_text, extract_text_from_pdf_with_metadata
 from radios.fcc_validation import validate_fcc_brand_assignment
@@ -27,7 +28,80 @@ logger = logging.getLogger(__name__)
 DEFAULT_RADIO_ALLOWLIST_TERMS = "TRANSCEIVER,TRANSMITTER,RECEIVER,MURS,ORIGINAL EQUIPMENT"
 RADIO_ALLOWLIST_ENV_NAME = "FCC_RADIO_ALLOWLIST_TERMS"
 URL_PATTERN = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
+_OET_APP_ID_RE = re.compile(r'application_id=([A-Za-z0-9]+)', re.IGNORECASE)
 FCC_RETRY_STATUS_CODES = {429, 500, 502, 503, 504}
+
+
+def _normalize_brand_identity(value):
+    return re.sub(r'[^a-z0-9]+', '', (value or '').strip().lower())
+
+
+def _find_existing_grantee_brand(normalized_grantee_code, normalized_grantee_name):
+    brand = Brand.objects.filter(grantee_code__iexact=normalized_grantee_code).first()
+    if brand is not None:
+        return brand
+
+    for field_name in ('name', 'alias', 'full_name'):
+        brand = Brand.objects.filter(**{f'{field_name}__iexact': normalized_grantee_name}).first()
+        if brand is not None:
+            return brand
+
+    normalized_name_key = _normalize_brand_identity(normalized_grantee_name)
+    if not normalized_name_key:
+        return None
+
+    blank_code_brands = Brand.objects.filter(Q(grantee_code__isnull=True) | Q(grantee_code__exact='')).only(
+        'id', 'name', 'alias', 'full_name', 'grantee_code'
+    )
+    for candidate in blank_code_brands:
+        for value in (candidate.name, candidate.alias, candidate.full_name):
+            if _normalize_brand_identity(value) == normalized_name_key:
+                return candidate
+
+    return None
+
+
+def _find_matching_blank_code_brand(normalized_grantee_name, exclude_brand_id=None):
+    normalized_name_key = _normalize_brand_identity(normalized_grantee_name)
+    if not normalized_name_key:
+        return None
+
+    blank_code_brands = Brand.objects.filter(Q(grantee_code__isnull=True) | Q(grantee_code__exact='')).only(
+        'id', 'name', 'alias', 'full_name', 'grantee_code'
+    )
+    if exclude_brand_id is not None:
+        blank_code_brands = blank_code_brands.exclude(pk=exclude_brand_id)
+
+    for candidate in blank_code_brands:
+        for value in (candidate.name, candidate.alias, candidate.full_name):
+            if _normalize_brand_identity(value) == normalized_name_key:
+                return candidate
+
+    return None
+
+
+def _resolve_authoritative_radio_brand_name(authoritative_brand, grantee_code, grantee_name):
+    normalized_grantee_name = (grantee_name or '').strip()
+    if authoritative_brand is None or not normalized_grantee_name:
+        return normalized_grantee_name
+
+    normalized_brand_name = _normalize_brand_identity(authoritative_brand.name)
+    normalized_grantee_key = _normalize_brand_identity(normalized_grantee_name)
+    if normalized_brand_name == normalized_grantee_key:
+        return authoritative_brand.name
+
+    authoritative_code = normalize_grantee_code(getattr(authoritative_brand, 'grantee_code', ''))
+    if authoritative_code != normalize_grantee_code(grantee_code):
+        return normalized_grantee_name
+
+    matching_blank_brand = _find_matching_blank_code_brand(
+        normalized_grantee_name,
+        exclude_brand_id=authoritative_brand.id,
+    )
+    if matching_blank_brand is None:
+        return normalized_grantee_name
+
+    return authoritative_brand.name
 
 
 def _fcc_request_with_retry(method, url, *, session=None, retries=2, retry_delay=0.6, **kwargs):
@@ -593,6 +667,14 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
                 }
             )
 
+    # NOTE: Intentionally no unconstrained application_id regex fallback here.
+    # Grabbing the first application_id found anywhere in the HTML when no row
+    # matched the target FCC ID caused cross-contamination (e.g. a grantee-wide
+    # search showing 2AZSA-RT490's row alongside 2AZSA-RT950 would hand RT490's
+    # application_id to the RT950 document fetch, attaching the wrong exhibits).
+    # Callers receive an empty candidate_exhibit_urls list and should treat that
+    # as "no OET exhibits found" rather than falling back to an unverified ID.
+
     return {
         'record_count': len(matched_records),
         'text_blob': ' || '.join(matched_records),
@@ -610,7 +692,7 @@ def _build_generic_search_payload(fcc_id):
     return {
         'grantee_code': grantee_code,
         'product_code': product_code,
-        'product_exact_match': 'on',
+        'product_exact_match': '',
         'applicant_name': '',
         'grant_date_from': '',
         'grant_date_to': '',
@@ -673,14 +755,104 @@ def _submit_generic_search_form_via_playwright(fcc_id):
             page.locator('input[name="grantee_code"]').fill(payload['grantee_code'])
             page.locator('input[name="product_code"]').fill(payload['product_code'])
             exact_match = page.locator('input[name="product_exact_match"]')
-            if not exact_match.is_checked():
-                exact_match.check()
+            if exact_match.is_checked():
+                exact_match.uncheck()
             page.locator('input[type="submit"][value="Start Search"]').click()
             page.wait_for_load_state('networkidle', timeout=30000)
+            
+            # Wait for results table to render
+            try:
+                page.wait_for_selector('tbody#offTblBdy', timeout=15000)
+            except Exception:
+                logger.info('FCC browser fallback search table wait timeout fcc_id=%s', fcc_id)
+            
             html_text = page.content()
             current_url = page.url
+            
+            # Strategy 1: Look for links in the DOM
+            exhibit_links = []
+            try:
+                links = page.query_selector_all('a[href*="ViewExhibitReport.cfm"]')
+                for link in links[:20]:
+                    href = link.get_attribute('href')
+                    if href and 'application_id=' in href:
+                        absolute_url = urljoin(current_url, href)
+                        if absolute_url not in exhibit_links:
+                            exhibit_links.append(absolute_url)
+                            logger.info('FCC browser found exhibit link in DOM fcc_id=%s url=%s', fcc_id, absolute_url)
+            except Exception:
+                logger.exception('FCC browser fallback link extraction failed fcc_id=%s', fcc_id)
+            
+            # Strategy 2: Extract application_id from page HTML using regex
+            if not exhibit_links:
+                app_id_pattern = r'application_id=([A-Za-z0-9%+/=]+)'
+                matches = re.findall(app_id_pattern, html_text)
+                if matches:
+                    # Use the first application_id found
+                    app_id = matches[0]
+                    constructed_url = f"{OET_EXHIBITS_URL}?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&application_id={app_id}&fcc_id={fcc_id}"
+                    exhibit_links.append(constructed_url)
+                    logger.info('FCC browser extracted application_id from HTML fcc_id=%s app_id=%s', fcc_id, app_id[:20])
+            
+            # Strategy 3: Try clicking on the first row to trigger navigation
+            if not exhibit_links:
+                try:
+                    first_link = page.query_selector('tbody#offTblBdy tr td a')
+                    if first_link:
+                        href = first_link.get_attribute('href')
+                        if href:
+                            absolute_url = urljoin(current_url, href)
+                            if 'ViewExhibitReport.cfm' in absolute_url:
+                                exhibit_links.append(absolute_url)
+                                logger.info('FCC browser found exhibit link via first row fcc_id=%s', fcc_id)
+                except Exception:
+                    logger.info('FCC browser first row click attempt failed fcc_id=%s', fcc_id)
+
+            # Strategy 4: Grantee-only retry — when the product_code search returns
+            # "no applications on file", search by grantee code alone so the FCC
+            # returns ALL records for this grantee.  The HTML parser upstream already
+            # filters for the matching FCC ID row and extracts the application_id link.
+            if not exhibit_links and 'no applications on file' in html_text.lower():
+                logger.info(
+                    'FCC browser fallback grantee-only retry fcc_id=%s grantee=%s',
+                    fcc_id, payload['grantee_code'],
+                )
+                try:
+                    page.goto(GENERIC_SEARCH_FORM_URL, wait_until='domcontentloaded', timeout=30000)
+                    page.locator('input[name="grantee_code"]').fill(payload['grantee_code'])
+                    # Leave product_code empty so the FCC returns all records for this grantee
+                    grantee_exact = page.locator('input[name="product_exact_match"]')
+                    if grantee_exact.is_checked():
+                        grantee_exact.uncheck()
+                    page.locator('input[type="submit"][value="Start Search"]').click()
+                    page.wait_for_load_state('networkidle', timeout=30000)
+                    try:
+                        page.wait_for_selector('tbody#offTblBdy', timeout=15000)
+                    except Exception:
+                        logger.info('FCC browser grantee-only table wait timeout fcc_id=%s', fcc_id)
+                    html_text = page.content()
+                    current_url = page.url
+                    logger.info(
+                        'FCC browser grantee-only results fcc_id=%s url=%s has_table=%s',
+                        fcc_id, current_url, 'offTblBdy' in html_text,
+                    )
+                    # Extract exhibit links from the grantee-wide results
+                    try:
+                        links = page.query_selector_all('a[href*="ViewExhibitReport.cfm"][href*="application_id="]')
+                        for link in links[:50]:
+                            href = link.get_attribute('href')
+                            if href:
+                                absolute_url = urljoin(current_url, href)
+                                if absolute_url not in exhibit_links:
+                                    exhibit_links.append(absolute_url)
+                    except Exception:
+                        logger.exception('FCC browser grantee-only link extraction failed fcc_id=%s', fcc_id)
+                except Exception:
+                    logger.exception('FCC browser grantee-only retry failed fcc_id=%s', fcc_id)
+
             browser.close()
-            logger.info('FCC browser fallback search success fcc_id=%s url=%s has_detail=%s', fcc_id, current_url, 'ViewExhibitReport.cfm' in html_text)
+            logger.info('FCC browser fallback search success fcc_id=%s url=%s has_detail=%s exhibit_links=%s', 
+                       fcc_id, current_url, 'ViewExhibitReport.cfm' in html_text, len(exhibit_links))
             return html_text, current_url
     except Exception:
         logger.exception('FCC browser fallback search failed fcc_id=%s', fcc_id)
@@ -774,7 +946,7 @@ def _submit_generic_search_form(fcc_id):
     return response.text or '', GENERIC_SEARCH_FORM_URL
 
 
-def _fetch_oet_documents_via_playwright(fcc_id, candidate_urls=None):
+def _fetch_oet_documents_via_playwright(fcc_id, candidate_urls=None, _allow_grantee_fallback=True):
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -790,13 +962,31 @@ def _fetch_oet_documents_via_playwright(fcc_id, candidate_urls=None):
 
     if not detail_urls:
         html_text, base_url = _submit_generic_search_form_via_playwright(fcc_id)
-        if not html_text:
-            return []
-        parsed = _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fcc_id)
-        for url in parsed.get('candidate_exhibit_urls', []):
-            if url not in seen:
-                seen.add(url)
-                detail_urls.append(url)
+        if html_text:
+            parsed = _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fcc_id)
+            for url in parsed.get('candidate_exhibit_urls', []):
+                if url not in seen:
+                    seen.add(url)
+                    detail_urls.append(url)
+
+        if not detail_urls:
+            # Generic search form could not produce exhibit URLs.
+            # Fall back to navigating the browser directly to the ViewExhibitReport
+            # URL variants — the browser bypasses the 503 that blocks curl_cffi.
+            for lookup_fcc_id in _fcc_lookup_variants(fcc_id):
+                direct_url = (
+                    f"{OET_EXHIBITS_URL}?mode=Exhibits"
+                    f"&RequestTimeout=500&calledFromFrame=N&fcc_id={lookup_fcc_id}"
+                )
+                if direct_url not in seen:
+                    seen.add(direct_url)
+                    detail_urls.append(direct_url)
+            logger.info(
+                'FCC browser OET falling back to direct ViewExhibitReport navigation fcc_id=%s url_count=%s',
+                fcc_id, len(detail_urls),
+            )
+        else:
+            logger.info('FCC browser fallback extracted exhibit URLs fcc_id=%s url_count=%s', fcc_id, len(detail_urls))
 
     if not detail_urls:
         return []
@@ -806,21 +996,155 @@ def _fetch_oet_documents_via_playwright(fcc_id, candidate_urls=None):
             browser = _launch_fcc_playwright_browser(playwright)
             page = browser.new_page()
             for url in detail_urls[:10]:
-                page.goto(url, wait_until='domcontentloaded', timeout=30000)
                 try:
-                    page.wait_for_load_state('networkidle', timeout=10000)
+                    page.goto(url, wait_until='domcontentloaded', timeout=30000)
+                    html_text = page.content()
+                    current_url = page.url
+
+                    # If the page redirected to a ViewExhibitReport with application_id, capture it
+                    if 'application_id=' in current_url and current_url not in seen:
+                        logger.info(
+                            'FCC browser OET redirect captured fcc_id=%s redirect_url=%s',
+                            fcc_id, current_url,
+                        )
+
+                    documents = _extract_oet_documents_from_html(html_text, base_url=current_url)
+                    documents += _extract_oet_documents_from_attachment_html(html_text, base_url=current_url)
+
+                    # If no documents found yet, give JS a short window to finish rendering
+                    # before reading content a second time (avoids full 10s networkidle wait).
+                    if not documents:
+                        try:
+                            page.wait_for_load_state('networkidle', timeout=3000)
+                        except Exception:
+                            pass
+                        html_text = page.content()
+                        current_url = page.url
+                        documents = _extract_oet_documents_from_html(html_text, base_url=current_url)
+                        documents += _extract_oet_documents_from_attachment_html(html_text, base_url=current_url)
+
+                    if documents:
+                        # Verify the exhibit page actually references the target FCC ID.
+                        # FCC sometimes redirects fcc_id=X queries to a different
+                        # application (e.g. a Change-in-ID's original grant), and the
+                        # documents on that page belong to the *original* FCC ID, not X.
+                        # Check both the hyphenated form ("2AZSA-RT950", as FCC renders
+                        # it in page text) and the stripped key ("2AZSART950") since
+                        # some pages omit the hyphen.  If neither appears, reject the
+                        # documents to prevent cross-contamination (RT950 ← RT490).
+                        html_upper = (html_text or '').upper()
+                        fcc_id_upper = (fcc_id or '').upper()
+                        target_fcc_key = _extract_fcc_key(fcc_id)
+                        fcc_id_in_page = (
+                            fcc_id_upper in html_upper or
+                            (target_fcc_key and target_fcc_key in html_upper)
+                        )
+                        if not fcc_id_in_page:
+                            logger.warning(
+                                'FCC exhibit page fcc_id_mismatch: target=%s not found in page HTML '
+                                'page_url=%s — rejecting %s docs to prevent cross-contamination',
+                                fcc_id, current_url, len(documents),
+                            )
+                            documents = []
+
+                    if documents:
+                        browser.close()
+                        logger.info('FCC browser fallback OET success fcc_id=%s url=%s document_count=%s', fcc_id, url, len(documents))
+                        return documents
+
+                    # If page itself contains an application_id link but no documents table yet,
+                    # try following that link within the same browser session
+                    app_links = page.query_selector_all('a[href*="ViewExhibitReport.cfm"][href*="application_id="]')
+                    for link in app_links[:5]:
+                        href = link.get_attribute('href')
+                        if not href:
+                            continue
+                        abs_href = urljoin(current_url, href)
+                        if abs_href in seen:
+                            continue
+                        seen.add(abs_href)
+                        logger.info('FCC browser OET following application_id link fcc_id=%s url=%s', fcc_id, abs_href)
+                        page.goto(abs_href, wait_until='domcontentloaded', timeout=30000)
+                        inner_html = page.content()
+                        inner_url = page.url
+                        docs = _extract_oet_documents_from_html(inner_html, base_url=inner_url)
+                        docs += _extract_oet_documents_from_attachment_html(inner_html, base_url=inner_url)
+                        if not docs:
+                            try:
+                                page.wait_for_load_state('networkidle', timeout=3000)
+                            except Exception:
+                                pass
+                            inner_html = page.content()
+                            inner_url = page.url
+                            docs = _extract_oet_documents_from_html(inner_html, base_url=inner_url)
+                            docs += _extract_oet_documents_from_attachment_html(inner_html, base_url=inner_url)
+                        if docs:
+                            inner_upper = (inner_html or '').upper()
+                            fcc_id_upper = (fcc_id or '').upper()
+                            target_fcc_key = _extract_fcc_key(fcc_id)
+                            fcc_id_in_inner = (
+                                fcc_id_upper in inner_upper or
+                                (target_fcc_key and target_fcc_key in inner_upper)
+                            )
+                            if not fcc_id_in_inner:
+                                logger.warning(
+                                    'FCC OET inner link fcc_id_mismatch: target=%s not in page HTML '
+                                    'inner_url=%s — rejecting %s docs to prevent cross-contamination',
+                                    fcc_id, inner_url, len(docs),
+                                )
+                                docs = []
+                        if docs:
+                            browser.close()
+                            logger.info('FCC browser OET application_id link success fcc_id=%s url=%s document_count=%s', fcc_id, abs_href, len(docs))
+                            return docs
+
                 except Exception:
-                    pass
-                html_text = page.content()
-                documents = _extract_oet_documents_from_html(html_text, base_url=url)
-                documents += _extract_oet_documents_from_attachment_html(html_text, base_url=url)
-                if documents:
-                    browser.close()
-                    logger.info('FCC browser fallback OET success fcc_id=%s url=%s document_count=%s', fcc_id, url, len(documents))
-                    return documents
+                    logger.exception('FCC browser OET page load failed fcc_id=%s url=%s', fcc_id, url)
+                    continue
+
             browser.close()
     except Exception:
         logger.exception('FCC browser fallback OET failed fcc_id=%s', fcc_id)
+
+    # Nothing found via direct URL navigation.  Fall back to the grantee-only
+    # browser search so we can discover the application_id through the FCC's
+    # search results table and then navigate to the correct exhibit page.
+    if not _allow_grantee_fallback:
+        # Already inside a grantee-fallback attempt; don't recurse again.
+        return []
+
+    logger.info('FCC browser OET direct URLs exhausted, trying grantee search fcc_id=%s', fcc_id)
+    grantee_html, grantee_base = _submit_generic_search_form_via_playwright(fcc_id)
+    if grantee_html:
+        parsed = _extract_secondary_metadata_from_generic_search_html(grantee_html, grantee_base, fcc_id)
+        # Row-filtered candidates (highest confidence — from the target FCC ID row)
+        filtered_urls = parsed.get('candidate_exhibit_urls', [])
+
+        # Broaden to ALL ViewExhibitReport.cfm links on the grantee page.
+        # For Change-in-ID grants the target FCC ID row in the search table may
+        # point to a page with no parseable documents; the correct exhibit page
+        # (with the real application_id) exists elsewhere on the same page.
+        # FCC ID verification at navigation time (below) guards against
+        # cross-contamination from other grantees' exhibit links.
+        all_exhibit_urls = list(filtered_urls)
+        for href_raw in re.findall(
+            r'href=["\']([^"\']*ViewExhibitReport\.cfm[^"\']*application_id=[^"\']+)["\']',
+            grantee_html, re.IGNORECASE,
+        ):
+            abs_url = unescape(urljoin(grantee_base, href_raw.strip()))
+            if abs_url not in all_exhibit_urls:
+                all_exhibit_urls.append(abs_url)
+
+        if all_exhibit_urls:
+            logger.info(
+                'FCC OET grantee fallback candidate_count=%s (filtered=%s all=%s) fcc_id=%s',
+                len(all_exhibit_urls), len(filtered_urls), len(all_exhibit_urls), fcc_id,
+            )
+            return _fetch_oet_documents_via_playwright(
+                fcc_id,
+                candidate_urls=all_exhibit_urls,
+                _allow_grantee_fallback=False,  # prevent re-entrant grantee search
+            )
 
     return []
 
@@ -854,23 +1178,22 @@ def _fetch_secondary_metadata_from_html_fallback(fcc_id, params):
 
 
 def _fetch_oet_documents_from_html(fcc_id, candidate_urls=None):
-    urls = []
-    for url in candidate_urls or []:
-        if isinstance(url, str) and url.strip():
-            urls.append(url.strip())
+    # Collect candidate URLs (from metadata parse) plus direct fcc_id variants.
+    # curl_cffi gets 503 from all CFML endpoints (ViewExhibitReport.cfm,
+    # GenericSearchResult.cfm) so we skip the HTTP loop entirely and hand
+    # everything straight to the Playwright path, which uses a real browser.
+    seen = set()
+    deduped_urls = []
+    for url in list(candidate_urls or []):
+        if isinstance(url, str) and url.strip() and url not in seen:
+            seen.add(url)
+            deduped_urls.append(url.strip())
 
     for lookup_fcc_id in _fcc_lookup_variants(fcc_id):
-        urls.append(
-            f"{OET_EXHIBITS_URL}?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id={lookup_fcc_id}"
-        )
-
-    deduped_urls = []
-    seen = set()
-    for url in urls:
-        if url in seen:
-            continue
-        seen.add(url)
-        deduped_urls.append(url)
+        url = f"{OET_EXHIBITS_URL}?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id={lookup_fcc_id}"
+        if url not in seen:
+            seen.add(url)
+            deduped_urls.append(url)
 
     logger.info(
         "FCC OET fetch start fcc_id=%s candidate_url_count=%s",
@@ -878,42 +1201,7 @@ def _fetch_oet_documents_from_html(fcc_id, candidate_urls=None):
         len(deduped_urls),
     )
 
-    for url in deduped_urls:
-        try:
-            response = _fcc_request_with_retry('get', url, impersonate='chrome124', timeout=15)
-        except Exception:
-            logger.exception("FCC OET HTML fetch failed fcc_id=%s url=%s", fcc_id, url)
-            continue
-
-        if response.status_code != 200:
-            logger.info("FCC OET HTML fetch non-200 fcc_id=%s status=%s url=%s", fcc_id, response.status_code, url)
-            continue
-
-        documents = _extract_oet_documents_from_html(response.text or '', base_url=url)
-        if documents:
-            sample_names = [
-                (doc.get('view_attachment') or doc.get('document_url') or '').strip()
-                for doc in documents[:5]
-            ]
-            logger.info(
-                "FCC OET fetch success fcc_id=%s source_url=%s document_count=%s sample_docs=%s",
-                fcc_id,
-                url,
-                len(documents),
-                sample_names,
-            )
-            return documents
-
-    fallback_docs = _fetch_oet_documents_via_generic_search_form(fcc_id)
-    if fallback_docs:
-        logger.info(
-            "FCC OET form fallback success fcc_id=%s document_count=%s",
-            fcc_id,
-            len(fallback_docs),
-        )
-        return fallback_docs
-
-    browser_docs = _fetch_oet_documents_via_playwright(fcc_id, candidate_urls=candidate_urls)
+    browser_docs = _fetch_oet_documents_via_playwright(fcc_id, candidate_urls=deduped_urls)
     if browser_docs:
         logger.info(
             'FCC OET browser fallback success fcc_id=%s document_count=%s',
@@ -1102,10 +1390,20 @@ def _sync_manual_record_for_oet_document(radio, fcc_id, oet_doc):
         manual_doc = RadioManual(radio=radio, source_url=source_url)
         created = True
 
+    # When the manual already has a PDF, all the expensive work (download,
+    # parse, spec backfill) was done on the first pass.  Exit early so that
+    # duplicate OET document entries in the exhibit list don't trigger a
+    # second PDF parse for the same record.
+    if not created and manual_doc.manual_pdf:
+        return False
+
     manual_doc.doc_type = doc_type
     manual_doc.status = RadioManual.ProcessingStatus.LINKED
     manual_doc.extraction_confidence = 1.0
+    # Merge with existing extracted_data so that spec_extraction (written by
+    # _backfill_radio_specs_from_manual_doc on the first pass) is preserved.
     manual_doc.extracted_data = {
+        **(manual_doc.extracted_data or {}),
         'source': 'fcc_oet_document',
         'fcc_id': fcc_id,
         'oet_document_id': oet_doc.id,
@@ -1200,6 +1498,8 @@ def _extract_specs_from_saved_pdf(file_field, source_name):
     if not extracted_text:
         return '', {}, extraction_meta
 
+    # Strip NUL bytes; PostgreSQL rejects string literals containing 0x00.
+    extracted_text = extracted_text.replace('\x00', '')
     extracted_specs = extract_specs_from_text(extracted_text, source_name=source_name)
     return extracted_text, extracted_specs, extraction_meta
 
@@ -1321,6 +1621,7 @@ def _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata):
             manual_synced,
             copied_names[:10],
         )
+        _update_radio_oet_page_url(radio, fcc_id)
         return synced
 
     synced = 0
@@ -1412,12 +1713,36 @@ def _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata):
         manual_synced,
         synced_names[:10],
     )
-
+    _update_radio_oet_page_url(radio, fcc_id)
     return synced
 
 
-def _safe_filename(value):
-    return re.sub(r'[^A-Za-z0-9._-]+', '_', value).strip('_')
+def _update_radio_oet_page_url(radio, fcc_id):
+    """Derive and save the FCC EAS exhibits listing URL from stored OET document URLs.
+
+    Only updates if radio.oet_page_url is not already set.  Uses the application_id
+    embedded in any document_url on a RadioOETDocument record to reconstruct the
+    exhibits listing page (mode=Exhibits) which is the stable, shareable URL.
+    """
+    if not radio or not getattr(radio, 'pk', None):
+        return
+    if getattr(radio, 'oet_page_url', ''):
+        return  # Already stored from a previous sync
+    for doc in RadioOETDocument.objects.filter(radio=radio, fcc_id__iexact=fcc_id).exclude(document_url='')[:20]:
+        m = _OET_APP_ID_RE.search(doc.document_url)
+        if m:
+            app_id = m.group(1)
+            url = f"{OET_EXHIBITS_URL}?mode=Exhibits&RequestTimeout=500&application_id={app_id}"
+            Radio.objects.filter(pk=radio.pk).update(oet_page_url=url)
+            radio.oet_page_url = url
+            logger.info(
+                'FCC OET page URL stored radio_id=%s fcc_id=%s oet_url=%s',
+                radio.pk, fcc_id, url,
+            )
+            return
+
+
+def _safe_filename(value):    return re.sub(r'[^A-Za-z0-9._-]+', '_', value).strip('_')
 
 
 def _build_test_report_filename(fcc_id, title, url):
@@ -1521,7 +1846,7 @@ def fetch_fcc_secondary_metadata(fcc_id):
     params = {
         'grantee_code': grantee_code,
         'product_code': product_code,
-        'product_exact_match': 'on',
+        'product_exact_match': '',
         'RequestTimeout': '500',
         'outputformat': 'XML',
         'show_records': '25',
@@ -1760,6 +2085,60 @@ def _stamp_lookup_timestamp(radio, looked_up_at):
     radio.last_fccid_lookup_at = looked_up_at
     radio.save(update_fields=['last_fccid_lookup_at'])
 
+
+def _ensure_grantee_brand_and_manufacturer(grantee_code, grantee_name):
+    normalized_grantee_code = normalize_grantee_code(grantee_code)
+    normalized_grantee_name = (grantee_name or '').strip()
+    if not normalized_grantee_code or not normalized_grantee_name:
+        return None, None
+
+    brand = _find_existing_grantee_brand(normalized_grantee_code, normalized_grantee_name)
+    matching_blank_brand = _find_matching_blank_code_brand(
+        normalized_grantee_name,
+        exclude_brand_id=brand.id if brand is not None else None,
+    )
+
+    if brand is None:
+        if matching_blank_brand is not None:
+            brand = matching_blank_brand
+            matching_blank_brand = None
+
+    if brand is None:
+        brand = Brand.objects.create(
+            name=normalized_grantee_name,
+            grantee_code=normalized_grantee_code,
+            full_name=normalized_grantee_name,
+        )
+    else:
+        update_fields = []
+        if not brand.grantee_code:
+            brand.grantee_code = normalized_grantee_code
+            update_fields.append('grantee_code')
+
+        brand_full_name_key = _normalize_brand_identity(brand.full_name)
+        grantee_name_key = _normalize_brand_identity(normalized_grantee_name)
+        if not brand.full_name or (matching_blank_brand is not None and brand_full_name_key != grantee_name_key):
+            brand.full_name = normalized_grantee_name
+            update_fields.append('full_name')
+        if not brand.alias and matching_blank_brand is not None and matching_blank_brand.alias:
+            brand.alias = matching_blank_brand.alias
+            update_fields.append('alias')
+        if update_fields:
+            brand.save(update_fields=update_fields)
+
+    manufacturer = Manufacturer.objects.filter(full_name__iexact=normalized_grantee_name).first()
+    if manufacturer is None:
+        manufacturer = Manufacturer.objects.create(
+            full_name=normalized_grantee_name,
+            alias=brand.alias or brand.name,
+        )
+    elif not manufacturer.alias and (brand.alias or brand.name):
+        manufacturer.alias = brand.alias or brand.name
+        manufacturer.save(update_fields=['alias'])
+
+    manufacturer.brands.add(brand)
+    return brand, manufacturer
+
 def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
     """
     Fetches FCC ID data using curl_cffi and saves it to the database.
@@ -1774,6 +2153,20 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
     Returns (count_added, count_updated, messages)
     """
     messages = []
+    ignored_grantee_codes = set(IgnoredGrantee.ignored_codes())
+    query_grantee_code = _exact_grantee_query(fcc_id_query)
+    if not query_grantee_code:
+        query_grantee_code, _ = split_fcc_id(_clean_query(fcc_id_query))
+    query_grantee_code = normalize_grantee_code(query_grantee_code)
+    if query_grantee_code and query_grantee_code in ignored_grantee_codes:
+        message = f"Skipped FCC query '{fcc_id_query}' because grantee {query_grantee_code} is on the ignore list."
+        messages.append(message)
+        logger.info(
+            "FCC sync skipped ignored query query=%s ignored_grantee=%s",
+            fcc_id_query,
+            query_grantee_code,
+        )
+        return 0, 0, messages
     request_url = f"{URL}fccId={fcc_id_query}"
     if start_date is not None:
         # Accept either a date or datetime object.
@@ -1810,6 +2203,19 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
         return 0, 0, messages
 
     records = [result] if isinstance(result, dict) else (result if result else [])
+    if not records:
+        logger.info(
+            "FCC sync no records returned query=%s start_date=%s end_date=%s — skipping",
+            fcc_id_query,
+            start_date,
+            end_date,
+        )
+        messages.append(
+            f"No grant applications returned from FCC for '{fcc_id_query}' "
+            + (f"since {start_date.strftime('%m/%d/%Y')}" if start_date else "(full history)")
+            + ". Nothing to process."
+        )
+        return 0, 0, messages
     exact_grantee = _exact_grantee_query(fcc_id_query)
     # When the user submits a specific full FCC ID (e.g. "2AN62-GC5"), the allowlist
     # is too aggressive: filings like "Change in Identification" contain no radio
@@ -1818,6 +2224,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
     is_specific_fcc_id = '-' in _clean_query(fcc_id_query)
     allowlist_terms = _radio_allowlist_terms()
     skipped_non_exact = 0
+    skipped_ignored_grantee = 0
     skipped_non_radio = 0
     skipped_stale_lookup = 0
     attached_test_reports = 0
@@ -1834,8 +2241,19 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
             continue
 
         grantee_code, product_code = split_fcc_id(fcc_id)
+        grantee_code = normalize_grantee_code(grantee_code)
         if not product_code:
             product_code = fcc_id
+
+        if grantee_code and grantee_code in ignored_grantee_codes:
+            skipped_ignored_grantee += 1
+            logger.info(
+                "FCC ingest skipped ignored grantee source=fcc_api query=%s ignored_grantee=%s fcc_id=%s",
+                fcc_id_query,
+                grantee_code,
+                fcc_id,
+            )
+            continue
 
         # FCC endpoint may return prefix-like results for grantee searches.
         # Enforce exact grantee code matching when query is a standalone grantee code.
@@ -1854,8 +2272,20 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
         if not raw_brand_name:
             raw_brand_name = grantee_code
 
+        authoritative_brand, authoritative_manufacturer = _ensure_grantee_brand_and_manufacturer(
+            grantee_code,
+            raw_brand_name,
+        )
+        resolved_authoritative_brand_name = _resolve_authoritative_radio_brand_name(
+            authoritative_brand,
+            grantee_code,
+            raw_brand_name,
+        )
+
         validation = validate_fcc_brand_assignment(fcc_id, raw_brand_name)
         brand_val = validation.get('resolved_brand_name') or raw_brand_name or grantee_code
+        if brand_val == raw_brand_name and resolved_authoritative_brand_name:
+            brand_val = resolved_authoritative_brand_name
 
         if validation.get('status') == 'white_label_possible':
             logger.info(
@@ -1913,8 +2343,40 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
             has_processable_radio = True
 
         if not has_processable_radio:
-            # Even when metadata is unchanged, retry OET doc sync so missing exhibit links
-            # can be backfilled on previously processed radios.
+            # When a date filter is active and the FCC record hasn't changed since
+            # the last lookup, there is genuinely nothing new for this grant — skip
+            # all secondary processing and move on to the next record.
+            if start_date is not None:
+                for radio in existing_radios_with_fcc:
+                    skipped_stale_lookup += 1
+                    _, record_last_modified = stale_lookup_radios.get(radio.id, (False, None))
+                    logger.info(
+                        "FCC ingest skipped stale lookup source=fcc_api query=%s radio_id=%s brand=%s model=%s fcc_id=%s record_last_modified=%s last_lookup_at=%s",
+                        fcc_id_query,
+                        radio.id,
+                        radio.brand,
+                        radio.model,
+                        fcc_id,
+                        record_last_modified.isoformat() if record_last_modified else '',
+                        radio.last_fccid_lookup_at.isoformat() if radio.last_fccid_lookup_at else '',
+                    )
+                if existing_radio_by_brand_model:
+                    skipped_stale_lookup += 1
+                    _, record_last_modified = stale_lookup_radios.get(existing_radio_by_brand_model.id, (False, None))
+                    logger.info(
+                        "FCC ingest skipped stale lookup source=fcc_api query=%s radio_id=%s brand=%s model=%s fcc_id=%s record_last_modified=%s last_lookup_at=%s",
+                        fcc_id_query,
+                        existing_radio_by_brand_model.id,
+                        existing_radio_by_brand_model.brand,
+                        existing_radio_by_brand_model.model,
+                        fcc_id,
+                        record_last_modified.isoformat() if record_last_modified else '',
+                        existing_radio_by_brand_model.last_fccid_lookup_at.isoformat() if existing_radio_by_brand_model.last_fccid_lookup_at else '',
+                    )
+                continue
+
+            # No date filter (full-history scan): still retry OET doc sync so missing
+            # exhibit links can be backfilled on previously processed radios.
             secondary_metadata = metadata_cache.get(fcc_id)
             if secondary_metadata is None:
                 secondary_metadata = fetch_fcc_secondary_metadata(fcc_id)
@@ -2031,6 +2493,17 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
                     radio.freq_bands_tx = derived_freq_bands_tx
                     has_changes = True
 
+                if brand_val and radio.brand != brand_val:
+                    radio_brand_key = _normalize_brand_identity(radio.brand)
+                    raw_brand_key = _normalize_brand_identity(raw_brand_name)
+                    if not radio_brand_key or radio_brand_key == raw_brand_key:
+                        radio.brand = brand_val
+                        has_changes = True
+
+                if authoritative_manufacturer and radio.manufacturer_id != authoritative_manufacturer.id:
+                    radio.manufacturer = authoritative_manufacturer
+                    has_changes = True
+
                 if has_changes:
                     radio.last_fccid_lookup_at = lookup_started_at
                     radio.save()
@@ -2091,6 +2564,15 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
                 if derived_freq_bands_tx and existing_radio_by_brand_model.freq_bands_tx != derived_freq_bands_tx:
                     existing_radio_by_brand_model.freq_bands_tx = derived_freq_bands_tx
 
+                if brand_val and existing_radio_by_brand_model.brand != brand_val:
+                    radio_brand_key = _normalize_brand_identity(existing_radio_by_brand_model.brand)
+                    raw_brand_key = _normalize_brand_identity(raw_brand_name)
+                    if not radio_brand_key or radio_brand_key == raw_brand_key:
+                        existing_radio_by_brand_model.brand = brand_val
+
+                if authoritative_manufacturer and existing_radio_by_brand_model.manufacturer_id != authoritative_manufacturer.id:
+                    existing_radio_by_brand_model.manufacturer = authoritative_manufacturer
+
                 existing_radio_by_brand_model.last_fccid_lookup_at = lookup_started_at
                 existing_radio_by_brand_model.save()
                 count_updated += 1
@@ -2111,6 +2593,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
                 created_radio = Radio.objects.create(
                     brand=brand_val,
                     model=product_code,
+                    manufacturer=authoritative_manufacturer,
                     fcc_id=fcc_id,
                     notes=new_notes,
                     is_a_whitelabel=is_change_in_id,
@@ -2142,6 +2625,10 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None):
     if exact_grantee and skipped_non_exact:
         messages.append(
             f"Filtered {skipped_non_exact} non-exact grantee matches while enforcing exact grantee code {exact_grantee}."
+        )
+    if skipped_ignored_grantee:
+        messages.append(
+            f"Skipped {skipped_ignored_grantee} FCC record(s) because their grantee code is on the ignore list."
         )
     if skipped_non_radio:
         messages.append(

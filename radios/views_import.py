@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 import logging
 from .forms import ImportGranteeXMLForm
-from .models import Radio, Brand
+from .models import Radio, Brand, IgnoredGrantee
 from .fcc_validation import validate_fcc_brand_assignment
 import xml.etree.ElementTree as ET
 import os
@@ -101,6 +101,19 @@ def import_grantee_radios(request):
             grantee_code = radio_list[0]['grantee_code'] if radio_list else ''
             grantee_name = radio_list[0]['brand'] if radio_list else ''
             grantee_country = radio_list[0].get('country', '') if radio_list else ''
+
+            if grantee_code and IgnoredGrantee.is_ignored(grantee_code):
+                logger.info(
+                    "XML import skipped ignored grantee actor=%s grantee_code=%s grantee_name=%s",
+                    _actor_label(request),
+                    grantee_code,
+                    grantee_name,
+                )
+                messages.warning(
+                    request,
+                    f"Skipped import for grantee {grantee_code} because it is on the ignore list.",
+                )
+                return redirect('import_grantee_radios')
             
             # Update or create Brand record for this grantee
             if grantee_code and grantee_name:

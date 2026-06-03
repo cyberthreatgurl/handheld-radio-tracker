@@ -60,19 +60,27 @@ def extract_text_from_pdf_with_metadata(file_path):
     """Extract plaintext from a PDF manual file with metadata on extraction method."""
     try:
         from pypdf import PdfReader
+        from pypdf.errors import DependencyError as PdfDependencyError
     except ImportError:
         logger.warning("PDF parser missing pypdf file=%s", file_path)
         return '', {'method': 'none', 'reason': 'pypdf_missing'}
 
     text_chunks = []
+    direct_failure_reason = ''
     try:
         reader = PdfReader(file_path)
         logger.info("Manual parse attempt file=%s pages=%s", file_path, len(reader.pages))
         for page in reader.pages:
             text_chunks.append(page.extract_text() or '')
+    except PdfDependencyError:
+        direct_failure_reason = 'pdf_crypto_dependency_missing'
+        logger.warning(
+            "Manual direct PDF parse needs cryptography for AES file=%s; falling back to OCR",
+            file_path,
+        )
     except Exception:
         logger.exception("Manual direct PDF parse failed file=%s", file_path)
-        return '', {'method': 'none', 'reason': 'pdf_parse_error'}
+        direct_failure_reason = 'pdf_parse_error'
 
     direct_text = '\n'.join(text_chunks)
     if _has_enough_text(direct_text):
@@ -83,10 +91,20 @@ def extract_text_from_pdf_with_metadata(file_path):
     ocr_text = _extract_text_via_ocr(file_path)
     if _has_enough_text(ocr_text):
         logger.info("Manual parse used OCR fallback file=%s text_length=%s", file_path, len(ocr_text))
-        return ocr_text, {'method': 'ocr', 'text_length': len(ocr_text)}
+        meta = {'method': 'ocr', 'text_length': len(ocr_text)}
+        if direct_failure_reason:
+            meta['direct_parse_reason'] = direct_failure_reason
+        return ocr_text, meta
 
     logger.info("Manual parse fallback insufficient text file=%s direct_len=%s ocr_len=%s", file_path, len(direct_text), len(ocr_text))
-    return direct_text, {'method': 'embedded_text_low_confidence', 'text_length': len(direct_text), 'ocr_text_length': len(ocr_text)}
+    meta = {
+        'method': 'embedded_text_low_confidence',
+        'text_length': len(direct_text),
+        'ocr_text_length': len(ocr_text),
+    }
+    if direct_failure_reason:
+        meta['direct_parse_reason'] = direct_failure_reason
+    return direct_text, meta
 
 
 def _extract_first(pattern, text, flags=re.IGNORECASE):

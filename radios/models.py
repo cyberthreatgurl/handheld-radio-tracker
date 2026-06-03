@@ -1,9 +1,13 @@
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 import logging
 
 
 logger = logging.getLogger(__name__)
+
+
+def normalize_grantee_code(value):
+    return (value or '').strip().upper()
 
 
 class Brand(models.Model):
@@ -45,6 +49,56 @@ class Brand(models.Model):
             parts.append(f"FCC: {self.grantee_code}")
         return " - ".join(parts)
 
+    def delete(self, *args, **kwargs):
+        return delete_brand_and_related(self, *args, **kwargs)
+
+
+class IgnoredGrantee(models.Model):
+    """FCC grantee codes that should be excluded from sync/import workflows."""
+
+    grantee_code = models.CharField(
+        max_length=20,
+        unique=True,
+        db_index=True,
+        help_text="FCC grantee code to exclude from sync/import workflows.",
+    )
+    reason = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Short reason this grantee should be ignored.",
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text="Optional notes about why this grantee is out of scope.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['grantee_code']
+        verbose_name = 'Ignored Grantee ID'
+        verbose_name_plural = 'Ignored Grantee IDs'
+
+    def __str__(self):
+        if self.reason:
+            return f"{self.grantee_code} - {self.reason}"
+        return self.grantee_code
+
+    def save(self, *args, **kwargs):
+        self.grantee_code = normalize_grantee_code(self.grantee_code)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def ignored_codes(cls):
+        return list(cls.objects.values_list('grantee_code', flat=True))
+
+    @classmethod
+    def is_ignored(cls, grantee_code):
+        normalized_code = normalize_grantee_code(grantee_code)
+        if not normalized_code:
+            return False
+        return cls.objects.filter(grantee_code=normalized_code).exists()
+
 
 class Radio(models.Model):
     """Model representing a ham radio device"""
@@ -71,6 +125,11 @@ class Radio(models.Model):
         null=True,
         blank=True,
         help_text="Timestamp of the last FCC ID lookup attempt for this radio",
+    )
+    oet_page_url = models.URLField(
+        max_length=1000,
+        blank=True,
+        help_text="FCC EAS OET exhibits page URL (auto-populated by FCC Update)",
     )
     intro_year = models.IntegerField(null=True, blank=True, help_text="Year introduced")
     
@@ -429,6 +488,21 @@ class Manufacturer(models.Model):
     )
     website = models.URLField(max_length=500, blank=True)
     country = models.CharField(max_length=100, blank=True)
+    address = models.TextField(
+        blank=True,
+        help_text="Full street/mailing address, used for geo-mapping manufacturing locations.",
+    )
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    geocode_failed = models.BooleanField(
+        default=False,
+        help_text="Set when Nominatim could not resolve the address.",
+    )
+    geocode_precision = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Resolution level achieved: full, city, state, country, or empty when not yet geocoded.",
+    )
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -442,6 +516,49 @@ class Manufacturer(models.Model):
         if self.alias:
             return f"{self.alias} ({self.full_name})"
         return self.full_name
+
+
+def delete_radios_and_related(radio_queryset):
+    radio_ids = list(radio_queryset.values_list('id', flat=True))
+
+    manual_count = RadioManual.objects.filter(radio_id__in=radio_ids).delete()[0]
+    report_count = RadioFCCTestReport.objects.filter(radio_id__in=radio_ids).delete()[0]
+    oet_count = RadioOETDocument.objects.filter(radio_id__in=radio_ids).delete()[0]
+    firmware_count = RadioFirmware.objects.filter(radio_id__in=radio_ids).delete()[0]
+    radio_count = radio_queryset.delete()[0]
+
+    return {
+        'radios_deleted': radio_count,
+        'manuals_deleted': manual_count,
+        'test_reports_deleted': report_count,
+        'oet_documents_deleted': oet_count,
+        'firmware_deleted': firmware_count,
+    }
+
+
+def delete_brand_and_related(brand, *args, **kwargs):
+    radio_queryset = Radio.objects.filter(brand__iexact=brand.name).distinct()
+    linked_manufacturer_ids = list(
+        Manufacturer.objects.filter(brands=brand).values_list('id', flat=True)
+    )
+
+    manufacturers_to_delete = list(
+        Manufacturer.objects.annotate(brand_count=models.Count('brands', distinct=True))
+        .filter(id__in=linked_manufacturer_ids)
+        .annotate(brand_count=models.Count('brands', distinct=True))
+        .filter(brand_count=1)
+        .values_list('id', flat=True)
+    )
+
+    with transaction.atomic():
+        delete_summary = delete_radios_and_related(radio_queryset)
+        models.Model.delete(brand, *args, **kwargs)
+        manufacturer_count = Manufacturer.objects.filter(id__in=manufacturers_to_delete).delete()[0]
+
+    return {
+        **delete_summary,
+        'manufacturers_deleted': manufacturer_count,
+    }
 
 
 class FCCSyncState(models.Model):
