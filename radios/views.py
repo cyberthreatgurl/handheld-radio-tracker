@@ -3,16 +3,18 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.http import Http404, JsonResponse
-from django.db.models import Q, Count, Max, Prefetch
+from django.db.models import Q, Count, Max, Prefetch, Subquery
 from django.conf import settings
+from django.views.decorators.cache import cache_page
 import logging
 import re
 import json
 from collections import Counter
 from pathlib import Path
 from django.utils import timezone
-from .models import Radio, Brand, RadioManual, RadioFirmware, Manufacturer, FCCSyncState, IgnoredGrantee, RadioFCCTestReport, RadioOETDocument, delete_brand_and_related
-from .forms import RadioForm, RadioSearchForm, BrandForm, ManufacturerForm
+from .models import Radio, Brand, RadioManual, RadioFirmware, Manufacturer, FCCSyncState, IgnoredGrantee, RadioFCCTestReport, RadioOETDocument, RadioImage, delete_brand_and_related
+from .forms import RadioForm, RadioSearchForm, BrandForm, ManufacturerForm, RadioImageFormSet
+from .image_utils import ingest_radio_image
 from .fcc_utils import fetch_and_sync_fcc_id
 from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from .nodal_graph import build_nodal_graph_data
@@ -125,11 +127,12 @@ def sync_radio_fcc_view(request, pk):
             messages.error(request, "This radio does not have an FCC ID assigned.")
             return redirect('radio_detail', pk=pk)
         
-        logger.info("User action sync_radio_fcc submit actor=%s radio_pk=%s fcc_id=%s", _actor_label(request), pk, radio.fcc_id)
+        force_reload = request.POST.get('force_reload') == '1'
+        logger.info("User action sync_radio_fcc submit actor=%s radio_pk=%s fcc_id=%s force_reload=%s", _actor_label(request), pk, radio.fcc_id, force_reload)
         try:
-            added, updated, _processing_msgs = fetch_and_sync_fcc_id(radio.fcc_id)
-            logger.info("User action sync_radio_fcc result actor=%s radio_pk=%s fcc_id=%s added=%s updated=%s", 
-                       _actor_label(request), pk, radio.fcc_id, added, updated)
+            added, updated, _processing_msgs = fetch_and_sync_fcc_id(radio.fcc_id, force_reload=force_reload)
+            logger.info("User action sync_radio_fcc result actor=%s radio_pk=%s fcc_id=%s added=%s updated=%s force_reload=%s", 
+                       _actor_label(request), pk, radio.fcc_id, added, updated, force_reload)
             
             ignore_message = next((msg for msg in _processing_msgs if 'ignore list' in msg.lower()), '')
             if ignore_message:
@@ -262,7 +265,7 @@ class RadioListView(ListView):
         brand = self.request.GET.get('brand')
         if brand:
             logger.info("User action radio_filter_brand actor=%s brand=%s", _actor_label(self.request), brand)
-            queryset = queryset.filter(brand__iexact=brand)
+            queryset = queryset.filter(brand__icontains=brand)
         
         # Sorting
         sort = self.request.GET.get('sort', 'brand')
@@ -402,6 +405,18 @@ class RadioUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['brand_name_to_pk'] = {b.name: b.pk for b in Brand.objects.only('id', 'name').all()}
+        if self.request.method == 'POST':
+            context['image_formset'] = RadioImageFormSet(
+                self.request.POST,
+                self.request.FILES,
+                instance=self.object,
+                prefix='images',
+            )
+        else:
+            context['image_formset'] = RadioImageFormSet(
+                instance=self.object,
+                prefix='images',
+            )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -411,21 +426,62 @@ class RadioUpdateView(UpdateView):
             messages.error(request, f'Radio #{kwargs.get("pk")} no longer exists — it may have been deleted.')
             return redirect('radio_list')
         form = self.get_form()
-        if form.is_valid():
-            return self.form_valid(form)
-        return self.render_to_response(self.get_context_data(form=form))
+        image_formset = RadioImageFormSet(
+            request.POST,
+            request.FILES,
+            instance=self.object,
+            prefix='images',
+        )
+        if form.is_valid() and image_formset.is_valid():
+            return self.form_valid(form, image_formset)
+        context = self.get_context_data(form=form)
+        context['image_formset'] = image_formset
+        return self.render_to_response(context)
 
-    def form_valid(self, form):
+    def form_valid(self, form, image_formset=None):
         logger.info("User action radio_update submit actor=%s radio_id=%s brand=%s model=%s", _actor_label(self.request), form.instance.pk, form.instance.brand, form.instance.model)
-        form.save()
+        self.object = form.save()
+
+        if image_formset is not None:
+            # Save formset rows that have a file OR a URL
+            for img_form in image_formset:
+                if img_form.cleaned_data.get('DELETE') and img_form.instance.pk:
+                    # Handled by formset.save() below
+                    continue
+                has_file = bool(img_form.cleaned_data.get('image_file'))
+                has_url = bool((img_form.cleaned_data.get('image_url') or '').strip())
+                if not has_file and not has_url:
+                    continue
+                if has_url and not has_file:
+                    # URL import — do NOT save via formset; use ingest_radio_image instead
+                    ingest_radio_image(
+                        img_form.cleaned_data['image_url'],
+                        self.object,
+                        caption=img_form.cleaned_data.get('caption', ''),
+                    )
+                # file uploads are handled by image_formset.save() below
+            image_formset.save()
+
         messages.success(self.request, f'Radio {form.instance} has been updated successfully!')
         return redirect(self.request.path)
 
 
+def radio_image_delete(request, radio_pk, pk):
+    """POST-only view: delete a single RadioImage and its stored file."""
+    image = get_object_or_404(RadioImage, pk=pk, radio_id=radio_pk)
+    if request.method == 'POST':
+        logger.info(
+            "User action radio_image_delete actor=%s radio_pk=%s image_pk=%s",
+            _actor_label(request), radio_pk, pk,
+        )
+        image.image_file.delete(save=False)
+        image.delete()
+        messages.success(request, 'Image deleted.')
+    return redirect('radio_edit', pk=radio_pk)
+
+
 class RadioDeleteView(DeleteView):
-    """View for deleting a radio entry"""
     model = Radio
-    template_name = 'radios/radio_confirm_delete.html'
     success_url = reverse_lazy('radio_list')
     
     def delete(self, request, *args, **kwargs):
@@ -852,6 +908,7 @@ def manufacturer_map_data_view(request):
     return JsonResponse({'manufacturers': results})
 
 
+@cache_page(60 * 5)  # Cache for 5 minutes
 def dashboard_view(request):
     """Dashboard view with statistics"""
     logger.info("User action dashboard_view actor=%s", _actor_label(request))
@@ -917,26 +974,36 @@ def dashboard_view(request):
                 row['grantee_code'] = match
                 break
 
-        # Fallback: infer dominant grantee code from FCC IDs on radios under this brand label.
-        if not row['grantee_code']:
-            source_brands = list(row.get('source_brands', []))
-            brand_filter = Q()
-            for source_brand in source_brands:
-                brand_filter |= Q(brand__iexact=source_brand)
-
-            fcc_ids = []
-            if source_brands:
-                fcc_ids = Radio.objects.filter(brand_filter).exclude(fcc_id__exact='').values_list('fcc_id', flat=True)[:300]
-
-            grantee_counts = Counter()
-            for fcc_id in fcc_ids:
-                grantee_code, _ = split_fcc_id(fcc_id)
-                if grantee_code:
-                    grantee_counts[grantee_code] += 1
-            if grantee_counts:
-                row['grantee_code'] = grantee_counts.most_common(1)[0][0]
-
         row['source_brands'] = sorted(row.get('source_brands', []))
+
+    # Fallback: batch a single query for all top_brands still missing a grantee code.
+    needs_grantee = [row for row in top_brands if not row['grantee_code']]
+    if needs_grantee:
+        batch_filter = Q()
+        for row in needs_grantee:
+            for sb in row.get('source_brands', []):
+                batch_filter |= Q(brand__iexact=sb)
+        brand_fcc_pairs = list(
+            Radio.objects.filter(batch_filter)
+            .exclude(fcc_id__exact='')
+            .values_list('brand', 'fcc_id')
+        )
+        # Build a grantee_counts map keyed by normalised brand.
+        brand_grantee_counts = {}
+        for brand_val, fcc_id in brand_fcc_pairs:
+            grantee_code, _ = split_fcc_id(fcc_id)
+            if not grantee_code:
+                continue
+            bkey = _normalize_brand_key(brand_val)
+            brand_grantee_counts.setdefault(bkey, Counter())[grantee_code] += 1
+
+        for row in needs_grantee:
+            counts = Counter()
+            for sb in row.get('source_brands', []):
+                bkey = _normalize_brand_key(sb)
+                counts += brand_grantee_counts.get(bkey, Counter())
+            if counts:
+                row['grantee_code'] = counts.most_common(1)[0][0]
 
     alias_map = _build_brand_display_alias_map()
 
@@ -948,24 +1015,29 @@ def dashboard_view(request):
     for radio in recent_radios:
         radio.display_brand = _preferred_brand_display_name(radio, alias_map)
 
-    _seen_pdfs = set()
-    recent_manual_uploads = []
-    for manual in RadioManual.objects.select_related('radio', 'radio__manufacturer').filter(
-        doc_type=RadioManual.DocType.MANUAL
-    ).exclude(manual_pdf='').order_by('-created_at'):
-        pdf_name = manual.manual_pdf.name
-        if pdf_name in _seen_pdfs:
-            continue
-        _seen_pdfs.add(pdf_name)
+    # Deduplicate by PDF filename in the database: keep the most-recent manual per unique PDF.
+    latest_manual_ids = (
+        RadioManual.objects
+        .filter(doc_type=RadioManual.DocType.MANUAL)
+        .exclude(manual_pdf='')
+        .values('manual_pdf')
+        .annotate(latest_id=Max('id'))
+        .values('latest_id')
+        .order_by()
+    )
+    recent_manual_uploads = list(
+        RadioManual.objects
+        .select_related('radio', 'radio__manufacturer')
+        .filter(id__in=Subquery(latest_manual_ids))
+        .order_by('-created_at')[:25]
+    )
+    for manual in recent_manual_uploads:
         if manual.radio:
             manual.radio.display_brand = _preferred_brand_display_name(manual.radio, alias_map)
-        recent_manual_uploads.append(manual)
-        if len(recent_manual_uploads) >= 25:
-            break
 
     context = {
-        'total_radios': Radio.objects.count(),
-        'total_brands': Radio.objects.values('brand').distinct().count(),
+        'total_radios': sum(r.get('count', 0) for r in raw_brand_rows),
+        'total_brands': len(merged_brands),
         'recent_radios': recent_radios,
         'recent_manual_uploads': recent_manual_uploads,
         'top_brands': top_brands,
@@ -1032,7 +1104,7 @@ def nodal_visualization_view(request):
     if brand_query:
         radios = radios.filter(
             Q(brand__icontains=brand_query)
-            | Q(manufacturer__name__icontains=brand_query)
+            | Q(manufacturer__full_name__icontains=brand_query)
             | Q(manufacturer__alias__icontains=brand_query)
         )
     if model_query:

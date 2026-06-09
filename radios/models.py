@@ -289,6 +289,12 @@ def firmware_upload_to(instance, filename):
     return f"{firmware_dir}/{filename}"
 
 
+def radio_image_upload_to(instance, filename):
+    images_dir = getattr(settings, 'RADIO_IMAGES_DIR', 'artifacts/images').strip('/ ')
+    radio_pk = getattr(instance.radio, 'pk', 'unknown') if instance.radio_id else 'unknown'
+    return f"{images_dir}/{radio_pk}/{filename}"
+
+
 class RadioManual(models.Model):
     """Uploaded document files (manuals, firmware, test reports, etc.) linked to a radio."""
 
@@ -516,6 +522,41 @@ class Manufacturer(models.Model):
         if self.alias:
             return f"{self.alias} ({self.full_name})"
         return self.full_name
+
+
+class RadioImage(models.Model):
+    """A product image for a Radio, uploaded directly or imported from a URL."""
+
+    radio = models.ForeignKey(
+        Radio,
+        on_delete=models.CASCADE,
+        related_name='images',
+    )
+    image_file = models.ImageField(upload_to=radio_image_upload_to)
+    caption = models.CharField(max_length=255, blank=True)
+    source_url = models.URLField(
+        max_length=500,
+        blank=True,
+        help_text="Original URL the image was fetched from, if imported via URL.",
+    )
+    original_width = models.PositiveIntegerField(null=True, blank=True)
+    original_height = models.PositiveIntegerField(null=True, blank=True)
+    display_width = models.PositiveIntegerField(null=True, blank=True)
+    display_height = models.PositiveIntegerField(null=True, blank=True)
+    sort_order = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Lower numbers appear first in the carousel.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'created_at']
+        verbose_name = 'Radio Image'
+        verbose_name_plural = 'Radio Images'
+
+    def __str__(self):
+        label = self.caption or self.image_file.name or f'Image {self.pk}'
+        return f"{self.radio} — {label}"
 
 
 def delete_radios_and_related(radio_queryset):

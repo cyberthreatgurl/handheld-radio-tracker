@@ -1,0 +1,13 @@
+{
+    "firmware_links": [
+        {
+            "brand": "radtel",
+            "url":  "https://www.radtels.com/pages/software-download"
+        },
+        {
+            "brand": "bajeton",
+            "url":  "https://www.bajeton.com/download/"
+        }
+    ]
+}
+

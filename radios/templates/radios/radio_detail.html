@@ -3,9 +3,11 @@
 {% block title %}{{ radio }} - Ham Radio Database{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto">
+<div class="max-w-5xl mx-auto">
     <div class="space-y-6">
-        <div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {# --- Left: title + actions --- #}
+            <div class="lg:col-span-2">
             {% if request.GET.from_brand %}
             <a href="{% url 'brand_edit' request.GET.from_brand %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
                 ← Back to brand
@@ -16,16 +18,22 @@
             </a>
             {% endif %}
             <h1 class="text-3xl font-bold text-gray-900">{{ radio.brand }} {{ radio.model }}</h1>
-            <div class="flex justify-end space-x-3 mt-3">
+            <div class="flex flex-wrap gap-2 mt-3">
                 {% if radio.fcc_id %}
                 <form action="{% url 'sync_radio_fcc' radio.pk %}" method="post" class="inline">
                     {% csrf_token %}
-                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-indigo-300 text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100">
-                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                        FCC Update
-                    </button>
+                    <div class="inline-flex items-center gap-2">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-indigo-300 text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100">
+                            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            FCC Update
+                        </button>
+                        <label class="inline-flex items-center gap-1 text-xs text-gray-500 cursor-pointer" title="Re-download all documents even if already stored">
+                            <input type="checkbox" name="force_reload" value="1" class="rounded border-gray-300 text-indigo-600">
+                            Force reload
+                        </label>
+                    </div>
                 </form>
                 {% endif %}
                 <a href="{% url 'nodal_visualization' %}?brand={{ radio.brand|urlencode }}&model={{ radio.model|urlencode }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
@@ -40,6 +48,63 @@
                 <a href="{% url 'radio_edit' radio.pk %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                     Edit Radio
                 </a>
+            </div>
+            </div>
+
+            {# --- Right: image carousel --- #}
+            <div class="lg:col-span-1">
+                {% with images=radio.images.all %}
+                {% if images %}
+                {# Embed image data as JSON for the JS carousel #}
+                <script id="radio-images-data" type="application/json">
+                [{% for img in images %}{"url":"{{ img.image_file.url|escapejs }}","caption":"{{ img.caption|escapejs }}","w":{{ img.display_width|default:0 }},"h":{{ img.display_height|default:0 }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+                </script>
+                <div id="radio-carousel" class="relative bg-gray-100 rounded-lg overflow-hidden" style="height:260px;">
+                    <a id="carousel-link" href="#" target="_blank" rel="noopener" class="block w-full h-full flex items-center justify-center">
+                        <img id="carousel-img" src="" alt="" class="max-w-full max-h-full object-contain" style="display:block;margin:auto;">
+                    </a>
+                    <button id="carousel-prev" class="absolute left-1 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-1 shadow text-gray-700" aria-label="Previous image">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button id="carousel-next" class="absolute right-1 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-1 shadow text-gray-700" aria-label="Next image">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <div id="carousel-caption" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-40 text-white text-xs px-2 py-1 text-center truncate" style="display:none;"></div>
+                    <div id="carousel-counter" class="absolute top-1 right-2 bg-black bg-opacity-40 text-white text-xs px-2 py-0.5 rounded-full"></div>
+                </div>
+                <script>
+                (function(){
+                    var imgs = JSON.parse(document.getElementById('radio-images-data').textContent);
+                    var idx = 0;
+                    function show(i){
+                        idx = (i + imgs.length) % imgs.length;
+                        var d = imgs[idx];
+                        document.getElementById('carousel-img').src = d.url;
+                        document.getElementById('carousel-img').alt = d.caption || '';
+                        document.getElementById('carousel-link').href = d.url;
+                        var cap = document.getElementById('carousel-caption');
+                        if(d.caption){ cap.textContent = d.caption; cap.style.display='block'; }
+                        else { cap.style.display='none'; }
+                        document.getElementById('carousel-counter').textContent = (idx+1) + ' / ' + imgs.length;
+                        var prev = document.getElementById('carousel-prev');
+                        var next = document.getElementById('carousel-next');
+                        if(imgs.length < 2){ prev.style.display='none'; next.style.display='none'; }
+                        else { prev.style.display=''; next.style.display=''; }
+                    }
+                    document.getElementById('carousel-prev').addEventListener('click', function(e){ e.preventDefault(); show(idx-1); });
+                    document.getElementById('carousel-next').addEventListener('click', function(e){ e.preventDefault(); show(idx+1); });
+                    show(0);
+                })();
+                </script>
+                {% else %}
+                <div class="flex items-center justify-center bg-gray-100 rounded-lg text-gray-400 text-sm" style="height:260px;">
+                    <div class="text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        No images yet
+                    </div>
+                </div>
+                {% endif %}
+                {% endwith %}
             </div>
         </div>
 

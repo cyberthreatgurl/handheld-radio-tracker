@@ -2,7 +2,7 @@ from django import forms
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.forms import inlineformset_factory
-from .models import Radio, Brand, RadioFirmware, Manufacturer, RadioManual
+from .models import Radio, Brand, RadioFirmware, Manufacturer, RadioManual, RadioImage
 
 
 class RadioForm(forms.ModelForm):
@@ -420,3 +420,67 @@ class ManufacturerForm(forms.ModelForm):
                 'placeholder': 'Additional notes…',
             }),
         }
+
+
+class RadioImageForm(forms.ModelForm):
+    """Form for uploading or URL-importing a single RadioImage."""
+
+    # URL import alternative to direct file upload.
+    image_url = forms.URLField(
+        required=False,
+        label='Image URL',
+        widget=forms.URLInput(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+            'placeholder': 'https://example.com/radio.jpg',
+        }),
+        help_text='Paste an image URL, or upload a file above — not both.',
+    )
+
+    class Meta:
+        model = RadioImage
+        fields = ['image_file', 'caption', 'sort_order']
+        widgets = {
+            'image_file': forms.ClearableFileInput(attrs={
+                'class': 'mt-1 block w-full text-sm text-gray-700',
+                'accept': 'image/*',
+            }),
+            'caption': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                         'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'placeholder': 'Optional caption…',
+            }),
+            'sort_order': forms.NumberInput(attrs={
+                'class': 'mt-1 block w-20 rounded-md border-gray-300 shadow-sm '
+                         'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'min': '0',
+            }),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        has_file = bool(cleaned.get('image_file'))
+        has_url = bool((cleaned.get('image_url') or '').strip())
+        # For existing records (with image_file already set), neither field is
+        # required unless the user explicitly clears the existing file.
+        is_existing = bool(self.instance and self.instance.pk and self.instance.image_file)
+        if has_file and has_url:
+            raise ValidationError('Provide either a file upload or a URL, not both.')
+        if not is_existing and not has_file and not has_url and not self.cleaned_data.get('DELETE', False):
+            # Only raise if this form has any other data (i.e. it’s not a blank extra row)
+            other_data = any(
+                v for k, v in cleaned.items()
+                if k not in ('image_file', 'image_url', 'sort_order', 'DELETE', 'id')
+            )
+            if other_data:
+                raise ValidationError('Provide either a file upload or a URL.')
+        return cleaned
+
+
+RadioImageFormSet = inlineformset_factory(
+    Radio,
+    RadioImage,
+    form=RadioImageForm,
+    extra=1,
+    can_delete=True,
+)

@@ -64,7 +64,7 @@ radio-tracker/
 - Node.js and npm for Tailwind
 - Google Chrome installed locally for the most reliable FCC OET retrieval
 
-The project includes Playwright in `requirements.txt`. FCC OET retrieval currently works best with a local desktop Chrome session. In this repository, fully headless HTTP-only access to the FCC exhibit flow is not reliable.
+The project includes Playwright in `requirements.txt`. FCC OET retrieval uses headless Chrome by default so browser windows never appear during syncs. Set `FCC_PLAYWRIGHT_HEADLESS=0` if you need a visible browser for debugging.
 
 ## Installation
 
@@ -137,7 +137,7 @@ FCC_PLAYWRIGHT_HEADLESS=0
 Notes:
 
 - `FCC_RADIO_ALLOWLIST_TERMS` controls which FCC records are treated as relevant radio equipment.
-- Leave `FCC_PLAYWRIGHT_HEADLESS` unset unless you know your environment can complete the FCC exhibit flow headlessly. Headed Chrome has been the most reliable in this project.
+- `FCC_PLAYWRIGHT_HEADLESS` — the Playwright browser runs **headless by default** (no visible window). Set to `0` / `false` / `no` to show the browser during FCC OET fetches, which is useful for debugging timeout or form-submission failures.
 
 ### 7. Run Django migrations
 
@@ -211,8 +211,9 @@ What happens during sync:
 Important operational note:
 
 - The FCC OET site frequently returns `503` or blocks non-browser requests.
-- This repository now falls back to Playwright/Chrome for the exhibit flow.
-- That makes local interactive syncs and desktop cron jobs practical, but a pure headless server deployment may still need additional work.
+- This repository falls back to Playwright/Chrome for the exhibit flow, running **headless by default**.
+- **Stale-skip guard:** when a radio was already processed within the current sync date window, it is skipped automatically — even if the FCC API returned 503 and could not provide a record last-modified date. This prevents redundant full re-processing on consecutive daily syncs.
+- A Playwright circuit-breaker fires after 2 consecutive page-load timeouts per FCC ID, abandoning remaining direct-URL attempts and falling through to the grantee-search fallback to avoid burning ~30 s per URL when the FCC site is unreachable.
 
 ## Cron / scheduled usage
 
@@ -634,6 +635,65 @@ For local environments where PostgreSQL test database creation is restricted, us
 python manage.py test --settings=radio_database.settings_test
 ```
 
+## Sync performance analysis
+
+### analyze_fcc_log.py
+
+A standalone script for diagnosing FCC sync behaviour from log files.
+
+**Single-file report** — grantee query summary, OET fetch stats, 503/timeout counts, stale-skip effectiveness, and per-grantee duration breakdown:
+
+```bash
+python analyze_fcc_log.py logs/radio_tracker.log
+```
+
+**Comparison report** — compares two log files to find FCC IDs and grantee queries that were re-processed unnecessarily:
+
+```bash
+python analyze_fcc_log.py logs/radio_tracker.log logs/radio_tracker.log.2026-06-04
+```
+
+Output includes:
+
+- Total grantees started vs completed (shows which are still in progress)
+- Radios added / updated / OET docs synced per grantee
+- Count of `skipped_stale_lookup=0` warnings that indicate the stale-skip guard is not firing
+- Overlap section: how many FCC IDs were re-fetched from the baseline log vs genuinely new
+- Diagnosis message explaining the likely root cause when re-processing is high
+
+**Overlap-only output** (skip the per-file summaries):
+
+```bash
+python analyze_fcc_log.py logs/radio_tracker.log logs/radio_tracker.log.2026-06-04 --overlap-only
+```
+
+### Headless vs visible Playwright browser
+
+Playwright runs **headless by default** during OET fetches. To watch the browser for debugging a specific sync:
+
+```bash
+FCC_PLAYWRIGHT_HEADLESS=0 python manage.py sync_fcc --fcc-id AZ489FT3716
+```
+
+### Reviewing stale-skip behaviour in logs
+
+```bash
+# See which grantees had stale skips and how many
+grep "skipped_stale_lookup" logs/radio_tracker.log | grep -v "skipped_stale_lookup=0"
+
+# See individual stale-skip records
+grep "FCC ingest skipped stale lookup" logs/radio_tracker.log | head -20
+
+# Count 503 errors per run
+grep -c "status=503" logs/radio_tracker.log
+
+# Count Playwright timeout errors
+grep -c "FCC browser OET page load failed" logs/radio_tracker.log
+
+# Check if circuit-breaker fired
+grep "circuit breaker triggered" logs/radio_tracker.log
+```
+
 ## Logs and generated files
 
 - App logs: `logs/radio_tracker.log`
@@ -647,8 +707,10 @@ python manage.py test --settings=radio_database.settings_test
 ### FCC sync returns `503` repeatedly
 
 - This is common with the FCC EAS site.
-- The code will retry and may fall back to Playwright/Chrome.
-- Make sure Chrome is installed locally and the machine can launch a browser session.
+- The code will retry with `curl_cffi` and may fall back to headless Playwright/Chrome.
+- After 2 consecutive page-load timeouts for the same FCC ID, a circuit-breaker skips remaining direct-URL candidates and moves to the grantee-search fallback.
+- Radios already synced within the current date window are skipped automatically even if 503s prevent obtaining a fresh FCC record last-modified date.
+- To watch the browser in real time: `FCC_PLAYWRIGHT_HEADLESS=0 python manage.py sync_fcc --fcc-id <FCCID>`
 
 ### OET documents are not downloaded
 

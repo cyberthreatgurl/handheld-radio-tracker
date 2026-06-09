@@ -9,6 +9,7 @@ urlpatterns = [
     path('radios/', views.RadioListView.as_view(), name='radio_list'),
     path('radios/add/', views.RadioCreateView.as_view(), name='radio_add'),
     path('radios/<int:pk>/', views.RadioDetailView.as_view(), name='radio_detail'),
+    path('radios/<int:radio_pk>/images/<int:pk>/delete/', views.radio_image_delete, name='radio_image_delete'),
     path('radios/<int:pk>/edit/', views.RadioUpdateView.as_view(), name='radio_edit'),
     path('radios/<int:pk>/delete/', views.RadioDeleteView.as_view(), name='radio_delete'),
     path('radios/<int:pk>/sync-fcc/', views.sync_radio_fcc_view, name='sync_radio_fcc'),

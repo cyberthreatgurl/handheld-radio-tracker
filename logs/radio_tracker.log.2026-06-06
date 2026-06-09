@@ -1,0 +1,684 @@
+2026-06-06 20:01:12,672 INFO [radios.views] User action dashboard_view actor=kelly
+2026-06-06 20:02:27,013 INFO [radios.views] User action sync_fcc submit actor=kelly fcc_id=2AZSA
+2026-06-06 20:02:27,028 INFO [radios.fcc_utils] FCC sync request started query=2AZSA start_date=None end_date=None
+2026-06-06 20:02:27,276 INFO [radios.fcc_utils] FCC sync parsing records query=2AZSA record_count=20
+2026-06-06 20:02:27,512 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 20:02:28,283 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 20:02:29,708 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AZSA-6D880 status=503
+2026-06-06 20:02:29,984 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 20:02:30,749 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 20:02:32,060 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AZSA-6D880 status=503
+2026-06-06 20:03:23,523 ERROR [radios.fcc_utils] FCC browser fallback search failed fcc_id=2AZSA-6D880
+Traceback (most recent call last):
+  File "/Users/ashaw/code/radio-tracker/radios/fcc_utils.py", line 792, in _submit_generic_search_form_via_playwright
+    page.goto(GENERIC_SEARCH_FORM_URL, wait_until='domcontentloaded', timeout=30000)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py", line 9612, in goto
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.goto(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm", waiting until "domcontentloaded"
+
+2026-06-06 20:03:23,526 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AZSA-6D880 candidate_url_count=2
+2026-06-06 20:03:54,232 ERROR [radios.fcc_utils] FCC browser OET page load failed fcc_id=2AZSA-6D880 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA-6D880
+Traceback (most recent call last):
+  File "/Users/ashaw/code/radio-tracker/radios/fcc_utils.py", line 1203, in _fetch_oet_documents_via_playwright
+    page.goto(url, wait_until='domcontentloaded', timeout=30000)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py", line 9612, in goto
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.goto(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA-6D880", waiting until "domcontentloaded"
+
+2026-06-06 20:04:24,241 ERROR [radios.fcc_utils] FCC browser OET page load failed fcc_id=2AZSA-6D880 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA6D880
+Traceback (most recent call last):
+  File "/Users/ashaw/code/radio-tracker/radios/fcc_utils.py", line 1203, in _fetch_oet_documents_via_playwright
+    page.goto(url, wait_until='domcontentloaded', timeout=30000)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py", line 9612, in goto
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.goto(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA6D880", waiting until "domcontentloaded"
+
+2026-06-06 20:04:24,244 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AZSA-6D880 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 20:04:24,325 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AZSA-6D880
+2026-06-06 20:05:11,019 ERROR [radios.fcc_utils] FCC browser fallback search failed fcc_id=2AZSA-6D880
+Traceback (most recent call last):
+  File "/Users/ashaw/code/radio-tracker/radios/fcc_utils.py", line 792, in _submit_generic_search_form_via_playwright
+    page.goto(GENERIC_SEARCH_FORM_URL, wait_until='domcontentloaded', timeout=30000)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py", line 9612, in goto
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.goto(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm", waiting until "domcontentloaded"
+
+2026-06-06 20:05:11,020 INFO [radios.fcc_utils] FCC OET sync start radio_id=4850 radio_fcc_id=2AZSA-6D880 requested_fcc_id=2AZSA-6D880 metadata_doc_count=0
+2026-06-06 20:05:11,043 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4850 fcc_id=2AZSA-6D880 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 20:05:11,076 INFO [radios.fcc_utils] FCC ingest skipped record source=fcc_api query=2AZSA fcc_id=2AZSA-6D880 reason=no_radio_allowlist_match allow_terms=TRANSCEIVER,TRANSMITTER,RECEIVER,MURS,GMRS,HAM,CB,AMATEUR,ORIGINAL EQUIPMENT primary_purpose=Change in Identification metadata_record_count=0 metadata_keys=
+2026-06-06 20:05:11,310 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 20:05:12,067 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 20:05:13,398 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AZSA-7518000 status=503
+2026-06-06 20:05:13,638 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 20:05:14,333 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 20:05:15,623 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AZSA-7518000 status=503
+2026-06-06 20:06:00,957 ERROR [radios.fcc_utils] FCC browser fallback search failed fcc_id=2AZSA-7518000
+Traceback (most recent call last):
+  File "/Users/ashaw/code/radio-tracker/radios/fcc_utils.py", line 792, in _submit_generic_search_form_via_playwright
+    page.goto(GENERIC_SEARCH_FORM_URL, wait_until='domcontentloaded', timeout=30000)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py", line 9612, in goto
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.goto(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm", waiting until "domcontentloaded"
+
+2026-06-06 20:06:00,958 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AZSA-7518000 candidate_url_count=2
+2026-06-06 20:06:31,601 ERROR [radios.fcc_utils] FCC browser OET page load failed fcc_id=2AZSA-7518000 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA-7518000
+Traceback (most recent call last):
+  File "/Users/ashaw/code/radio-tracker/radios/fcc_utils.py", line 1203, in _fetch_oet_documents_via_playwright
+    page.goto(url, wait_until='domcontentloaded', timeout=30000)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py", line 9612, in goto
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.goto(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA-7518000", waiting until "domcontentloaded"
+
+2026-06-06 20:07:01,606 ERROR [radios.fcc_utils] FCC browser OET page load failed fcc_id=2AZSA-7518000 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA7518000
+Traceback (most recent call last):
+  File "/Users/ashaw/code/radio-tracker/radios/fcc_utils.py", line 1203, in _fetch_oet_documents_via_playwright
+    page.goto(url, wait_until='domcontentloaded', timeout=30000)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py", line 9612, in goto
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.goto(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA7518000", waiting until "domcontentloaded"
+
+2026-06-06 20:07:01,609 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AZSA-7518000 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 20:07:01,718 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AZSA-7518000
+2026-06-06 20:09:56,809 INFO [radios.views] User action dashboard_view actor=kelly
+2026-06-06 20:10:15,790 INFO [radios.views] User action sync_fcc submit actor=kelly fcc_id=2AZSA
+2026-06-06 20:10:15,801 INFO [radios.fcc_utils] FCC sync request started query=2AZSA start_date=None end_date=None
+2026-06-06 20:10:15,965 INFO [radios.fcc_utils] FCC sync parsing records query=2AZSA record_count=20
+2026-06-06 20:10:16,227 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 20:10:18,137 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 20:10:19,518 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AZSA-6D880 status=503
+2026-06-06 20:10:19,831 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 20:10:20,557 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 20:10:21,855 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AZSA-6D880 status=503
+2026-06-06 20:11:09,592 ERROR [radios.fcc_utils] FCC browser fallback search failed fcc_id=2AZSA-6D880
+Traceback (most recent call last):
+  File "/Users/ashaw/code/radio-tracker/radios/fcc_utils.py", line 792, in _submit_generic_search_form_via_playwright
+    page.goto(GENERIC_SEARCH_FORM_URL, wait_until='domcontentloaded', timeout=30000)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py", line 9612, in goto
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.goto(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm", waiting until "domcontentloaded"
+
+2026-06-06 20:11:09,594 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AZSA-6D880 candidate_url_count=2
+2026-06-06 20:11:40,744 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AZSA-6D880 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA-6D880 consecutive=1
+2026-06-06 20:12:20,012 INFO [radios.views] User action sync_fcc submit actor=kelly fcc_id=2AZSA
+2026-06-06 20:12:20,039 INFO [radios.fcc_utils] FCC sync request started query=2AZSA start_date=None end_date=None
+2026-06-06 20:12:20,212 INFO [radios.fcc_utils] FCC sync parsing records query=2AZSA record_count=20
+2026-06-06 20:12:20,945 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 20:12:21,694 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 20:12:23,195 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AZSA-6D880 status=503
+2026-06-06 20:12:23,547 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 20:12:24,378 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 20:12:25,734 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AZSA-6D880 status=503
+2026-06-06 20:13:12,795 ERROR [radios.fcc_utils] FCC browser fallback search failed fcc_id=2AZSA-6D880
+Traceback (most recent call last):
+  File "/Users/ashaw/code/radio-tracker/radios/fcc_utils.py", line 792, in _submit_generic_search_form_via_playwright
+    page.goto(GENERIC_SEARCH_FORM_URL, wait_until='domcontentloaded', timeout=30000)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py", line 9612, in goto
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.goto(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/ashaw/code/radio-tracker/venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.Error: Page.goto: net::ERR_TIMED_OUT at https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm
+Call log:
+  - navigating to "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm", waiting until "domcontentloaded"
+
+2026-06-06 20:13:12,797 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AZSA-6D880 candidate_url_count=2
+2026-06-06 20:13:43,889 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AZSA-6D880 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA-6D880 consecutive=1
+2026-06-06 20:14:13,898 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AZSA-6D880 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AZSA6D880 consecutive=2
+2026-06-06 20:14:13,898 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AZSA-6D880 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 20:14:14,039 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AZSA-6D880
+2026-06-06 20:16:57,158 INFO [radios.views] User action radio_search actor=kelly query=R5000
+2026-06-06 20:16:57,367 INFO [radios.views] User action radio_list_sort actor=kelly sort=brand order=asc
+2026-06-06 20:17:09,206 INFO [radios.views] User action radio_search actor=kelly query=bajeton
+2026-06-06 20:17:09,389 INFO [radios.views] User action radio_list_sort actor=kelly sort=brand order=asc
+2026-06-06 20:20:16,093 INFO [radios.views] User action radio_list_sort actor=kelly sort=brand order=asc
+2026-06-06 20:24:48,756 INFO [radios.views] User action dashboard_view actor=kelly
+2026-06-06 20:24:54,374 INFO [radios.views] User action radio_search actor=kelly query=DM-5000
+2026-06-06 20:24:54,443 INFO [radios.views] User action radio_list_sort actor=kelly sort=brand order=asc
+2026-06-06 21:13:14,222 INFO [radios.views] User action dashboard_view actor=kelly
+2026-06-06 21:13:28,188 INFO [radios.views] User action sync_fcc submit actor=kelly fcc_id=2AGND
+2026-06-06 21:13:28,194 INFO [radios.fcc_utils] FCC sync request started query=2AGND start_date=None end_date=None
+2026-06-06 21:13:28,477 INFO [radios.fcc_utils] FCC sync parsing records query=2AGND record_count=32
+2026-06-06 21:13:28,774 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:13:29,612 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:13:31,092 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-5X3 status=503
+2026-06-06 21:13:31,472 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:13:32,229 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:13:33,688 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-5X3 status=503
+2026-06-06 21:14:23,309 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-5X3
+2026-06-06 21:14:23,309 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-5X3 candidate_url_count=2
+2026-06-06 21:14:43,109 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-5X3 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-5X3 consecutive=1
+2026-06-06 21:15:13,113 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-5X3 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND5X3 consecutive=2
+2026-06-06 21:15:13,114 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-5X3 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:15:13,226 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-5X3
+2026-06-06 21:15:59,086 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-5X3
+2026-06-06 21:15:59,149 INFO [radios.fcc_utils] FCC OET sync start radio_id=4870 radio_fcc_id=2AGND-5X3 requested_fcc_id=2AGND-5X3 metadata_doc_count=0
+2026-06-06 21:15:59,163 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4870 fcc_id=2AGND-5X3 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:16:00,448 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:16:01,335 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:16:02,823 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-AMP-U status=503
+2026-06-06 21:16:03,200 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:16:04,211 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:16:05,547 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-AMP-U status=503
+2026-06-06 21:16:51,120 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-AMP-U
+2026-06-06 21:16:51,120 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-AMP-U candidate_url_count=2
+2026-06-06 21:17:21,804 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-AMP-U url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-AMP-U consecutive=1
+2026-06-06 21:17:51,812 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-AMP-U url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDAMPU consecutive=2
+2026-06-06 21:17:51,812 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-AMP-U consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:17:51,900 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-AMP-U
+2026-06-06 21:18:38,514 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-AMP-U
+2026-06-06 21:18:38,546 INFO [radios.fcc_utils] FCC OET sync start radio_id=4871 radio_fcc_id=2AGND-AMP-U requested_fcc_id=2AGND-AMP-U metadata_doc_count=0
+2026-06-06 21:18:38,558 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4871 fcc_id=2AGND-AMP-U copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:18:38,858 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:18:39,738 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:18:41,524 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-AMP-V status=503
+2026-06-06 21:18:41,818 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:18:42,562 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:18:44,282 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-AMP-V status=503
+2026-06-06 21:19:29,686 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-AMP-V
+2026-06-06 21:19:29,686 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-AMP-V candidate_url_count=2
+2026-06-06 21:20:00,689 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-AMP-V url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-AMP-V consecutive=1
+2026-06-06 21:20:30,697 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-AMP-V url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDAMPV consecutive=2
+2026-06-06 21:20:30,699 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-AMP-V consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:20:30,807 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-AMP-V
+2026-06-06 21:21:17,643 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-AMP-V
+2026-06-06 21:21:17,674 INFO [radios.fcc_utils] FCC OET sync start radio_id=4872 radio_fcc_id=2AGND-AMP-V requested_fcc_id=2AGND-AMP-V metadata_doc_count=0
+2026-06-06 21:21:17,687 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4872 fcc_id=2AGND-AMP-V copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:21:18,180 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:21:19,226 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:21:20,707 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-BS-22 status=503
+2026-06-06 21:21:22,598 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:21:23,365 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:21:24,676 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-BS-22 status=503
+2026-06-06 21:22:10,708 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-BS-22
+2026-06-06 21:22:10,708 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-BS-22 candidate_url_count=2
+2026-06-06 21:22:41,400 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-BS-22 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-BS-22 consecutive=1
+2026-06-06 21:23:11,364 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-BS-22 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDBS22 consecutive=2
+2026-06-06 21:23:11,365 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-BS-22 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:23:11,501 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-BS-22
+2026-06-06 21:23:58,503 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-BS-22
+2026-06-06 21:23:58,537 INFO [radios.fcc_utils] FCC OET sync start radio_id=4873 radio_fcc_id=2AGND-BS-22 requested_fcc_id=2AGND-BS-22 metadata_doc_count=0
+2026-06-06 21:23:58,552 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4873 fcc_id=2AGND-BS-22 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:23:58,860 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:23:59,735 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:24:01,343 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-BS-50 status=503
+2026-06-06 21:24:01,736 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:24:02,472 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:24:03,804 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-BS-50 status=503
+2026-06-06 21:24:51,374 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-BS-50
+2026-06-06 21:24:51,374 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-BS-50 candidate_url_count=2
+2026-06-06 21:25:22,071 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-BS-50 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-BS-50 consecutive=1
+2026-06-06 21:25:52,079 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-BS-50 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDBS50 consecutive=2
+2026-06-06 21:25:52,081 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-BS-50 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:25:52,176 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-BS-50
+2026-06-06 21:26:23,057 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-BS-50
+2026-06-06 21:26:23,084 INFO [radios.fcc_utils] FCC OET sync start radio_id=4874 radio_fcc_id=2AGND-BS-50 requested_fcc_id=2AGND-BS-50 metadata_doc_count=0
+2026-06-06 21:26:23,097 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4874 fcc_id=2AGND-BS-50 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:26:23,347 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:26:24,509 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:26:26,209 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-DA7X2 status=503
+2026-06-06 21:26:26,542 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:26:27,247 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:26:28,639 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-DA7X2 status=503
+2026-06-06 21:27:14,423 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-DA7X2
+2026-06-06 21:27:14,424 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-DA7X2 candidate_url_count=2
+2026-06-06 21:27:45,551 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-DA7X2 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-DA7X2 consecutive=1
+2026-06-06 21:28:15,564 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-DA7X2 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDDA7X2 consecutive=2
+2026-06-06 21:28:15,564 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-DA7X2 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:28:15,691 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-DA7X2
+2026-06-06 21:29:02,942 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-DA7X2
+2026-06-06 21:29:02,942 INFO [radios.fcc_utils] FCC OET sync start radio_id=4875 radio_fcc_id=2AGND-DA7X2 requested_fcc_id=2AGND-DA7X2 metadata_doc_count=0
+2026-06-06 21:29:02,963 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4875 fcc_id=2AGND-DA7X2 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:29:03,000 INFO [radios.fcc_utils] FCC ingest skipped record source=fcc_api query=2AGND fcc_id=2AGND-DA7X2 reason=no_radio_allowlist_match allow_terms=TRANSCEIVER,TRANSMITTER,RECEIVER,MURS,GMRS,HAM,CB,AMATEUR,ORIGINAL EQUIPMENT primary_purpose=Change in Identification metadata_record_count=0 metadata_keys=
+2026-06-06 21:29:03,378 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:29:04,282 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:29:06,138 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-DMR6X2 status=503
+2026-06-06 21:29:06,814 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:29:07,514 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:29:09,981 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-DMR6X2 status=503
+2026-06-06 21:29:55,172 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-DMR6X2
+2026-06-06 21:29:55,173 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-DMR6X2 candidate_url_count=2
+2026-06-06 21:30:26,350 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-DMR6X2 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-DMR6X2 consecutive=1
+2026-06-06 21:30:56,356 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-DMR6X2 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDDMR6X2 consecutive=2
+2026-06-06 21:30:56,357 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-DMR6X2 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:30:56,453 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-DMR6X2
+2026-06-06 21:31:42,673 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-DMR6X2
+2026-06-06 21:31:42,673 INFO [radios.fcc_utils] FCC OET sync start radio_id=4876 radio_fcc_id=2AGND-DMR6X2 requested_fcc_id=2AGND-DMR6X2 metadata_doc_count=0
+2026-06-06 21:31:42,770 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4876 fcc_id=2AGND-DMR6X2 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:31:42,799 INFO [radios.fcc_utils] FCC OET sync start radio_id=2307 radio_fcc_id=2AGND-DMR6X2 requested_fcc_id=2AGND-DMR6X2 metadata_doc_count=0
+2026-06-06 21:31:42,902 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=2307 fcc_id=2AGND-DMR6X2 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:31:42,936 INFO [radios.fcc_utils] FCC ingest skipped record source=fcc_api query=2AGND fcc_id=2AGND-DMR6X2 reason=no_radio_allowlist_match allow_terms=TRANSCEIVER,TRANSMITTER,RECEIVER,MURS,GMRS,HAM,CB,AMATEUR,ORIGINAL EQUIPMENT primary_purpose=Change in Identification metadata_record_count=0 metadata_keys=
+2026-06-06 21:31:43,169 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:31:43,956 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:31:45,822 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-FRSA1 status=503
+2026-06-06 21:31:46,162 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:31:46,871 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:31:48,285 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-FRSA1 status=503
+2026-06-06 21:32:34,799 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-FRSA1
+2026-06-06 21:32:34,799 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-FRSA1 candidate_url_count=2
+2026-06-06 21:33:05,950 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-FRSA1 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-FRSA1 consecutive=1
+2026-06-06 21:33:35,959 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-FRSA1 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDFRSA1 consecutive=2
+2026-06-06 21:33:35,961 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-FRSA1 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:33:36,088 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-FRSA1
+2026-06-06 21:34:22,518 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-FRSA1
+2026-06-06 21:34:22,547 INFO [radios.fcc_utils] FCC OET sync start radio_id=4877 radio_fcc_id=2AGND-FRSA1 requested_fcc_id=2AGND-FRSA1 metadata_doc_count=0
+2026-06-06 21:34:22,560 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4877 fcc_id=2AGND-FRSA1 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:34:22,848 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:34:23,974 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:34:25,418 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-FRSB1 status=503
+2026-06-06 21:34:25,854 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:34:26,664 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:34:27,991 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-FRSB1 status=503
+2026-06-06 21:35:12,885 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-FRSB1
+2026-06-06 21:35:12,885 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-FRSB1 candidate_url_count=2
+2026-06-06 21:35:43,778 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-FRSB1 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-FRSB1 consecutive=1
+2026-06-06 21:36:13,784 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-FRSB1 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDFRSB1 consecutive=2
+2026-06-06 21:36:13,786 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-FRSB1 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:36:13,875 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-FRSB1
+2026-06-06 21:37:00,320 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-FRSB1
+2026-06-06 21:37:00,346 INFO [radios.fcc_utils] FCC OET sync start radio_id=4878 radio_fcc_id=2AGND-FRSB1 requested_fcc_id=2AGND-FRSB1 metadata_doc_count=0
+2026-06-06 21:37:00,359 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4878 fcc_id=2AGND-FRSB1 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:37:00,664 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:37:01,871 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:37:03,396 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-GMRS-50PRO status=503
+2026-06-06 21:37:03,999 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:37:04,782 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:37:06,435 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-GMRS-50PRO status=503
+2026-06-06 21:37:54,470 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-GMRS-50PRO
+2026-06-06 21:37:54,470 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-GMRS-50PRO candidate_url_count=2
+2026-06-06 21:38:25,649 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-GMRS-50PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-GMRS-50PRO consecutive=1
+2026-06-06 21:38:55,664 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-GMRS-50PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDGMRS50PRO consecutive=2
+2026-06-06 21:38:55,665 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-GMRS-50PRO consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:38:55,837 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-GMRS-50PRO
+2026-06-06 21:39:42,705 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-GMRS-50PRO
+2026-06-06 21:39:42,755 INFO [radios.fcc_utils] FCC OET sync start radio_id=4879 radio_fcc_id=2AGND-GMRS-50PRO requested_fcc_id=2AGND-GMRS-50PRO metadata_doc_count=0
+2026-06-06 21:39:42,767 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4879 fcc_id=2AGND-GMRS-50PRO copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:39:43,002 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:39:43,961 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:39:45,372 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-GMRS-PRO status=503
+2026-06-06 21:39:45,632 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:39:46,417 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:39:47,712 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-GMRS-PRO status=503
+2026-06-06 21:40:33,867 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-GMRS-PRO
+2026-06-06 21:40:33,867 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-GMRS-PRO candidate_url_count=2
+2026-06-06 21:41:05,061 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-GMRS-PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-GMRS-PRO consecutive=1
+2026-06-06 21:41:35,068 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-GMRS-PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDGMRSPRO consecutive=2
+2026-06-06 21:41:35,069 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-GMRS-PRO consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:41:35,208 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-GMRS-PRO
+2026-06-06 21:42:20,705 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-GMRS-PRO
+2026-06-06 21:42:20,732 INFO [radios.fcc_utils] FCC OET sync start radio_id=4880 radio_fcc_id=2AGND-GMRS-PRO requested_fcc_id=2AGND-GMRS-PRO metadata_doc_count=0
+2026-06-06 21:42:20,744 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4880 fcc_id=2AGND-GMRS-PRO copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:42:21,111 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:42:22,188 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:42:23,674 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-GMRS-V1 status=503
+2026-06-06 21:42:23,946 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:42:24,726 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:42:26,062 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-GMRS-V1 status=503
+2026-06-06 21:43:11,366 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-GMRS-V1
+2026-06-06 21:43:11,366 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-GMRS-V1 candidate_url_count=2
+2026-06-06 21:43:42,601 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-GMRS-V1 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-GMRS-V1 consecutive=1
+2026-06-06 21:44:12,611 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-GMRS-V1 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDGMRSV1 consecutive=2
+2026-06-06 21:44:12,613 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-GMRS-V1 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:44:12,732 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-GMRS-V1
+2026-06-06 21:44:59,871 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-GMRS-V1
+2026-06-06 21:44:59,899 INFO [radios.fcc_utils] FCC OET sync start radio_id=4881 radio_fcc_id=2AGND-GMRS-V1 requested_fcc_id=2AGND-GMRS-V1 metadata_doc_count=0
+2026-06-06 21:44:59,914 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4881 fcc_id=2AGND-GMRS-V1 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:45:00,290 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:45:01,245 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:45:02,758 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-GMRS-V2 status=503
+2026-06-06 21:45:03,547 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:45:04,580 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:45:06,360 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-GMRS-V2 status=503
+2026-06-06 21:45:52,788 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-GMRS-V2
+2026-06-06 21:45:52,789 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-GMRS-V2 candidate_url_count=2
+2026-06-06 21:46:23,646 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-GMRS-V2 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-GMRS-V2 consecutive=1
+2026-06-06 21:46:53,656 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-GMRS-V2 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDGMRSV2 consecutive=2
+2026-06-06 21:46:53,658 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-GMRS-V2 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:46:53,752 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-GMRS-V2
+2026-06-06 21:47:40,866 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-GMRS-V2
+2026-06-06 21:47:40,919 INFO [radios.fcc_utils] FCC OET sync start radio_id=4882 radio_fcc_id=2AGND-GMRS-V2 requested_fcc_id=2AGND-GMRS-V2 metadata_doc_count=0
+2026-06-06 21:47:40,931 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4882 fcc_id=2AGND-GMRS-V2 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:47:41,176 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:47:42,128 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:47:43,506 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-HAM-PRO status=503
+2026-06-06 21:47:43,977 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:47:44,683 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:47:46,185 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-HAM-PRO status=503
+2026-06-06 21:48:31,744 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-HAM-PRO
+2026-06-06 21:48:31,745 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-HAM-PRO candidate_url_count=2
+2026-06-06 21:49:02,932 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-HAM-PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-HAM-PRO consecutive=1
+2026-06-06 21:49:32,950 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-HAM-PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDHAMPRO consecutive=2
+2026-06-06 21:49:32,950 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-HAM-PRO consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:49:33,052 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-HAM-PRO
+2026-06-06 21:50:19,163 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-HAM-PRO
+2026-06-06 21:50:19,194 INFO [radios.fcc_utils] FCC OET sync start radio_id=4883 radio_fcc_id=2AGND-HAM-PRO requested_fcc_id=2AGND-HAM-PRO metadata_doc_count=0
+2026-06-06 21:50:19,205 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4883 fcc_id=2AGND-HAM-PRO copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:50:19,602 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:50:20,436 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:50:21,879 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-MURS-V1 status=503
+2026-06-06 21:50:22,461 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:50:23,242 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:50:24,732 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-MURS-V1 status=503
+2026-06-06 21:51:09,032 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-MURS-V1
+2026-06-06 21:51:09,033 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-MURS-V1 candidate_url_count=2
+2026-06-06 21:51:40,287 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-MURS-V1 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-MURS-V1 consecutive=1
+2026-06-06 21:52:10,300 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-MURS-V1 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDMURSV1 consecutive=2
+2026-06-06 21:52:10,301 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-MURS-V1 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:52:10,422 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-MURS-V1
+2026-06-06 21:52:56,482 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-MURS-V1
+2026-06-06 21:52:56,640 INFO [radios.models] FCC validation white-label candidate source=radio_model_save radio_id=2313 brand=BTECH (BaoFeng Tech) fcc_id=2AJGM-MURS-V1 inferred_grantee=2AJGM grantee_brand=PO FUNG ELECTRONIC (HK) INTERNATONAL GROUP COMPANY LIMITED resolved_brand=BTECH (BaoFeng Tech)
+2026-06-06 21:52:56,654 INFO [radios.fcc_utils] FCC ingest update source=fcc_api query=2AGND action=update_by_brand_model radio_id=2313 brand=BTECH (BaoFeng Tech) model=MURS-V1 fcc_id=2AGND-MURS-V1 validation_status=ok intro_year=2017 freq_bands_tx=154.57000000-154.60000000 MHz
+2026-06-06 21:52:56,654 INFO [radios.fcc_utils] FCC OET sync start radio_id=2313 radio_fcc_id=2AJGM-MURS-V1 requested_fcc_id=2AGND-MURS-V1 metadata_doc_count=0
+2026-06-06 21:52:56,667 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=2313 fcc_id=2AGND-MURS-V1 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:52:57,042 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:52:57,876 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:52:59,236 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-MURS-V2 status=503
+2026-06-06 21:52:59,585 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:53:00,362 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:53:01,678 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-MURS-V2 status=503
+2026-06-06 21:53:47,660 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-MURS-V2
+2026-06-06 21:53:47,660 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-MURS-V2 candidate_url_count=2
+2026-06-06 21:54:18,850 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-MURS-V2 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-MURS-V2 consecutive=1
+2026-06-06 21:54:48,861 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-MURS-V2 url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDMURSV2 consecutive=2
+2026-06-06 21:54:48,862 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-MURS-V2 consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:54:49,022 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-MURS-V2
+2026-06-06 21:55:36,330 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-MURS-V2
+2026-06-06 21:55:36,359 INFO [radios.fcc_utils] FCC OET sync start radio_id=4885 radio_fcc_id=2AGND-MURS-V2 requested_fcc_id=2AGND-MURS-V2 metadata_doc_count=0
+2026-06-06 21:55:36,371 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4885 fcc_id=2AGND-MURS-V2 copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:55:36,692 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:55:37,500 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:55:38,967 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-UV-50PRO status=503
+2026-06-06 21:55:39,278 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:55:39,984 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:55:41,302 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-UV-50PRO status=503
+2026-06-06 21:56:27,778 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-UV-50PRO
+2026-06-06 21:56:27,778 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-UV-50PRO candidate_url_count=2
+2026-06-06 21:56:58,924 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-UV-50PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-UV-50PRO consecutive=1
+2026-06-06 21:57:28,932 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-UV-50PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDUV50PRO consecutive=2
+2026-06-06 21:57:28,934 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-UV-50PRO consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 21:57:29,033 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-UV-50PRO
+2026-06-06 21:58:15,064 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-UV-50PRO
+2026-06-06 21:58:15,094 INFO [radios.fcc_utils] FCC OET sync start radio_id=4886 radio_fcc_id=2AGND-UV-50PRO requested_fcc_id=2AGND-UV-50PRO metadata_doc_count=0
+2026-06-06 21:58:15,105 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4886 fcc_id=2AGND-UV-50PRO copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 21:58:15,689 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:58:16,680 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:58:18,154 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND-UV-PRO status=503
+2026-06-06 21:58:18,912 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 21:58:19,730 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 21:58:21,067 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND-UV-PRO status=503
+2026-06-06 21:59:06,624 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-UV-PRO
+2026-06-06 21:59:06,625 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND-UV-PRO candidate_url_count=2
+2026-06-06 21:59:37,325 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-UV-PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND-UV-PRO consecutive=1
+2026-06-06 22:00:07,332 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND-UV-PRO url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGNDUVPRO consecutive=2
+2026-06-06 22:00:07,332 WARNING [radios.fcc_utils] FCC browser OET circuit breaker triggered fcc_id=2AGND-UV-PRO consecutive_timeouts=2 — skipping remaining direct URLs
+2026-06-06 22:00:07,451 INFO [radios.fcc_utils] FCC browser OET direct URLs exhausted, trying grantee search fcc_id=2AGND-UV-PRO
+2026-06-06 22:00:53,474 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND-UV-PRO
+2026-06-06 22:00:53,474 INFO [radios.fcc_utils] FCC OET sync start radio_id=4887 radio_fcc_id=2AGND-UV-PRO requested_fcc_id=2AGND-UV-PRO metadata_doc_count=0
+2026-06-06 22:00:53,490 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4887 fcc_id=2AGND-UV-PRO copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 22:00:53,521 INFO [radios.fcc_utils] FCC ingest skipped record source=fcc_api query=2AGND fcc_id=2AGND-UV-PRO reason=no_radio_allowlist_match allow_terms=TRANSCEIVER,TRANSMITTER,RECEIVER,MURS,GMRS,HAM,CB,AMATEUR,ORIGINAL EQUIPMENT primary_purpose=Class II Permissive Change metadata_record_count=0 metadata_keys=
+2026-06-06 22:00:53,562 INFO [radios.fcc_utils] FCC OET sync start radio_id=4887 radio_fcc_id=2AGND-UV-PRO requested_fcc_id=2AGND-UV-PRO metadata_doc_count=0
+2026-06-06 22:00:53,573 INFO [radios.fcc_utils] FCC OET sync fallback copy radio_id=4887 fcc_id=2AGND-UV-PRO copied_count=0 manual_docs_synced=0 copied_docs=[]
+2026-06-06 22:00:53,784 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 22:00:54,611 INFO [radios.fcc_utils] FCC request retrying method=GET url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 22:00:56,591 INFO [radios.fcc_utils] FCC metadata fetch non-200 fcc_id=2AGND20V2G status=503
+2026-06-06 22:00:56,860 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=1 retries=2
+2026-06-06 22:00:57,645 INFO [radios.fcc_utils] FCC request retrying method=POST url=https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm status=503 attempt=2 retries=2
+2026-06-06 22:00:59,231 INFO [radios.fcc_utils] FCC generic search form non-200 fcc_id=2AGND20V2G status=503
+2026-06-06 22:01:45,706 WARNING [radios.fcc_utils] FCC browser fallback search timeout fcc_id=2AGND20V2G
+2026-06-06 22:01:45,707 INFO [radios.fcc_utils] FCC OET fetch start fcc_id=2AGND20V2G candidate_url_count=2
+2026-06-06 22:02:16,903 WARNING [radios.fcc_utils] FCC browser OET page load timeout fcc_id=2AGND20V2G url=https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&fcc_id=2AGND20V2G consecutive=1
