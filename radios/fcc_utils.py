@@ -2858,8 +2858,11 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
             secondary_metadata = fetch_fcc_secondary_metadata(fcc_id)
             metadata_cache[fcc_id] = secondary_metadata
 
+        app_purpose = (res.get('applicationPurpose', '') or '')
+        is_change_in_id = 'change in identification' in app_purpose.lower()
+
         matched_terms = _allowlist_match_terms(res, secondary_metadata, allowlist_terms)
-        if allowlist_terms and not matched_terms and not is_specific_fcc_id:
+        if allowlist_terms and not matched_terms and not is_specific_fcc_id and not is_change_in_id:
             # Even for non-radio classifications, ingest OET exhibits for existing FCC-linked radios.
             for radio in existing_radios_with_fcc:
                 should_skip, _ = stale_lookup_radios.get(radio.id, (False, None))
@@ -2883,12 +2886,12 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
 
         # Format new details for notes
         grant_date = res.get("grantDate", "N/A")
-        app_purpose = res.get("applicationPurpose", "N/A")
-        new_notes = f"FCC Grant Date: {grant_date} | Purpose: {app_purpose}"
+        app_purpose_str = app_purpose or "N/A"
+        new_notes = f"FCC Grant Date: {grant_date} | Purpose: {app_purpose_str}"
 
         # "Change in Identification" means the grantee name changed after initial filing —
         # the device was built under one company and is now sold under another, i.e. white label.
-        is_change_in_id = 'change in identification' in (app_purpose or '').lower()
+        # Note: is_change_in_id is already computed above for the allowlist check.
 
         # Check if Radio already exists
         if existing_radios_with_fcc:
