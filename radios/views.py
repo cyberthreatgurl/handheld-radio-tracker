@@ -226,7 +226,7 @@ class RadioListView(ListView):
     SORT_FIELDS = {
         'brand': 'brand',
         'model': 'model',
-        'intro_year': 'intro_year',
+        'grant_date': 'grant_date',
         'freq_bands_tx': 'freq_bands_tx',
         'power_watts': 'power_watts',
         'cost_approx': 'cost_approx',
@@ -912,6 +912,18 @@ def manufacturer_map_data_view(request):
 def dashboard_view(request):
     """Dashboard view with statistics"""
     logger.info("User action dashboard_view actor=%s", _actor_label(request))
+
+    # Parse adjustable recent_days parameter (default 30, range 7-365)
+    recent_days = request.GET.get('recent_days', '30')
+    try:
+        recent_days = max(7, min(365, int(recent_days)))
+    except (ValueError, TypeError):
+        recent_days = 30
+
+    from django.utils import timezone as tz_utils
+    from datetime import timedelta
+    cutoff_date = tz_utils.now().date() - timedelta(days=recent_days)
+
     raw_brand_rows = list(
         Radio.objects.values('brand').annotate(
             count=Count('id'),
@@ -1011,7 +1023,11 @@ def dashboard_view(request):
     for row in top_brands:
         row['display_brand'] = alias_map.get(row.get('brand_key', '')) or row.get('brand', '')
 
-    recent_radios = list(Radio.objects.select_related('manufacturer').order_by('-created_at')[:10])
+    recent_radios = list(
+        Radio.objects.select_related('manufacturer')
+        .filter(grant_date__isnull=False, grant_date__gte=cutoff_date)
+        .order_by('-grant_date')[:10]
+    )
     for radio in recent_radios:
         radio.display_brand = _preferred_brand_display_name(radio, alias_map)
 
@@ -1041,6 +1057,7 @@ def dashboard_view(request):
         'recent_radios': recent_radios,
         'recent_manual_uploads': recent_manual_uploads,
         'top_brands': top_brands,
+        'recent_days': recent_days,
         'last_grantee_sync_at': FCCSyncState.get_instance().last_grantee_sync_at,
     }
     return render(request, 'radios/dashboard.html', context)

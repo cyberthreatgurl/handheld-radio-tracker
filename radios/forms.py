@@ -31,7 +31,7 @@ class RadioForm(forms.ModelForm):
     class Meta:
         model = Radio
         fields = [
-            'brand', 'model', 'is_a_whitelabel', 'manufacturer', 'radio_type', 'fcc_id', 'intro_year',
+            'brand', 'model', 'is_a_whitelabel', 'manufacturer', 'radio_type', 'fcc_id', 'grant_date',
             'freq_bands_tx', 'power_watts',
             'satellite_tracking', 'harmonic_suppression',
             'gps', 'aprs', 'air_band', 'dmr',
@@ -54,9 +54,10 @@ class RadioForm(forms.ModelForm):
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., 2AJGM-UV5R'
             }),
-            'intro_year': forms.NumberInput(attrs={
+            'grant_date': forms.DateInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'e.g., 2021'
+                'type': 'date',
+                'placeholder': 'e.g., 2021-06-15'
             }),
             'freq_bands_tx': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',

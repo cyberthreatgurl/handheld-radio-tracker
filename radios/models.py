@@ -131,7 +131,7 @@ class Radio(models.Model):
         blank=True,
         help_text="FCC EAS OET exhibits page URL (auto-populated by FCC Update)",
     )
-    intro_year = models.IntegerField(null=True, blank=True, help_text="Year introduced")
+    grant_date = models.DateField(null=True, blank=True, help_text="Date of FCC grant")
     
     # Technical specifications
     freq_bands_tx = models.CharField(max_length=200, blank=True, help_text="Frequency bands (TX) (e.g., VHF, UHF, 220)")

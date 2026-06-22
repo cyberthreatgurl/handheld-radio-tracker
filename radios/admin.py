@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware, Manufacturer, IgnoredGrantee, delete_brand_and_related
+from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware, Manufacturer, IgnoredGrantee, FCCSyncState, delete_brand_and_related
 
 
 @admin.register(Brand)
@@ -8,7 +8,7 @@ class BrandAdmin(admin.ModelAdmin):
     search_fields = ['name', 'grantee_code', 'full_name']
     ordering = ['name']
 
-    actions = ['rename_brand_globally']
+    actions = ['rename_brand_globally', 'sync_selected_grantees']
 
     def delete_model(self, request, obj):
         delete_brand_and_related(obj)
@@ -43,6 +43,38 @@ class BrandAdmin(admin.ModelAdmin):
         return render(request, 'admin/rename_brand.html', {'form': form, 'brand': brand})
     rename_brand_globally.short_description = "Globally rename selected brand (Brand & Radio)"
 
+    def sync_selected_grantees(self, request, queryset):
+        """Trigger FCC sync for selected brands with grantee codes."""
+        from radios.fcc_utils import fetch_and_sync_fcc_id
+        from radios.models import IgnoredGrantee
+        from django.utils import timezone
+
+        ignored_codes = IgnoredGrantee.ignored_codes()
+        total_added = 0
+        total_updated = 0
+        synced = 0
+        skipped = 0
+
+        for brand in queryset:
+            code = (brand.grantee_code or '').strip()
+            if not code:
+                skipped += 1
+                continue
+            if code in ignored_codes:
+                skipped += 1
+                continue
+            added, updated, _ = fetch_and_sync_fcc_id(code)
+            total_added += added
+            total_updated += updated
+            synced += 1
+
+        self.message_user(
+            request,
+            f"Synced {synced} grantees. Added {total_added}, updated {total_updated} records."
+            + (f" Skipped {skipped} (no grantee code or ignored)." if skipped else ""),
+        )
+    sync_selected_grantees.short_description = "FCC Sync — fetch grants for selected grantees"
+
 
 @admin.register(Manufacturer)
 class ManufacturerAdmin(admin.ModelAdmin):
@@ -65,14 +97,14 @@ class IgnoredGranteeAdmin(admin.ModelAdmin):
 
 @admin.register(Radio)
 class RadioAdmin(admin.ModelAdmin):
-    list_display = ['brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'intro_year', 'freq_bands_tx', 'power_watts', 'cost_approx']
-    list_filter = ['brand', 'last_fccid_lookup_at', 'intro_year', 'dmr', 'gps', 'aprs']
+    list_display = ['brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'grant_date', 'freq_bands_tx', 'power_watts', 'cost_approx']
+    list_filter = ['brand', 'last_fccid_lookup_at', 'grant_date', 'dmr', 'gps', 'aprs']
     search_fields = ['brand', 'model', 'fcc_id']
     ordering = ['brand', 'model']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('brand', 'model', 'radio_type', 'is_a_whitelabel', 'manufacturer', 'fcc_id', 'last_fccid_lookup_at', 'intro_year')
+            'fields': ('brand', 'model', 'radio_type', 'is_a_whitelabel', 'manufacturer', 'fcc_id', 'last_fccid_lookup_at', 'grant_date')
         }),
         ('Technical Specifications', {
             'fields': ('freq_bands_tx', 'power_watts')
@@ -122,3 +154,49 @@ class RadioFirmwareAdmin(admin.ModelAdmin):
     list_filter = ['created_at', 'updated_at']
     search_fields = ['radio__brand', 'radio__model', 'label', 'version']
     ordering = ['radio', 'label']
+
+
+@admin.register(FCCSyncState)
+class FCCSyncStateAdmin(admin.ModelAdmin):
+    """Admin for the FCC sync singleton. Allows triggering full sync."""
+
+    list_display = ['id', 'last_grantee_sync_at']
+    actions = ['run_full_history_sync']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request):
+        return False
+
+    def run_full_history_sync(self, request, queryset):
+        """Trigger a full-history FCC grantee sync."""
+        from django.utils import timezone
+        from radios.fcc_utils import fetch_and_sync_fcc_id
+        from radios.models import IgnoredGrantee
+
+        ignored_codes = IgnoredGrantee.ignored_codes()
+        grantees = Brand.objects.exclude(grantee_code__isnull=True).exclude(grantee_code='')
+        if ignored_codes:
+            grantees = grantees.exclude(grantee_code__in=ignored_codes)
+
+        total_added = 0
+        total_updated = 0
+        count = 0
+        sync_state = FCCSyncState.get_instance()
+
+        for brand in grantees:
+            added, updated, _ = fetch_and_sync_fcc_id(brand.grantee_code)
+            total_added += added
+            total_updated += updated
+            count += 1
+
+        sync_state.last_grantee_sync_at = timezone.now()
+        sync_state.save(update_fields=['last_grantee_sync_at'])
+
+        self.message_user(
+            request,
+            f"Full grantee sync complete. Processed {count} grantees. "
+            f"Added {total_added}, updated {total_updated} records.",
+        )
+    run_full_history_sync.short_description = "Run FULL FCC sync for ALL grantees (slow)"

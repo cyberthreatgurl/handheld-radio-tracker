@@ -14,7 +14,10 @@ from django.db.models import Q
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
-from radios.models import Brand, IgnoredGrantee, Manufacturer, Radio, RadioFCCTestReport, RadioManual, RadioOETDocument, normalize_grantee_code
+from radios.models import (
+    Brand, IgnoredGrantee, Manufacturer, Radio,
+    RadioFCCTestReport, RadioManual, RadioOETDocument, normalize_grantee_code,
+)
 from radios.fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from radios.manual_extraction import extract_specs_from_text, extract_text_from_pdf_with_metadata
 from radios.fcc_validation import validate_fcc_brand_assignment
@@ -24,6 +27,9 @@ GENERIC_SEARCH_URL = "https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult
 GENERIC_SEARCH_FORM_URL = "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm"
 OET_EXHIBITS_URL = "https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm"
 logger = logging.getLogger(__name__)
+# pylint: disable=no-member, broad-except, global-statement
+# pyright: reportAttributeAccessIssue=false, reportGeneralTypeIssues=false
+# pyright: reportOptionalMemberAccess=false
 
 # Set to True within a process when the FCC site is completely unreachable
 # (curl error 28 — 0 bytes received). Avoids burning retries for every
@@ -54,72 +60,76 @@ def _normalize_brand_identity(value):
     return re.sub(r'[^a-z0-9]+', '', (value or '').strip().lower())
 
 
-def _find_existing_grantee_brand(normalized_grantee_code, normalized_grantee_name):
-    brand = Brand.objects.filter(grantee_code__iexact=normalized_grantee_code).first()
+def _find_existing_grantee_brand(grantee_code, grantee_name):
+    brand = Brand.objects.filter(grantee_code__iexact=grantee_code).first()
     if brand is not None:
         return brand
 
     for field_name in ('name', 'alias', 'full_name'):
-        brand = Brand.objects.filter(**{f'{field_name}__iexact': normalized_grantee_name}).first()
+        brand = Brand.objects.filter(**{f'{field_name}__iexact': grantee_name}).first()
         if brand is not None:
             return brand
 
-    normalized_name_key = _normalize_brand_identity(normalized_grantee_name)
-    if not normalized_name_key:
+    name_key = _normalize_brand_identity(grantee_name)
+    if not name_key:
         return None
 
-    blank_code_brands = Brand.objects.filter(Q(grantee_code__isnull=True) | Q(grantee_code__exact='')).only(
-        'id', 'name', 'alias', 'full_name', 'grantee_code'
+    blank_code_brands = Brand.objects.filter(
+        Q(grantee_code__isnull=True) | Q(grantee_code__exact=''),
+    ).only(
+        'id', 'name', 'alias', 'full_name', 'grantee_code',
     )
     for candidate in blank_code_brands:
         for value in (candidate.name, candidate.alias, candidate.full_name):
-            if _normalize_brand_identity(value) == normalized_name_key:
+            if _normalize_brand_identity(value) == name_key:
                 return candidate
 
     return None
 
 
-def _find_matching_blank_code_brand(normalized_grantee_name, exclude_brand_id=None):
-    normalized_name_key = _normalize_brand_identity(normalized_grantee_name)
-    if not normalized_name_key:
+def _find_matching_blank_code_brand(grantee_name, exclude_brand_id=None):
+    name_key = _normalize_brand_identity(grantee_name)
+    if not name_key:
         return None
 
-    blank_code_brands = Brand.objects.filter(Q(grantee_code__isnull=True) | Q(grantee_code__exact='')).only(
-        'id', 'name', 'alias', 'full_name', 'grantee_code'
+    blank_code_brands = Brand.objects.filter(
+        Q(grantee_code__isnull=True) | Q(grantee_code__exact=''),
+    ).only(
+        'id', 'name', 'alias', 'full_name', 'grantee_code',
     )
     if exclude_brand_id is not None:
         blank_code_brands = blank_code_brands.exclude(pk=exclude_brand_id)
 
     for candidate in blank_code_brands:
         for value in (candidate.name, candidate.alias, candidate.full_name):
-            if _normalize_brand_identity(value) == normalized_name_key:
+            if _normalize_brand_identity(value) == name_key:
                 return candidate
 
     return None
 
 
-def _resolve_authoritative_radio_brand_name(authoritative_brand, grantee_code, grantee_name):
-    normalized_grantee_name = (grantee_name or '').strip()
-    if authoritative_brand is None or not normalized_grantee_name:
-        return normalized_grantee_name
+def _resolve_authoritative_radio_brand_name(auth_brand, grantee_code, grantee_name):
+    norm_grantee_name = (grantee_name or '').strip()
+    if auth_brand is None or not norm_grantee_name:
+        return norm_grantee_name
 
-    normalized_brand_name = _normalize_brand_identity(authoritative_brand.name)
-    normalized_grantee_key = _normalize_brand_identity(normalized_grantee_name)
-    if normalized_brand_name == normalized_grantee_key:
-        return authoritative_brand.name
+    norm_brand = _normalize_brand_identity(auth_brand.name)
+    grantee_key = _normalize_brand_identity(norm_grantee_name)
+    if norm_brand == grantee_key:
+        return auth_brand.name
 
-    authoritative_code = normalize_grantee_code(getattr(authoritative_brand, 'grantee_code', ''))
-    if authoritative_code != normalize_grantee_code(grantee_code):
-        return normalized_grantee_name
+    auth_code = normalize_grantee_code(getattr(auth_brand, 'grantee_code', ''))
+    if auth_code != normalize_grantee_code(grantee_code):
+        return norm_grantee_name
 
-    matching_blank_brand = _find_matching_blank_code_brand(
-        normalized_grantee_name,
-        exclude_brand_id=authoritative_brand.id,
+    blank_brand = _find_matching_blank_code_brand(
+        norm_grantee_name,
+        exclude_brand_id=auth_brand.id,
     )
-    if matching_blank_brand is None:
-        return normalized_grantee_name
+    if blank_brand is None:
+        return norm_grantee_name
 
-    return authoritative_brand.name
+    return auth_brand.name
 
 
 def _is_connection_timeout_error(exc):
@@ -159,7 +169,10 @@ def _fcc_request_with_retry(method, url, *, session=None, retries=2, retry_delay
     # skip the HTTP call entirely and raise immediately so callers fall
     # through to the Playwright path without wasting additional retries.
     if _fcc_connection_down:
-        raise _FCCConnectionDownError('FCC site unreachable (connection-down flag set); skipping HTTP attempt')
+        raise _FCCConnectionDownError(
+            'FCC site unreachable (connection-down flag set); '
+            'skipping HTTP attempt',
+        )
 
     for attempt in range(retries + 1):
         try:
@@ -263,7 +276,10 @@ def _extract_product_designation(payload):
     if not isinstance(payload, dict):
         return ''
 
-    for key in ('product_designation', 'productDesignation', 'product_description', 'productDescription', 'equipment_description'):
+    for key in (
+        'product_designation', 'productDesignation', 'product_description',
+        'productDescription', 'equipment_description',
+    ):
         value = payload.get(key)
         if isinstance(value, str) and value.strip():
             return value.strip()
@@ -331,19 +347,47 @@ def _format_decimal_8(value):
     return f"{value.quantize(Decimal('0.00000000'))}"
 
 
-def _extract_original_equipment_summary(primary_record, secondary_metadata):
+def _extract_grant_date(primary_record, secondary_metadata):
+    """Extract the earliest grant date from primary record or secondary metadata.
+
+    Returns a datetime.date or None.
+    """
+    dates = []
+
+    # Primary API record grantDate
+    raw_primary = (primary_record or {}).get('grantDate', '')
+    if raw_primary:
+        dt = _parse_datetime_value(raw_primary)
+        if dt:
+            dates.append(dt.date() if hasattr(dt, 'date') else dt)
+
+    # Secondary metadata OEM rows
+    for node in (secondary_metadata or {}).get('original_equipment_rows', []):
+        raw = node.get('grant_date', '')
+        if raw:
+            dt = _parse_datetime_value(raw)
+            if dt:
+                dates.append(dt.date() if hasattr(dt, 'date') else dt)
+
+    return min(dates) if dates else None
+
+
+def _extract_original_equipment_summary(primary_record, sec_metadata):
     years = []
     frequency_ranges = []
 
     # Primary API record can contribute grant date + purpose.
-    primary_purpose = primary_record.get('applicationPurpose', '') if isinstance(primary_record, dict) else ''
+    primary_purpose = (
+        primary_record.get('applicationPurpose', '')
+        if isinstance(primary_record, dict) else ''
+    )
     if _is_original_equipment_purpose(primary_purpose):
         year = _parse_year_from_grant_date(primary_record.get('grantDate', ''))
         if year:
             years.append(year)
 
     # Secondary metadata can include grant date + purpose + frequency rows.
-    for node in (secondary_metadata or {}).get('original_equipment_rows', []):
+    for node in (sec_metadata or {}).get('original_equipment_rows', []):
         year = _parse_year_from_grant_date(node.get('grant_date', ''))
         if year:
             years.append(year)
@@ -365,9 +409,12 @@ def _extract_original_equipment_summary(primary_record, secondary_metadata):
         lower, upper = min(frequency_ranges, key=lambda pair: (pair[1] - pair[0], pair[0]))
         freq_bands_tx = f"{_format_decimal_8(lower)}-{_format_decimal_8(upper)} MHz"
 
+    grant_date = _extract_grant_date(primary_record, sec_metadata)
+
     return {
         'intro_year': intro_year,
         'freq_bands_tx': freq_bands_tx,
+        'grant_date': grant_date,
     }
 
 
@@ -510,16 +557,25 @@ def _extract_oet_documents_from_xml(data, fcc_id):
         ).strip()
 
         document_url = ''
-        for url in _extract_urls_from_payload(node):
-            lower_url = url.lower()
-            if 'viewexhibitreport' in lower_url or 'report=' in lower_url or lower_url.endswith('.pdf'):
-                document_url = url
-                break
+        for extracted_url in _extract_urls_from_payload(node):
+            lower_url = extracted_url.lower()
+            if (
+                'viewexhibitreport' in lower_url
+                or 'report=' in lower_url
+                or lower_url.endswith('.pdf')
+            ):
+                document_url = extracted_url
 
-        if not any((view_attachment, exhibit_type, date_submitted, display_type, date_available, document_url)):
+        if not any((
+            view_attachment, exhibit_type, date_submitted,
+            display_type, date_available, document_url,
+        )):
             continue
 
-        key = (document_url, view_attachment, exhibit_type, date_submitted, display_type, date_available)
+        key = (
+            document_url, view_attachment, exhibit_type,
+            date_submitted, display_type, date_available,
+        )
         if key in seen:
             continue
         seen.add(key)
@@ -552,7 +608,10 @@ def _extract_oet_documents_from_html(html_text, base_url):
         for index, cell in enumerate(cells):
             link = cell.find(
                 'a',
-                href=lambda href: isinstance(href, str) and _is_fcc_attachment_document_url(href),
+                href=lambda href: (
+                    isinstance(href, str)
+                    and _is_fcc_attachment_document_url(href)
+                ),
             )
             if link:
                 attachment_index = index
@@ -561,7 +620,11 @@ def _extract_oet_documents_from_html(html_text, base_url):
 
             cell_html = str(cell)
             link_match = re.search(
-                r'(?:["\'])(/oetcf/eas/reports/(?:GenericExhibit\.cfm|GetAttachment\.cfm|ViewAttachment\.cfm)[^"\'\s)]*|/eas/GetApplicationAttachment\.html[^"\'\s)]*)(?:["\'])',
+                (
+                    r'(?:["\'])(/oetcf/eas/reports/'
+                    r'(?:GenericExhibit\.cfm|GetAttachment\.cfm|ViewAttachment\.cfm)'
+                    r'[^"\'\s)]*|/eas/GetApplicationAttachment\.html[^"\'\s)]*)(?:["\'])'
+                ),
                 cell_html,
                 flags=re.IGNORECASE,
             )
@@ -577,13 +640,21 @@ def _extract_oet_documents_from_html(html_text, base_url):
         if len(row_cells) < 5:
             continue
 
-        view_attachment = _strip_html_tags(row_cells[0].get_text(' ', strip=True) or '')
-        exhibit_type = _strip_html_tags(row_cells[1].get_text(' ', strip=True) or '')
-        date_submitted = _strip_html_tags(row_cells[2].get_text(' ', strip=True) or '')
-        display_type = _strip_html_tags(row_cells[3].get_text(' ', strip=True) or '')
-        date_available = _strip_html_tags(row_cells[4].get_text(' ', strip=True) or '')
+        row_text = row_cells[0].get_text(' ', strip=True)
+        view_attachment = _strip_html_tags(row_text or '')
+        row_text = row_cells[1].get_text(' ', strip=True)
+        exhibit_type = _strip_html_tags(row_text or '')
+        row_text = row_cells[2].get_text(' ', strip=True)
+        date_submitted = _strip_html_tags(row_text or '')
+        row_text = row_cells[3].get_text(' ', strip=True)
+        display_type = _strip_html_tags(row_text or '')
+        row_text = row_cells[4].get_text(' ', strip=True)
+        date_available = _strip_html_tags(row_text or '')
 
-        if not any((view_attachment, exhibit_type, date_submitted, display_type, date_available, document_url)):
+        if not any((
+            view_attachment, exhibit_type, date_submitted,
+            display_type, date_available, document_url,
+        )):
             continue
 
         if not _is_fcc_attachment_document_url(document_url):
@@ -592,7 +663,10 @@ def _extract_oet_documents_from_html(html_text, base_url):
         if view_attachment.lower() == 'view attachment' and exhibit_type.lower() == 'exhibit type':
             continue
 
-        key = (document_url, view_attachment, exhibit_type, date_submitted, display_type, date_available)
+        key = (
+            document_url, view_attachment, exhibit_type,
+            date_submitted, display_type, date_available,
+        )
         if key in seen:
             continue
         seen.add(key)
@@ -668,8 +742,8 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
     target_key = _extract_fcc_key(fcc_id)
     matched_records = []
     matched_keys = set()
-    original_equipment_rows = []
-    candidate_exhibit_urls = []
+    oe_rows = []
+    exhibit_urls = []
 
     body_match = re.search(
         r'<tbody[^>]*id=["\']offTblBdy["\'][^>]*>(.*?)</tbody>',
@@ -719,10 +793,10 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
         for href in re.findall(r'href=["\']([^"\']+)["\']', cells[2], flags=re.IGNORECASE):
             url = unescape(urljoin(base_url, href.strip()))
             if 'ViewExhibitReport.cfm' in url:
-                candidate_exhibit_urls.append(url)
+                exhibit_urls.append(url)
 
         if _is_original_equipment_purpose(application_purpose):
-            original_equipment_rows.append(
+            oe_rows.append(
                 {
                     'grant_date': grant_date,
                     'application_purpose': application_purpose,
@@ -743,8 +817,7 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
         'record_count': len(matched_records),
         'text_blob': ' || '.join(matched_records),
         'matched_keys': sorted(matched_keys),
-        'original_equipment_rows': original_equipment_rows,
-        'candidate_exhibit_urls': candidate_exhibit_urls,
+        'original_equipment_rows': oe_rows,
     }
 
 
@@ -867,7 +940,10 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                 if matches:
                     # Use the first application_id found
                     app_id = matches[0]
-                    constructed_url = f"{OET_EXHIBITS_URL}?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&application_id={app_id}&fcc_id={fcc_id}"
+                    constructed_url = (
+                        f"{OET_EXHIBITS_URL}?mode=Exhibits&RequestTimeout=500"
+                        f"&calledFromFrame=N&application_id={app_id}&fcc_id={fcc_id}"
+                    )
                     exhibit_links.append(constructed_url)
                     logger.info('FCC browser extracted application_id from HTML fcc_id=%s app_id=%s', fcc_id, app_id[:20])
             
@@ -945,7 +1021,8 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                                     exhibit_links.append(absolute_url)
                     else:
                         logger.info(
-                            'FCC browser hyphen-product early retry no match fcc_id=%s — falling back to grantee-only',
+                            'FCC browser hyphen-product early retry no match '
+                            'fcc_id=%s — falling back to grantee-only',
                             fcc_id,
                         )
                 except Exception:
@@ -1491,7 +1568,7 @@ def _fetch_oet_documents_via_playwright(fcc_id, candidate_urls=None, _allow_gran
     return []
 
 
-def _fetch_secondary_metadata_from_html_fallback(fcc_id, params):
+def _fetch_secondary_metadata_from_html_fallback(fcc_id, _params):
     # Skip all network calls if both HTTP and Playwright are known-down.
     if _fcc_connection_down and _fcc_playwright_down:
         logger.info(
@@ -2285,8 +2362,8 @@ def fetch_fcc_secondary_metadata(fcc_id):
     target_key = _extract_fcc_key(fcc_id)
     matched_records = []
     matched_keys = set()
-    original_equipment_rows = []
-    candidate_exhibit_urls = []
+    oe_rows = []
+    exhibit_urls = []
     for node in _iter_dict_nodes(data):
         if not isinstance(node, dict):
             continue
@@ -2313,11 +2390,11 @@ def fetch_fcc_secondary_metadata(fcc_id):
         for url in _extract_urls_from_payload(node):
             clean_url = unescape(url)
             if 'ViewExhibitReport.cfm' in clean_url:
-                candidate_exhibit_urls.append(clean_url)
+                exhibit_urls.append(clean_url)
 
         application_purpose = (node.get('application_purpose') or node.get('applicationPurpose') or '').strip()
         if _is_original_equipment_purpose(application_purpose):
-            original_equipment_rows.append(
+            oe_rows.append(
                 {
                     'grant_date': (node.get('grant_date') or node.get('grantDate') or '').strip(),
                     'application_purpose': application_purpose,
@@ -2328,14 +2405,14 @@ def fetch_fcc_secondary_metadata(fcc_id):
 
     oet_documents = _extract_oet_documents_from_xml(data, fcc_id)
     if not oet_documents:
-        oet_documents = _fetch_oet_documents_from_html(fcc_id, candidate_urls=candidate_exhibit_urls)
+        oet_documents = _fetch_oet_documents_from_html(fcc_id, candidate_urls=exhibit_urls)
 
     return {
         'record_count': len(matched_records),
         'text_blob': ' || '.join(matched_records),
         'matched_keys': sorted(matched_keys),
         'test_report_candidates': _extract_test_report_candidates(data, fcc_id),
-        'original_equipment_rows': original_equipment_rows,
+        'original_equipment_rows': oe_rows,
         'oet_documents': oet_documents,
     }
 
@@ -2510,49 +2587,49 @@ def _stamp_lookup_timestamp(radio, looked_up_at):
 
 
 def _ensure_grantee_brand_and_manufacturer(grantee_code, grantee_name):
-    normalized_grantee_code = normalize_grantee_code(grantee_code)
-    normalized_grantee_name = (grantee_name or '').strip()
-    if not normalized_grantee_code or not normalized_grantee_name:
+    norm_grantee = normalize_grantee_code(grantee_code)
+    norm_grantee_name = (grantee_name or '').strip()
+    if not norm_grantee or not norm_grantee_name:
         return None, None
 
-    brand = _find_existing_grantee_brand(normalized_grantee_code, normalized_grantee_name)
-    matching_blank_brand = _find_matching_blank_code_brand(
-        normalized_grantee_name,
+    brand = _find_existing_grantee_brand(norm_grantee, norm_grantee_name)
+    blank_brand = _find_matching_blank_code_brand(
+        norm_grantee_name,
         exclude_brand_id=brand.id if brand is not None else None,
     )
 
     if brand is None:
-        if matching_blank_brand is not None:
-            brand = matching_blank_brand
-            matching_blank_brand = None
+        if blank_brand is not None:
+            brand = blank_brand
+            blank_brand = None
 
     if brand is None:
         brand = Brand.objects.create(
-            name=normalized_grantee_name,
-            grantee_code=normalized_grantee_code,
-            full_name=normalized_grantee_name,
+            name=norm_grantee_name,
+            grantee_code=norm_grantee,
+            full_name=norm_grantee_name,
         )
     else:
         update_fields = []
         if not brand.grantee_code:
-            brand.grantee_code = normalized_grantee_code
+            brand.grantee_code = norm_grantee
             update_fields.append('grantee_code')
 
         brand_full_name_key = _normalize_brand_identity(brand.full_name)
-        grantee_name_key = _normalize_brand_identity(normalized_grantee_name)
-        if not brand.full_name or (matching_blank_brand is not None and brand_full_name_key != grantee_name_key):
-            brand.full_name = normalized_grantee_name
+        grantee_name_key = _normalize_brand_identity(norm_grantee_name)
+        if not brand.full_name or (blank_brand is not None and brand_full_name_key != grantee_name_key):
+            brand.full_name = norm_grantee_name
             update_fields.append('full_name')
-        if not brand.alias and matching_blank_brand is not None and matching_blank_brand.alias:
-            brand.alias = matching_blank_brand.alias
+        if not brand.alias and blank_brand is not None and blank_brand.alias:
+            brand.alias = blank_brand.alias
             update_fields.append('alias')
         if update_fields:
             brand.save(update_fields=update_fields)
 
-    manufacturer = Manufacturer.objects.filter(full_name__iexact=normalized_grantee_name).first()
+    manufacturer = Manufacturer.objects.filter(full_name__iexact=norm_grantee_name).first()
     if manufacturer is None:
         manufacturer = Manufacturer.objects.create(
-            full_name=normalized_grantee_name,
+            full_name=norm_grantee_name,
             alias=brand.alias or brand.name,
         )
     elif not manufacturer.alias and (brand.alias or brand.name):
@@ -2579,18 +2656,18 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
     Returns (count_added, count_updated, messages)
     """
     messages = []
-    ignored_grantee_codes = set(IgnoredGrantee.ignored_codes())
-    query_grantee_code = _exact_grantee_query(fcc_id_query)
-    if not query_grantee_code:
-        query_grantee_code, _ = split_fcc_id(_clean_query(fcc_id_query))
-    query_grantee_code = normalize_grantee_code(query_grantee_code)
-    if query_grantee_code and query_grantee_code in ignored_grantee_codes:
-        message = f"Skipped FCC query '{fcc_id_query}' because grantee {query_grantee_code} is on the ignore list."
+    ignored_codes = set(IgnoredGrantee.ignored_codes())
+    q_grantee = _exact_grantee_query(fcc_id_query)
+    if not q_grantee:
+        q_grantee, _ = split_fcc_id(_clean_query(fcc_id_query))
+    q_grantee = normalize_grantee_code(q_grantee)
+    if q_grantee and q_grantee in ignored_codes:
+        message = f"Skipped FCC query '{fcc_id_query}' because grantee {q_grantee} is on the ignore list."
         messages.append(message)
         logger.info(
             "FCC sync skipped ignored query query=%s ignored_grantee=%s",
             fcc_id_query,
-            query_grantee_code,
+            q_grantee,
         )
         return 0, 0, messages
     request_url = f"{URL}fccId={fcc_id_query}"
@@ -2656,11 +2733,11 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
     is_specific_fcc_id = '-' in _clean_query(fcc_id_query)
     allowlist_terms = _radio_allowlist_terms()
     skipped_non_exact = 0
-    skipped_ignored_grantee = 0
+    skipped_ignored = 0
     skipped_non_radio = 0
-    skipped_stale_lookup = 0
-    attached_test_reports = 0
-    synced_oet_documents = 0
+    skipped_stale = 0
+    attached_reports = 0
+    synced_oet_docs = 0
     metadata_cache = {}
     lookup_started_at = timezone.now()
 
@@ -2677,8 +2754,8 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         if not product_code:
             product_code = fcc_id
 
-        if grantee_code and grantee_code in ignored_grantee_codes:
-            skipped_ignored_grantee += 1
+        if grantee_code and grantee_code in ignored_codes:
+            skipped_ignored += 1
             logger.info(
                 "FCC ingest skipped ignored grantee source=fcc_api query=%s ignored_grantee=%s fcc_id=%s",
                 fcc_id_query,
@@ -2704,20 +2781,20 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         if not raw_brand_name:
             raw_brand_name = grantee_code
 
-        authoritative_brand, authoritative_manufacturer = _ensure_grantee_brand_and_manufacturer(
+        auth_brand, auth_manufacturer = _ensure_grantee_brand_and_manufacturer(
             grantee_code,
             raw_brand_name,
         )
-        resolved_authoritative_brand_name = _resolve_authoritative_radio_brand_name(
-            authoritative_brand,
+        auth_brand_name = _resolve_authoritative_radio_brand_name(
+            auth_brand,
             grantee_code,
             raw_brand_name,
         )
 
         validation = validate_fcc_brand_assignment(fcc_id, raw_brand_name)
         brand_val = validation.get('resolved_brand_name') or raw_brand_name or grantee_code
-        if brand_val == raw_brand_name and resolved_authoritative_brand_name:
-            brand_val = resolved_authoritative_brand_name
+        if brand_val == raw_brand_name and auth_brand_name:
+            brand_val = auth_brand_name
 
         if validation.get('status') == 'white_label_possible':
             logger.info(
@@ -2748,47 +2825,47 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 validation.get('provided_brand_name', ''),
             )
 
-        existing_radios_with_fcc = list(Radio.objects.filter(fcc_id__iexact=fcc_id))
-        existing_radio_by_brand_model = None
-        if not existing_radios_with_fcc:
-            existing_radio_by_brand_model = Radio.objects.filter(brand=brand_val, model=product_code).first()
+        radios_with_fcc = list(Radio.objects.filter(fcc_id__iexact=fcc_id))
+        existing_radio = None
+        if not radios_with_fcc:
+            existing_radio = Radio.objects.filter(brand=brand_val, model=product_code).first()
 
-        stale_lookup_radios = {}
-        has_processable_radio = False
+        stale_radios = {}
+        has_radio = False
 
-        for radio in existing_radios_with_fcc:
-            should_skip, record_last_modified = _should_skip_supporting_lookup(
+        for radio in radios_with_fcc:
+            should_skip, rec_modified = _should_skip_supporting_lookup(
                 res, radio.last_fccid_lookup_at, start_date=start_date,
             )
             if force_reload:
                 should_skip = False
-            stale_lookup_radios[radio.id] = (should_skip, record_last_modified)
+            stale_radios[radio.id] = (should_skip, rec_modified)
             if not should_skip:
-                has_processable_radio = True
+                has_radio = True
 
-        if existing_radio_by_brand_model:
-            should_skip, record_last_modified = _should_skip_supporting_lookup(
+        if existing_radio:
+            should_skip, rec_modified = _should_skip_supporting_lookup(
                 res,
-                existing_radio_by_brand_model.last_fccid_lookup_at,
+                existing_radio.last_fccid_lookup_at,
                 start_date=start_date,
             )
             if force_reload:
                 should_skip = False
-            stale_lookup_radios[existing_radio_by_brand_model.id] = (should_skip, record_last_modified)
+            stale_radios[existing_radio.id] = (should_skip, rec_modified)
             if not should_skip:
-                has_processable_radio = True
+                has_radio = True
 
-        if not existing_radios_with_fcc and not existing_radio_by_brand_model:
-            has_processable_radio = True
+        if not radios_with_fcc and not existing_radio:
+            has_radio = True
 
-        if not has_processable_radio:
+        if not has_radio:
             # When a date filter is active and the FCC record hasn't changed since
             # the last lookup, there is genuinely nothing new for this grant — skip
             # all secondary processing and move on to the next record.
             if start_date is not None:
-                for radio in existing_radios_with_fcc:
-                    skipped_stale_lookup += 1
-                    _, record_last_modified = stale_lookup_radios.get(radio.id, (False, None))
+                for radio in radios_with_fcc:
+                    skipped_stale += 1
+                    _, rec_modified = stale_radios.get(radio.id, (False, None))
                     logger.info(
                         "FCC ingest skipped stale lookup source=fcc_api query=%s radio_id=%s brand=%s model=%s fcc_id=%s record_last_modified=%s last_lookup_at=%s",
                         fcc_id_query,
@@ -2796,36 +2873,36 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                         radio.brand,
                         radio.model,
                         fcc_id,
-                        record_last_modified.isoformat() if record_last_modified else '',
+                        rec_modified.isoformat() if rec_modified else '',
                         radio.last_fccid_lookup_at.isoformat() if radio.last_fccid_lookup_at else '',
                     )
-                if existing_radio_by_brand_model:
-                    skipped_stale_lookup += 1
-                    _, record_last_modified = stale_lookup_radios.get(existing_radio_by_brand_model.id, (False, None))
+                if existing_radio:
+                    skipped_stale += 1
+                    _, rec_modified = stale_radios.get(existing_radio.id, (False, None))
                     logger.info(
                         "FCC ingest skipped stale lookup source=fcc_api query=%s radio_id=%s brand=%s model=%s fcc_id=%s record_last_modified=%s last_lookup_at=%s",
                         fcc_id_query,
-                        existing_radio_by_brand_model.id,
-                        existing_radio_by_brand_model.brand,
-                        existing_radio_by_brand_model.model,
+                        existing_radio.id,
+                        existing_radio.brand,
+                        existing_radio.model,
                         fcc_id,
-                        record_last_modified.isoformat() if record_last_modified else '',
-                        existing_radio_by_brand_model.last_fccid_lookup_at.isoformat() if existing_radio_by_brand_model.last_fccid_lookup_at else '',
+                        rec_modified.isoformat() if rec_modified else '',
+                        existing_radio.last_fccid_lookup_at.isoformat() if existing_radio.last_fccid_lookup_at else '',
                     )
                 continue
 
             # No date filter (full-history scan): still retry OET doc sync so missing
             # exhibit links can be backfilled on previously processed radios.
-            secondary_metadata = metadata_cache.get(fcc_id)
-            if secondary_metadata is None:
-                secondary_metadata = fetch_fcc_secondary_metadata(fcc_id)
-                metadata_cache[fcc_id] = secondary_metadata
+            sec_metadata = metadata_cache.get(fcc_id)
+            if sec_metadata is None:
+                sec_metadata = fetch_fcc_secondary_metadata(fcc_id)
+                metadata_cache[fcc_id] = sec_metadata
 
-            for radio in existing_radios_with_fcc:
-                synced_oet_documents += _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata, force_reload=force_reload)
+            for radio in radios_with_fcc:
+                synced_oet_docs += _sync_oet_documents_for_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
                 _stamp_lookup_timestamp(radio, lookup_started_at)
-                skipped_stale_lookup += 1
-                _, record_last_modified = stale_lookup_radios.get(radio.id, (False, None))
+                skipped_stale += 1
+                _, rec_modified = stale_radios.get(radio.id, (False, None))
                 logger.info(
                     "FCC ingest skipped stale lookup source=fcc_api query=%s radio_id=%s brand=%s model=%s fcc_id=%s record_last_modified=%s last_lookup_at=%s",
                     fcc_id_query,
@@ -2833,42 +2910,42 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     radio.brand,
                     radio.model,
                     fcc_id,
-                    record_last_modified.isoformat() if record_last_modified else '',
+                    rec_modified.isoformat() if rec_modified else '',
                     radio.last_fccid_lookup_at.isoformat() if radio.last_fccid_lookup_at else '',
                 )
-            if existing_radio_by_brand_model:
-                synced_oet_documents += _sync_oet_documents_for_radio(existing_radio_by_brand_model, fcc_id, secondary_metadata, force_reload=force_reload)
-                _stamp_lookup_timestamp(existing_radio_by_brand_model, lookup_started_at)
-                skipped_stale_lookup += 1
-                _, record_last_modified = stale_lookup_radios.get(existing_radio_by_brand_model.id, (False, None))
+            if existing_radio:
+                synced_oet_docs += _sync_oet_documents_for_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
+                _stamp_lookup_timestamp(existing_radio, lookup_started_at)
+                skipped_stale += 1
+                _, rec_modified = stale_radios.get(existing_radio.id, (False, None))
                 logger.info(
                     "FCC ingest skipped stale lookup source=fcc_api query=%s radio_id=%s brand=%s model=%s fcc_id=%s record_last_modified=%s last_lookup_at=%s",
                     fcc_id_query,
-                    existing_radio_by_brand_model.id,
-                    existing_radio_by_brand_model.brand,
-                    existing_radio_by_brand_model.model,
+                    existing_radio.id,
+                    existing_radio.brand,
+                    existing_radio.model,
                     fcc_id,
-                    record_last_modified.isoformat() if record_last_modified else '',
-                    existing_radio_by_brand_model.last_fccid_lookup_at.isoformat() if existing_radio_by_brand_model.last_fccid_lookup_at else '',
+                    rec_modified.isoformat() if rec_modified else '',
+                    existing_radio.last_fccid_lookup_at.isoformat() if existing_radio.last_fccid_lookup_at else '',
                 )
             continue
 
-        secondary_metadata = metadata_cache.get(fcc_id)
-        if secondary_metadata is None:
-            secondary_metadata = fetch_fcc_secondary_metadata(fcc_id)
-            metadata_cache[fcc_id] = secondary_metadata
+        sec_metadata = metadata_cache.get(fcc_id)
+        if sec_metadata is None:
+            sec_metadata = fetch_fcc_secondary_metadata(fcc_id)
+            metadata_cache[fcc_id] = sec_metadata
 
         app_purpose = (res.get('applicationPurpose', '') or '')
         is_change_in_id = 'change in identification' in app_purpose.lower()
 
-        matched_terms = _allowlist_match_terms(res, secondary_metadata, allowlist_terms)
+        matched_terms = _allowlist_match_terms(res, sec_metadata, allowlist_terms)
         if allowlist_terms and not matched_terms and not is_specific_fcc_id and not is_change_in_id:
             # Even for non-radio classifications, ingest OET exhibits for existing FCC-linked radios.
-            for radio in existing_radios_with_fcc:
-                should_skip, _ = stale_lookup_radios.get(radio.id, (False, None))
+            for radio in radios_with_fcc:
+                should_skip, _ = stale_radios.get(radio.id, (False, None))
                 if should_skip:
                     continue
-                synced_oet_documents += _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata, force_reload=force_reload)
+                synced_oet_docs += _sync_oet_documents_for_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
                 _stamp_lookup_timestamp(radio, lookup_started_at)
             skipped_non_radio += 1
             logger.info(
@@ -2877,12 +2954,12 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 fcc_id,
                 ','.join(allowlist_terms),
                 res.get('applicationPurpose', ''),
-                secondary_metadata.get('record_count', 0),
-                ','.join(secondary_metadata.get('matched_keys', [])),
+                sec_metadata.get('record_count', 0),
+                ','.join(sec_metadata.get('matched_keys', [])),
             )
             continue
 
-        original_equipment_summary = _extract_original_equipment_summary(res, secondary_metadata)
+        oe_summary = _extract_original_equipment_summary(res, sec_metadata)
 
         # Format new details for notes
         grant_date = res.get("grantDate", "N/A")
@@ -2894,12 +2971,12 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         # Note: is_change_in_id is already computed above for the allowlist check.
 
         # Check if Radio already exists
-        if existing_radios_with_fcc:
-            for radio in existing_radios_with_fcc:
-                should_skip, record_last_modified = stale_lookup_radios.get(radio.id, (False, None))
+        if radios_with_fcc:
+            for radio in radios_with_fcc:
+                should_skip, rec_modified = stale_radios.get(radio.id, (False, None))
                 if should_skip:
                     _stamp_lookup_timestamp(radio, lookup_started_at)
-                    skipped_stale_lookup += 1
+                    skipped_stale += 1
                     logger.info(
                         "FCC ingest skipped stale lookup source=fcc_api query=%s radio_id=%s brand=%s model=%s fcc_id=%s record_last_modified=%s last_lookup_at=%s",
                         fcc_id_query,
@@ -2907,7 +2984,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                         radio.brand,
                         radio.model,
                         fcc_id,
-                        record_last_modified.isoformat() if record_last_modified else '',
+                        rec_modified.isoformat() if rec_modified else '',
                         radio.last_fccid_lookup_at.isoformat() if radio.last_fccid_lookup_at else '',
                     )
                     continue
@@ -2925,12 +3002,18 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                         fcc_id_query, radio.id, radio.brand, radio.model, fcc_id,
                     )
 
-                derived_intro_year = original_equipment_summary.get('intro_year')
-                if derived_intro_year and radio.intro_year != derived_intro_year:
-                    radio.intro_year = derived_intro_year
+                derived_grant_date = oe_summary.get('grant_date')
+                if derived_grant_date and radio.grant_date != derived_grant_date:
+                    radio.grant_date = derived_grant_date
                     has_changes = True
 
-                derived_freq_bands_tx = original_equipment_summary.get('freq_bands_tx', '')
+                derived_intro_year = oe_summary.get('intro_year')
+                if derived_intro_year and not radio.grant_date:
+                    from datetime import date
+                    radio.grant_date = date(derived_intro_year, 1, 1)
+                    has_changes = True
+
+                derived_freq_bands_tx = oe_summary.get('freq_bands_tx', '')
                 if derived_freq_bands_tx and radio.freq_bands_tx != derived_freq_bands_tx:
                     radio.freq_bands_tx = derived_freq_bands_tx
                     has_changes = True
@@ -2942,8 +3025,8 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                         radio.brand = brand_val
                         has_changes = True
 
-                if authoritative_manufacturer and radio.manufacturer_id != authoritative_manufacturer.id:
-                    radio.manufacturer = authoritative_manufacturer
+                if auth_manufacturer and radio.manufacturer_id != auth_manufacturer.id:
+                    radio.manufacturer = auth_manufacturer
                     has_changes = True
 
                 if has_changes:
@@ -2951,96 +3034,101 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     radio.save()
                     count_updated += 1
                     logger.info(
-                        "FCC ingest update source=fcc_api query=%s action=update_by_fcc_id radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s intro_year=%s freq_bands_tx=%s is_whitelabel=%s",
+                        "FCC ingest update source=fcc_api query=%s action=update_by_fcc_id radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s grant_date=%s freq_bands_tx=%s is_whitelabel=%s",
                         fcc_id_query,
                         radio.id,
                         radio.brand,
                         radio.model,
                         fcc_id,
                         validation.get('status', ''),
-                        radio.intro_year,
+                        radio.grant_date,
                         radio.freq_bands_tx,
                         radio.is_a_whitelabel,
                     )
                 else:
                     _stamp_lookup_timestamp(radio, lookup_started_at)
-                attached_test_reports += _attach_test_reports_to_radio(radio, fcc_id, secondary_metadata, force_reload=force_reload)
-                synced_oet_documents += _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata, force_reload=force_reload)
+                attached_reports += _attach_test_reports_to_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
+                synced_oet_docs += _sync_oet_documents_for_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
         else:
-            if existing_radio_by_brand_model:
-                should_skip, record_last_modified = stale_lookup_radios.get(existing_radio_by_brand_model.id, (False, None))
+            if existing_radio:
+                should_skip, rec_modified = stale_radios.get(existing_radio.id, (False, None))
                 if should_skip:
-                    _stamp_lookup_timestamp(existing_radio_by_brand_model, lookup_started_at)
-                    skipped_stale_lookup += 1
+                    _stamp_lookup_timestamp(existing_radio, lookup_started_at)
+                    skipped_stale += 1
                     logger.info(
                         "FCC ingest skipped stale lookup source=fcc_api query=%s radio_id=%s brand=%s model=%s fcc_id=%s record_last_modified=%s last_lookup_at=%s",
                         fcc_id_query,
-                        existing_radio_by_brand_model.id,
-                        existing_radio_by_brand_model.brand,
-                        existing_radio_by_brand_model.model,
+                        existing_radio.id,
+                        existing_radio.brand,
+                        existing_radio.model,
                         fcc_id,
-                        record_last_modified.isoformat() if record_last_modified else '',
-                        existing_radio_by_brand_model.last_fccid_lookup_at.isoformat() if existing_radio_by_brand_model.last_fccid_lookup_at else '',
+                        rec_modified.isoformat() if rec_modified else '',
+                        existing_radio.last_fccid_lookup_at.isoformat() if existing_radio.last_fccid_lookup_at else '',
                     )
                     continue
 
                 # Update the existing radio instead of creating a duplicate
-                if not existing_radio_by_brand_model.fcc_id:
-                    existing_radio_by_brand_model.fcc_id = fcc_id
-                if new_notes not in existing_radio_by_brand_model.notes:
-                    existing_radio_by_brand_model.notes = f"{new_notes}\n{existing_radio_by_brand_model.notes}".strip()
+                if not existing_radio.fcc_id:
+                    existing_radio.fcc_id = fcc_id
+                if new_notes not in existing_radio.notes:
+                    existing_radio.notes = f"{new_notes}\n{existing_radio.notes}".strip()
 
-                if is_change_in_id and not existing_radio_by_brand_model.is_a_whitelabel:
-                    existing_radio_by_brand_model.is_a_whitelabel = True
+                if is_change_in_id and not existing_radio.is_a_whitelabel:
+                    existing_radio.is_a_whitelabel = True
                     logger.info(
                         "FCC ingest white_label_flagged source=change_in_id query=%s radio_id=%s brand=%s model=%s fcc_id=%s",
-                        fcc_id_query, existing_radio_by_brand_model.id,
-                        existing_radio_by_brand_model.brand, existing_radio_by_brand_model.model, fcc_id,
+                        fcc_id_query, existing_radio.id,
+                        existing_radio.brand, existing_radio.model, fcc_id,
                     )
 
-                derived_intro_year = original_equipment_summary.get('intro_year')
-                if derived_intro_year and existing_radio_by_brand_model.intro_year != derived_intro_year:
-                    existing_radio_by_brand_model.intro_year = derived_intro_year
+                derived_grant_date = oe_summary.get('grant_date')
+                if derived_grant_date and existing_radio.grant_date != derived_grant_date:
+                    existing_radio.grant_date = derived_grant_date
 
-                derived_freq_bands_tx = original_equipment_summary.get('freq_bands_tx', '')
-                if derived_freq_bands_tx and existing_radio_by_brand_model.freq_bands_tx != derived_freq_bands_tx:
-                    existing_radio_by_brand_model.freq_bands_tx = derived_freq_bands_tx
+                derived_intro_year = oe_summary.get('intro_year')
+                if derived_intro_year and not existing_radio.grant_date:
+                    from datetime import date
+                    existing_radio.grant_date = date(derived_intro_year, 1, 1)
 
-                if brand_val and existing_radio_by_brand_model.brand != brand_val:
-                    radio_brand_key = _normalize_brand_identity(existing_radio_by_brand_model.brand)
+                derived_freq_bands_tx = oe_summary.get('freq_bands_tx', '')
+                if derived_freq_bands_tx and existing_radio.freq_bands_tx != derived_freq_bands_tx:
+                    existing_radio.freq_bands_tx = derived_freq_bands_tx
+
+                if brand_val and existing_radio.brand != brand_val:
+                    radio_brand_key = _normalize_brand_identity(existing_radio.brand)
                     raw_brand_key = _normalize_brand_identity(raw_brand_name)
                     if not radio_brand_key or radio_brand_key == raw_brand_key:
-                        existing_radio_by_brand_model.brand = brand_val
+                        existing_radio.brand = brand_val
 
-                if authoritative_manufacturer and existing_radio_by_brand_model.manufacturer_id != authoritative_manufacturer.id:
-                    existing_radio_by_brand_model.manufacturer = authoritative_manufacturer
+                if auth_manufacturer and existing_radio.manufacturer_id != auth_manufacturer.id:
+                    existing_radio.manufacturer = auth_manufacturer
 
-                existing_radio_by_brand_model.last_fccid_lookup_at = lookup_started_at
-                existing_radio_by_brand_model.save()
+                existing_radio.last_fccid_lookup_at = lookup_started_at
+                existing_radio.save()
                 count_updated += 1
                 logger.info(
                     "FCC ingest update source=fcc_api query=%s action=update_by_brand_model radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s intro_year=%s freq_bands_tx=%s",
                     fcc_id_query,
-                    existing_radio_by_brand_model.id,
+                    existing_radio.id,
                     brand_val,
                     product_code,
                     fcc_id,
                     validation.get('status', ''),
-                    existing_radio_by_brand_model.intro_year,
-                    existing_radio_by_brand_model.freq_bands_tx,
+                    existing_radio.intro_year,
+                    existing_radio.freq_bands_tx,
                 )
-                attached_test_reports += _attach_test_reports_to_radio(existing_radio_by_brand_model, fcc_id, secondary_metadata, force_reload=force_reload)
-                synced_oet_documents += _sync_oet_documents_for_radio(existing_radio_by_brand_model, fcc_id, secondary_metadata, force_reload=force_reload)
+                attached_reports += _attach_test_reports_to_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
+                synced_oet_docs += _sync_oet_documents_for_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
             else:
                 created_radio = Radio.objects.create(
                     brand=brand_val,
                     model=product_code,
-                    manufacturer=authoritative_manufacturer,
+                    manufacturer=auth_manufacturer,
                     fcc_id=fcc_id,
                     notes=new_notes,
                     is_a_whitelabel=is_change_in_id,
-                    intro_year=original_equipment_summary.get('intro_year'),
-                    freq_bands_tx=original_equipment_summary.get('freq_bands_tx', ''),
+                    grant_date=oe_summary.get('grant_date'),
+                    freq_bands_tx=oe_summary.get('freq_bands_tx', ''),
                     last_fccid_lookup_at=lookup_started_at,
                 )
                 if is_change_in_id:
@@ -3061,29 +3149,29 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     created_radio.intro_year,
                     created_radio.freq_bands_tx,
                 )
-                attached_test_reports += _attach_test_reports_to_radio(created_radio, fcc_id, secondary_metadata, force_reload=force_reload)
-                synced_oet_documents += _sync_oet_documents_for_radio(created_radio, fcc_id, secondary_metadata, force_reload=force_reload)
+                attached_reports += _attach_test_reports_to_radio(created_radio, fcc_id, sec_metadata, force_reload=force_reload)
+                synced_oet_docs += _sync_oet_documents_for_radio(created_radio, fcc_id, sec_metadata, force_reload=force_reload)
 
     if exact_grantee and skipped_non_exact:
         messages.append(
             f"Filtered {skipped_non_exact} non-exact grantee matches while enforcing exact grantee code {exact_grantee}."
         )
-    if skipped_ignored_grantee:
+    if skipped_ignored:
         messages.append(
-            f"Skipped {skipped_ignored_grantee} FCC record(s) because their grantee code is on the ignore list."
+            f"Skipped {skipped_ignored} FCC record(s) because their grantee code is on the ignore list."
         )
     if skipped_non_radio:
         messages.append(
             f"Skipped {skipped_non_radio} records that did not match FCC_RADIO_ALLOWLIST_TERMS ({','.join(allowlist_terms)})."
         )
-    if skipped_stale_lookup:
+    if skipped_stale:
         messages.append(
-            f"Skipped {skipped_stale_lookup} radio records because FCC last-modified data was not newer than the prior lookup timestamp."
+            f"Skipped {skipped_stale} radio records because FCC last-modified data was not newer than the prior lookup timestamp."
         )
-    if attached_test_reports:
-        messages.append(f"Attached {attached_test_reports} FCC test report files.")
-    if synced_oet_documents:
-        messages.append(f"Synced {synced_oet_documents} OET exhibit documents.")
+    if attached_reports:
+        messages.append(f"Attached {attached_reports} FCC test report files.")
+    if synced_oet_docs:
+        messages.append(f"Synced {synced_oet_docs} OET exhibit documents.")
     messages.append(f"Successfully processed {len(records)} records for {fcc_id_query}.")
     logger.info(
         "FCC sync completed query=%s added=%s updated=%s exact_grantee=%s skipped_non_exact=%s skipped_non_radio=%s skipped_stale_lookup=%s attached_test_reports=%s synced_oet_documents=%s",
@@ -3093,8 +3181,8 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         exact_grantee,
         skipped_non_exact,
         skipped_non_radio,
-        skipped_stale_lookup,
-        attached_test_reports,
-        synced_oet_documents,
+        skipped_stale,
+        attached_reports,
+        synced_oet_docs,
     )
     return count_added, count_updated, messages

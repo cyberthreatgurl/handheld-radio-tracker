@@ -44,18 +44,37 @@
         <div class="lg:col-span-2 space-y-6">
             <div class="bg-white shadow rounded-lg">
                 <div class="px-4 py-5 sm:p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Newest Brand/Model Additions</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Newest Brand/Model Additions</h3>
+                        <form method="get" class="flex items-center space-x-2">
+                            <label for="recent_days" class="text-xs text-gray-500">Show last</label>
+                            <select name="recent_days" id="recent_days" onchange="this.form.submit()" class="text-xs border-gray-300 rounded-md py-1 px-2">
+                                <option value="7" {% if recent_days == 7 %}selected{% endif %}>7 days</option>
+                                <option value="14" {% if recent_days == 14 %}selected{% endif %}>14 days</option>
+                                <option value="30" {% if recent_days == 30 %}selected{% endif %}>30 days</option>
+                                <option value="60" {% if recent_days == 60 %}selected{% endif %}>60 days</option>
+                                <option value="90" {% if recent_days == 90 %}selected{% endif %}>90 days</option>
+                                <option value="180" {% if recent_days == 180 %}selected{% endif %}>180 days</option>
+                                <option value="365" {% if recent_days == 365 %}selected{% endif %}>365 days</option>
+                            </select>
+                        </form>
+                    </div>
                     <ul class="divide-y divide-gray-200">
                         {% for radio in recent_radios %}
                         <li class="py-3 flex justify-between items-center sm:px-2 hover:bg-gray-50 rounded transition">
                             <a href="{% url 'radio_detail' radio.pk %}" class="text-indigo-600 hover:text-indigo-900 font-medium truncate pr-4">
                                 {{ radio.display_brand|default:radio.brand }} {{ radio.model }}
                             </a>
-                            <span class="text-xs text-gray-400 whitespace-nowrap">{{ radio.created_at|date:"M d, Y" }}</span>
+                            <span class="text-xs text-gray-400 whitespace-nowrap">{{ radio.grant_date|date:"M d, Y" }}</span>
                         </li>
                         {% empty %}
-                        <li class="py-3 text-sm text-gray-500">No radios added yet.</li>
+                        <li class="py-3 text-sm text-gray-500">No radios with grant dates in this period.</li>
                         {% endfor %}
+                        {% if recent_radios|length == 10 %}
+                        <li class="py-2 text-center">
+                            <a href="{% url 'radio_list' %}?sort=grant_date&order=desc" class="text-xs text-indigo-500 hover:text-indigo-700">View all by grant date →</a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
