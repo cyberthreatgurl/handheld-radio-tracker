@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.http import Http404, JsonResponse
+from django.http import Http404, JsonResponse, HttpResponse
 from django.db.models import Q, Count, Max, Prefetch, Subquery
 from django.conf import settings
 from django.views.decorators.cache import cache_page
@@ -12,7 +12,11 @@ import json
 from collections import Counter
 from pathlib import Path
 from django.utils import timezone
-from .models import Radio, Brand, RadioManual, RadioFirmware, Manufacturer, FCCSyncState, IgnoredGrantee, RadioFCCTestReport, RadioOETDocument, RadioImage, delete_brand_and_related
+from .models import (
+    Radio, Brand, RadioManual, RadioFirmware, Manufacturer, FCCSyncState,
+    IgnoredGrantee, RadioFCCTestReport, RadioOETDocument, RadioImage,
+    delete_brand_and_related,
+)
 from .forms import RadioForm, RadioSearchForm, BrandForm, ManufacturerForm, RadioImageFormSet
 from .image_utils import ingest_radio_image
 from .fcc_utils import fetch_and_sync_fcc_id
@@ -1061,6 +1065,61 @@ def dashboard_view(request):
         'last_grantee_sync_at': FCCSyncState.get_instance().last_grantee_sync_at,
     }
     return render(request, 'radios/dashboard.html', context)
+
+
+def maintenance_view(request):
+    """Maintenance page — DB stats, country counts, grant year chart."""
+    logger.info("User action maintenance_view actor=%s", _actor_label(request))
+
+    total_radios = Radio.objects.count()
+    total_manufacturers = Manufacturer.objects.count()
+    total_brands = Brand.objects.count()
+
+    # Count radios by country of manufacturer — list each country found
+    country_counts = {}
+    for row in Manufacturer.objects.exclude(
+        country__isnull=True
+    ).exclude(country__exact='').values('country').distinct():
+        cname = row['country'].strip()
+        if not cname:
+            continue
+        cnt = Radio.objects.filter(
+            manufacturer__country__iexact=cname
+        ).count()
+        if cnt:
+            country_counts[cname] = cnt
+    country_counts['Unknown'] = Radio.objects.filter(
+        Q(manufacturer__isnull=True)
+        | Q(manufacturer__country__isnull=True)
+        | Q(manufacturer__country__exact='')
+    ).count()
+    # Sort by count descending for display
+    country_counts = dict(
+        sorted(country_counts.items(), key=lambda x: -x[1])
+    )
+
+    # Grant_date chart data: count of radios by year of first FCC grant
+    from django.db.models.functions import ExtractYear
+    from collections import Counter
+    year_counts = Counter()
+    for row in Radio.objects.exclude(grant_date__isnull=True).values('grant_date'):
+        year_counts[row['grant_date'].year] += 1
+    grant_chart = sorted(year_counts.items())
+
+    total_oet_docs = RadioOETDocument.objects.count()
+
+    import json
+    context = {
+        'total_radios': total_radios,
+        'total_manufacturers': total_manufacturers,
+        'total_brands': total_brands,
+        'total_oet_docs': total_oet_docs,
+        'country_counts': country_counts,
+        'grant_chart': grant_chart,
+        'grant_chart_json': json.dumps([[int(y), c] for y, c in grant_chart]),
+        'max_grant_year_count': max((c for _, c in grant_chart), default=1),
+    }
+    return render(request, 'radios/maintenance.html', context)
 
 
 def processing_logs_view(request):

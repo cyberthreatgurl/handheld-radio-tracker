@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Maintenance - Ham Radio Database{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="sm:flex sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Maintenance</h1>
+            <p class="mt-2 text-sm text-gray-600">Database statistics and management tools</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <dt class="text-sm font-medium text-gray-500 truncate">Total Radios</dt>
+                <dd class="mt-1 text-3xl font-semibold text-indigo-600">{{ total_radios }}</dd>
+            </div>
+        </div>
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <dt class="text-sm font-medium text-gray-500 truncate">Manufacturers</dt>
+                <dd class="mt-1 text-3xl font-semibold text-indigo-600">{{ total_manufacturers }}</dd>
+            </div>
+        </div>
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <dt class="text-sm font-medium text-gray-500 truncate">Brands</dt>
+                <dd class="mt-1 text-3xl font-semibold text-indigo-600">{{ total_brands }}</dd>
+            </div>
+        </div>
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <dt class="text-sm font-medium text-gray-500 truncate">OET Documents</dt>
+                <dd class="mt-1 text-3xl font-semibold text-indigo-600">{{ total_oet_docs }}</dd>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Links -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Management Tools</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="{% url 'radio_list' %}" class="block p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-center">
+                    <p class="font-medium text-indigo-700">All Radios</p>
+                    <p class="text-xs text-indigo-500 mt-1">Browse &amp; edit</p>
+                </a>
+                <a href="{% url 'brand_list' %}" class="block p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-center">
+                    <p class="font-medium text-indigo-700">Brands</p>
+                    <p class="text-xs text-indigo-500 mt-1">Manage brands</p>
+                </a>
+                <a href="{% url 'manufacturer_list' %}" class="block p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-center">
+                    <p class="font-medium text-indigo-700">Manufacturers</p>
+                    <p class="text-xs text-indigo-500 mt-1">View manufacturers</p>
+                </a>
+                <a href="{% url 'manufacturer_map' %}" class="block p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-center">
+                    <p class="font-medium text-indigo-700">Map</p>
+                    <p class="text-xs text-indigo-500 mt-1">Manufacturer map</p>
+                </a>
+                <a href="{% url 'nodal_visualization' %}" class="block p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-center">
+                    <p class="font-medium text-indigo-700">Nodal View</p>
+                    <p class="text-xs text-indigo-500 mt-1">Relationship graph</p>
+                </a>
+                <a href="{% url 'import_grantee_radios' %}" class="block p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-center">
+                    <p class="font-medium text-indigo-700">Import Data</p>
+                    <p class="text-xs text-indigo-500 mt-1">XML import tool</p>
+                </a>
+                <a href="{% url 'processing_logs' %}" class="block p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-center">
+                    <p class="font-medium text-indigo-700">Logs</p>
+                    <p class="text-xs text-indigo-500 mt-1">Processing logs</p>
+                </a>
+                <a href="/admin/" class="block p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-center">
+                    <p class="font-medium text-indigo-700">Admin</p>
+                    <p class="text-xs text-indigo-500 mt-1">Django admin</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Country Counts -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Radios by Country of Manufacture</h3>
+                <div class="space-y-3">
+                    {% for label, count in country_counts.items %}
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-medium text-gray-700">{{ label }}</span>
+                            <span class="text-gray-500">{{ count }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-indigo-600 h-2.5 rounded-full" style="width:{% widthratio count total_radios 100 %}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Grant Year Chart -->
+        <div class="bg-white shadow rounded-lg" style="min-height:300px;">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Radios Granted FCC IDs by Year</h3>
+                <div class="relative" style="height:200px;">
+                    <canvas id="grantChart" class="w-full h-full"></canvas>
+                </div>
+                {% if grant_chart %}
+                <script>
+                (function() {
+                    var ctx = document.getElementById('grantChart').getContext('2d');
+                    var data = {{ grant_chart_json|safe }};
+                    var years = data.map(function(d) { return d[0]; });
+                    var counts = data.map(function(d) { return d[1]; });
+                    var maxCount = Math.max.apply(null, counts) || 1;
+                    var canvas = ctx.canvas;
+                    var w = canvas.clientWidth;
+                    var h = canvas.clientHeight;
+                    canvas.width = w;
+                    canvas.height = h;
+
+                    var ml = 40, mr = 10, mt = 10, mb = 25;
+                    var pw = w - ml - mr;
+                    var ph = h - mt - mb;
+
+                    ctx.strokeStyle = '#d1d5db';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(ml, mt); ctx.lineTo(ml, mt + ph);
+                    ctx.lineTo(ml + pw, mt + ph);
+                    ctx.stroke();
+
+                    if (years.length > 0) {
+                        ctx.strokeStyle = '#10b981';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        years.forEach(function(y, i) {
+                            var x = ml + (years.length > 1 ? i * pw / (years.length - 1) : pw / 2);
+                            var yPos = mt + ph - (counts[i] / maxCount) * ph;
+                            if (i === 0) ctx.moveTo(x, yPos);
+                            else ctx.lineTo(x, yPos);
+                        });
+                        ctx.stroke();
+
+                        ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+                        ctx.beginPath();
+                        ctx.moveTo(ml, mt + ph);
+                        years.forEach(function(y, i) {
+                            var x = ml + (years.length > 1 ? i * pw / (years.length - 1) : pw / 2);
+                            var yPos = mt + ph - (counts[i] / maxCount) * ph;
+                            ctx.lineTo(x, yPos);
+                        });
+                        ctx.lineTo(ml + pw, mt + ph);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+
+                    ctx.fillStyle = '#6b7280';
+                    ctx.font = '10px sans-serif';
+                    ctx.textAlign = 'center';
+                    years.forEach(function(y, i) {
+                        if (i % 5 === 0 || i === years.length - 1) {
+                            var x = ml + (years.length > 1 ? i * pw / (years.length - 1) : pw / 2);
+                            ctx.fillText(y, x, mt + ph + 16);
+                        }
+                    });
+
+                    ctx.textAlign = 'right';
+                    for (var r = 0; r <= 4; r++) {
+                        var val = Math.round(maxCount * r / 4);
+                        var yY = mt + ph - (r / 4) * ph;
+                        ctx.fillText(val, ml - 4, yY + 3);
+                        ctx.strokeStyle = '#f3f4f6';
+                        ctx.beginPath();
+                        ctx.moveTo(ml, yY);
+                        ctx.lineTo(ml + pw, yY);
+                        ctx.stroke();
+                    }
+                })();
+                </script>
+                {% else %}
+                <p class="text-sm text-gray-500">No grant dates recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Validation -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Database Validation</h3>
+            <p class="text-sm text-gray-500 mb-3">
+                Validate FCC grantee code mappings and flag incorrect or missing Brand records.
+            </p>
+            <a href="/grantee_audit.html" target="_blank" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                View FCC Grantee Validation Report
+            </a>
+            <a href="{% url 'sync_fcc_id' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 ml-2">
+                Sync FCC ID
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
