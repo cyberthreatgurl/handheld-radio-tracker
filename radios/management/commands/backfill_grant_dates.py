@@ -147,34 +147,37 @@ class Command(BaseCommand):
                 f'radios still missing grant_date...'
             )
             from radios.fcc_utils import fetch_and_sync_fcc_id
+            from radios.fcc_id_utils import split_fcc_id
 
-            synced_fcc_ids = set()
+            synced_grantee_codes = set()
             updated_fcc = 0
             skipped = 0
 
             for rid in radio_ids_fcc_after_local:
                 r = Radio.objects.get(pk=rid)
-                if r.fcc_id in synced_fcc_ids:
-                    # Already synced this FCC ID in this run
+                grantee_code, _ = split_fcc_id(r.fcc_id)
+                query = grantee_code if grantee_code else r.fcc_id
+
+                if query in synced_grantee_codes:
                     skipped += 1
                     continue
 
                 if dry_run:
-                    self.stdout.write(f'  Would sync {r.fcc_id} ({r.brand} {r.model})')
+                    self.stdout.write(f'  Would sync {query} ({r.brand} {r.model})')
                     continue
 
-                self.stdout.write(f'  Syncing {r.fcc_id} ({r.brand} {r.model})...')
+                self.stdout.write(f'  Syncing grantee {query} ({r.brand} {r.model})...')
                 try:
-                    fetch_and_sync_fcc_id(r.fcc_id)
+                    fetch_and_sync_fcc_id(query)
                 except Exception as exc:
                     self.stderr.write(
-                        self.style.ERROR(f'  Error syncing {r.fcc_id}: {exc}')
+                        self.style.ERROR(f'  Error syncing {query}: {exc}')
                     )
                     continue
 
-                synced_fcc_ids.add(r.fcc_id)
+                synced_grantee_codes.add(query)
                 updated_fcc += 1
-                time.sleep(0.3)  # Rate-limit to avoid FCC throttling
+                time.sleep(0.3)  # Rate-limit
 
             # Re-extract grant_date from newly synced OET docs
             newly_dated = 0

@@ -174,12 +174,16 @@ def _fcc_request_with_retry(method, url, *, session=None, retries=2, retry_delay
             'skipping HTTP attempt',
         )
 
+    # Env-driven 503 fast-fail: skip retries for 503 since it's an FCC overload
+    # signal that won't resolve within our retry window.
+    _skip_503_retry = os.environ.get('FCC_SKIP_RETRY_ON_503', 'true').strip().lower() in \
+        ('1', 'true', 'yes', 'on')
+
     for attempt in range(retries + 1):
         try:
             response = getattr(requester, method)(url, **kwargs)
         except Exception as exc:
             if _is_connection_timeout_error(exc):
-                # Network-level failure — don't retry, mark the site as down.
                 _fcc_connection_down = True
                 logger.warning(
                     'FCC request connection timeout (no bytes received) method=%s url=%s '
@@ -191,27 +195,28 @@ def _fcc_request_with_retry(method, url, *, session=None, retries=2, retry_delay
                 raise
             logger.warning(
                 "FCC request retry after exception method=%s url=%s attempt=%s retries=%s",
-                method.upper(),
-                url,
-                attempt + 1,
-                retries,
+                method.upper(), url, attempt + 1, retries,
             )
             time.sleep(retry_delay * (attempt + 1))
             continue
 
         last_response = response
-        # A successful response means the site is reachable — clear the flag.
         _fcc_connection_down = False
+
+        # 503 fast-fail: skip retries, fall through to next handler immediately
+        if response.status_code == 503 and _skip_503_retry and attempt < retries:
+            logger.info(
+                "FCC request 503 fast-fail method=%s url=%s — skipping remaining retries",
+                method.upper(), url,
+            )
+            return response
+
         if response.status_code not in FCC_RETRY_STATUS_CODES or attempt >= retries:
             return response
 
         logger.info(
             "FCC request retrying method=%s url=%s status=%s attempt=%s retries=%s",
-            method.upper(),
-            url,
-            response.status_code,
-            attempt + 1,
-            retries,
+            method.upper(), url, response.status_code, attempt + 1, retries,
         )
         time.sleep(retry_delay * (attempt + 1))
 
@@ -909,7 +914,9 @@ def _submit_generic_search_form_via_playwright(fcc_id):
             try:
                 page.wait_for_selector('tbody#offTblBdy', timeout=15000)
             except Exception:
-                logger.info('FCC browser fallback search table wait timeout fcc_id=%s', fcc_id)
+                logger.info(
+                'FCC browser fallback search table wait timeout fcc_id=%s', fcc_id,
+            )
             
             html_text = page.content()
             current_url = page.url
@@ -945,7 +952,10 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                         f"&calledFromFrame=N&application_id={app_id}&fcc_id={fcc_id}"
                     )
                     exhibit_links.append(constructed_url)
-                    logger.info('FCC browser extracted application_id from HTML fcc_id=%s app_id=%s', fcc_id, app_id[:20])
+                    logger.info(
+                'FCC browser extracted application_id from HTML fcc_id=%s app_id=%s',
+                fcc_id, app_id[:20],
+            )
             
             # Strategy 3: Try clicking on the first row to trigger navigation
             if not exhibit_links:
@@ -959,7 +969,9 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                                 exhibit_links.append(absolute_url)
                                 logger.info('FCC browser found exhibit link via first row fcc_id=%s', fcc_id)
                 except Exception:
-                    logger.info('FCC browser first row click attempt failed fcc_id=%s', fcc_id)
+                    logger.info(
+                'FCC browser first row click attempt failed fcc_id=%s', fcc_id,
+            )
 
             # --- Background: FCC grantee/product code rules -------------------------
             # FCC IDs beginning with a digit have a 5-character grantee code;
@@ -1103,7 +1115,9 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                     try:
                         page.wait_for_selector('tbody#offTblBdy', timeout=15000)
                     except Exception:
-                        logger.info('FCC browser hyphen-product table wait timeout fcc_id=%s', fcc_id)
+                        logger.info(
+                'FCC browser hyphen-product table wait timeout fcc_id=%s', fcc_id,
+            )
                     hyphen_html = page.content()
                     hyphen_url = page.url
                     fcc_id_upper = (fcc_id or '').upper()
@@ -1139,8 +1153,10 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                     logger.exception('FCC browser hyphen-product retry failed fcc_id=%s', fcc_id)
 
             browser.close()
-            logger.info('FCC browser fallback search success fcc_id=%s url=%s has_detail=%s exhibit_links=%s', 
-                       fcc_id, current_url, 'ViewExhibitReport.cfm' in html_text, len(exhibit_links))
+            logger.info(
+            'FCC browser fallback search success fcc_id=%s url=%s has_detail=%s exhibit_links=%s',
+            fcc_id, current_url, 'ViewExhibitReport.cfm' in html_text, len(exhibit_links),
+        )
             return html_text, current_url
     except Exception as exc:
         if _is_playwright_timeout_error(exc):
@@ -3034,16 +3050,14 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     radio.save()
                     count_updated += 1
                     logger.info(
-                        "FCC ingest update source=fcc_api query=%s action=update_by_fcc_id radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s grant_date=%s freq_bands_tx=%s is_whitelabel=%s",
-                        fcc_id_query,
-                        radio.id,
-                        radio.brand,
-                        radio.model,
-                        fcc_id,
-                        validation.get('status', ''),
-                        radio.grant_date,
-                        radio.freq_bands_tx,
-                        radio.is_a_whitelabel,
+                        (
+                            'FCC ingest update source=fcc_api query=%s action=update_by_fcc_id'
+                            ' radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s'
+                            ' grant_date=%s freq_bands_tx=%s is_whitelabel=%s',
+                            fcc_id_query, radio.id, radio.brand, radio.model,
+                            fcc_id, validation.get('status', ''),
+                            radio.grant_date, radio.freq_bands_tx, radio.is_a_whitelabel,
+                        )
                     )
                 else:
                     _stamp_lookup_timestamp(radio, lookup_started_at)
@@ -3107,15 +3121,12 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 existing_radio.save()
                 count_updated += 1
                 logger.info(
-                    "FCC ingest update source=fcc_api query=%s action=update_by_brand_model radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s intro_year=%s freq_bands_tx=%s",
-                    fcc_id_query,
-                    existing_radio.id,
-                    brand_val,
-                    product_code,
-                    fcc_id,
-                    validation.get('status', ''),
-                    existing_radio.intro_year,
-                    existing_radio.freq_bands_tx,
+                    "FCC ingest update source=fcc_api query=%s action=update_by_brand_model"
+                    " radio_id=%s brand=%s model=%s fcc_id=%s validation=%s"
+                    " grant_date=%s freq_bands_tx=%s",
+                    fcc_id_query, existing_radio.id, brand_val, product_code,
+                    fcc_id, validation.get('status', ''),
+                    existing_radio.grant_date, existing_radio.freq_bands_tx,
                 )
                 attached_reports += _attach_test_reports_to_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
                 synced_oet_docs += _sync_oet_documents_for_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
@@ -3138,16 +3149,15 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     )
                 count_added += 1
                 logger.info(
-                    "FCC ingest create source=fcc_api query=%s action=create radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s inferred_grantee=%s intro_year=%s freq_bands_tx=%s",
-                    fcc_id_query,
-                    created_radio.id,
-                    brand_val,
-                    product_code,
-                    fcc_id,
-                    validation.get('status', ''),
-                    validation.get('inferred_grantee_code', ''),
-                    created_radio.intro_year,
-                    created_radio.freq_bands_tx,
+                    (
+                        'FCC ingest create source=fcc_api query=%s action=create'
+                        ' radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s'
+                        ' inferred_grantee=%s grant_date=%s',
+                        fcc_id_query, created_radio.id, brand_val, product_code,
+                        fcc_id, validation.get('status', ''),
+                        validation.get('inferred_grantee_code', ''),
+                        created_radio.grant_date,
+                    )
                 )
                 attached_reports += _attach_test_reports_to_radio(created_radio, fcc_id, sec_metadata, force_reload=force_reload)
                 synced_oet_docs += _sync_oet_documents_for_radio(created_radio, fcc_id, sec_metadata, force_reload=force_reload)

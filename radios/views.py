@@ -19,6 +19,7 @@ from .models import (
 )
 from .forms import RadioForm, RadioSearchForm, BrandForm, ManufacturerForm, RadioImageFormSet
 from .image_utils import ingest_radio_image
+from curl_cffi import requests as curl_requests
 from .fcc_utils import fetch_and_sync_fcc_id
 from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from .nodal_graph import build_nodal_graph_data
@@ -98,7 +99,9 @@ def _actor_label(request):
 
 
 def sync_fcc_view(request):
-    """View to handle fetching and syncing an FCC ID from the dashboard."""
+    """View to handle fetching and syncing an FCC ID or grantee code."""
+    redirect_to = request.POST.get('redirect_to', 'dashboard')
+
     if request.method == 'POST':
         fcc_id = request.POST.get('fcc_id', '').strip()
         logger.info("User action sync_fcc submit actor=%s fcc_id=%s", _actor_label(request), fcc_id)
@@ -118,8 +121,8 @@ def sync_fcc_view(request):
                 messages.error(request, f"Error processing FCC ID: {e}")
         else:
             messages.error(request, "Please enter a valid FCC ID.")
-            
-    return redirect('dashboard')
+
+    return redirect(redirect_to)
 
 
 def sync_radio_fcc_view(request, pk):
@@ -153,17 +156,14 @@ def sync_radio_fcc_view(request, pk):
 
 
 def sync_all_grantees_view(request):
-    """View to update all existing grantees by iterating through Brand records.
+    """View to update all existing grantees by iterating through Brand records."""
+    redirect_to = request.POST.get('redirect_to', 'dashboard')
 
-    By default, only queries the FCC API for grants issued since the last
-    successful run (stored in FCCSyncState).  On the very first run, no date
-    filter is applied and the full history is fetched.
-    """
     if request.method == 'POST':
         logger.info("User action sync_all_grantees submit actor=%s", _actor_label(request))
         try:
             sync_state = FCCSyncState.get_instance()
-            start_date = sync_state.last_grantee_sync_at  # None on first run → no filter
+            start_date = sync_state.last_grantee_sync_at
             end_date = timezone.now()
 
             if start_date:
@@ -193,7 +193,6 @@ def sync_all_grantees_view(request):
                 total_added += added
                 total_updated += updated
 
-            # Persist the end_date as the new baseline for future incremental syncs.
             sync_state.last_grantee_sync_at = end_date
             sync_state.save(update_fields=['last_grantee_sync_at'])
 
@@ -216,7 +215,7 @@ def sync_all_grantees_view(request):
             logger.exception("User action sync_all_grantees error actor=%s", _actor_label(request))
             messages.error(request, f"Error processing grantees: {e}")
 
-    return redirect('dashboard')
+    return redirect(redirect_to)
 
 
 class RadioListView(ListView):
@@ -1030,7 +1029,7 @@ def dashboard_view(request):
     recent_radios = list(
         Radio.objects.select_related('manufacturer')
         .filter(grant_date__isnull=False, grant_date__gte=cutoff_date)
-        .order_by('-grant_date')[:10]
+        .order_by('-grant_date')[:50]
     )
     for radio in recent_radios:
         radio.display_brand = _preferred_brand_display_name(radio, alias_map)
@@ -1065,6 +1064,146 @@ def dashboard_view(request):
         'last_grantee_sync_at': FCCSyncState.get_instance().last_grantee_sync_at,
     }
     return render(request, 'radios/dashboard.html', context)
+
+
+def fcc_lookup_view(request):
+    """AJAX view: look up an FCC ID or grantee code via the FCC API (read-only)."""
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return JsonResponse({'error': 'No query provided'}, status=400)
+
+    try:
+        resp = curl_requests.get(
+            f'https://apps.fcc.gov/OETLabServices/getFCCIDList?fccId={query}',
+            impersonate='chrome124',
+            timeout=15,
+        )
+    except Exception as e:
+        return JsonResponse({'error': f'FCC API error: {e}'}, status=502)
+
+    if resp.status_code != 200:
+        return JsonResponse(
+            {'error': f'FCC API returned status {resp.status_code}'},
+            status=502,
+        )
+
+    try:
+        import xmltodict as _x
+        data = _x.parse(resp.text)
+        wrapper = data.get('fCCIDInfoes') or {}
+        records = wrapper.get('fccidInfo') or []
+        if isinstance(records, dict):
+            records = [records]
+    except Exception as e:
+        return JsonResponse({'error': f'Parse error: {e}'}, status=502)
+
+    if not records:
+        return JsonResponse({'error': 'No records found.'}, status=404)
+
+    is_grantee = '-' not in query
+    summary = {
+        'type': 'grantee' if is_grantee else 'fcc_id',
+        'query': query,
+        'record_count': len(records),
+    }
+
+    if is_grantee:
+        summary['grantee_names'] = sorted(
+            set(r.get('grantee', '') for r in records)
+        )
+
+    summary['records'] = [
+        {
+            'FCCId': r.get('FCCId', ''),
+            'applicationPurpose': r.get('applicationPurpose', ''),
+            'grantDate': r.get('grantDate', ''),
+        }
+        for r in records
+    ]
+    if not is_grantee:
+        for rec, src in zip(summary['records'], records):
+            rec['grantee'] = src.get('grantee', '')
+
+    return JsonResponse(summary)
+
+
+def fcc_validate_fccids_view(request):
+    """Validate unique FCC IDs against the live FCC API.
+    Reports any FCC IDs that do not exist in the FCC database.
+    Validates by unique FCC ID (not per radio record) to minimize API calls."""
+    from radios.fcc_id_utils import split_fcc_id
+
+    # Collect unique FCC IDs and their sample radios
+    unique_fcc_ids = {}
+    pk_limit = int(request.GET.get('limit', '0'))
+    count = 0
+    for radio in Radio.objects.exclude(fcc_id='').exclude(fcc_id__isnull=True).iterator():
+        fcc_id = radio.fcc_id.strip().upper()
+        if fcc_id and fcc_id not in unique_fcc_ids:
+            unique_fcc_ids[fcc_id] = {
+                'brand': radio.brand,
+                'model': radio.model,
+                'radio_id': radio.pk,
+            }
+            count += 1
+            if pk_limit and count >= pk_limit:
+                break
+
+    results = []
+    checked = 0
+    for fcc_id, info in sorted(unique_fcc_ids.items()):
+        checked += 1
+        # FCC API may need compact (no dash) format for some IDs
+        compact_id = fcc_id.replace('-', '')
+        candidates = list(set([fcc_id, compact_id]))
+
+        records = []
+        for candidate in candidates:
+            try:
+                resp = curl_requests.get(
+                    f'https://apps.fcc.gov/OETLabServices/getFCCIDList?fccId={candidate}',
+                    impersonate='chrome124',
+                    timeout=15,
+                )
+            except Exception:
+                continue
+
+            if resp.status_code != 200:
+                continue
+
+            try:
+                import xmltodict as _x
+                data = _x.parse(resp.text)
+                wrapper = data.get('fCCIDInfoes') or {}
+                records = wrapper.get('fccidInfo') or []
+                if isinstance(records, dict):
+                    records = [records]
+            except Exception:
+                continue
+
+            if records:
+                break
+
+        if not records:
+            results.append({
+                'fcc_id': fcc_id, 'status': 'NOT_FOUND',
+                'brand': info['brand'], 'model': info['model'],
+            })
+        else:
+            has_grant_date = any(r.get('grantDate') for r in records)
+            results.append({
+                'fcc_id': fcc_id, 'status': 'VALID',
+                'brand': info['brand'], 'model': info['model'],
+                'has_grant_date': has_grant_date,
+            })
+
+    invalid_count = sum(1 for r in results if r['status'] != 'VALID')
+    return JsonResponse({
+        'total_unique': len(unique_fcc_ids),
+        'checked': checked,
+        'invalid_count': invalid_count,
+        'results': results,
+    })
 
 
 def maintenance_view(request):
@@ -1118,6 +1257,7 @@ def maintenance_view(request):
         'grant_chart': grant_chart,
         'grant_chart_json': json.dumps([[int(y), c] for y, c in grant_chart]),
         'max_grant_year_count': max((c for _, c in grant_chart), default=1),
+        'last_grantee_sync_at': FCCSyncState.get_instance().last_grantee_sync_at,
     }
     return render(request, 'radios/maintenance.html', context)
 

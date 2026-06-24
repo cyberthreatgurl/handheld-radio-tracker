@@ -80,6 +80,50 @@
         </div>
     </div>
 
+    <!-- Sync FCC ID Tool -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">FCC Sync API</h3>
+            <p class="text-sm text-gray-500 mb-4">Fetch and import an FCC ID, grantee code, or sync all known grantees from the FCC database.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Single FCC ID search -->
+                <div>
+                    <form action="{% url 'sync_fcc_id' %}" method="post" class="space-y-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="redirect_to" value="maintenance">
+                        <div>
+                            <label for="fcc_id" class="block text-sm font-medium text-gray-700 mb-1">FCC ID or Grantee Code</label>
+                            <input type="text" name="fcc_id" id="fcc_id" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="e.g., 2AJGM-UV5R or 2AJGM">
+                        </div>
+                        <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                            Search & Import
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Bulk sync all grantees -->
+                <div class="flex flex-col justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-700 mb-1">Update All Known Grantees</p>
+                        {% if last_grantee_sync_at %}
+                        <p class="text-xs text-gray-400 mb-2">Last synced: {{ last_grantee_sync_at|date:"M d, Y H:i" }} UTC &mdash; only new grants since then will be fetched.</p>
+                        {% else %}
+                        <p class="text-xs text-gray-400 mb-2">Never synced &mdash; full grant history will be fetched.</p>
+                        {% endif %}
+                    </div>
+                    <form action="{% url 'sync_all_grantees' %}" method="post" class="mt-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="redirect_to" value="maintenance">
+                        <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                            Update All Known Grantees
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Country Counts -->
         <div class="bg-white shadow rounded-lg">
@@ -188,6 +232,23 @@
         </div>
     </div>
 
+    <!-- FCC ID Lookup -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">FCC ID Lookup</h3>
+            <p class="text-sm text-gray-500 mb-3">
+                Look up an FCC ID or grantee code on the FCC database. Read-only &mdash; no records are changed.
+            </p>
+            <div class="flex items-start space-x-3">
+                <input type="text" id="fccLookupInput" placeholder="e.g., 2AJGM-UV5R or 2AJGM" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                <button onclick="fccLookup()" class="flex-shrink-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                    Look Up
+                </button>
+            </div>
+            <div id="fccLookupResult" class="mt-4"></div>
+        </div>
+    </div>
+
     <!-- Database Validation -->
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
@@ -195,13 +256,129 @@
             <p class="text-sm text-gray-500 mb-3">
                 Validate FCC grantee code mappings and flag incorrect or missing Brand records.
             </p>
-            <a href="/grantee_audit.html" target="_blank" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                View FCC Grantee Validation Report
-            </a>
-            <a href="{% url 'sync_fcc_id' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 ml-2">
-                Sync FCC ID
-            </a>
+
+            <!-- Grantee audit link + FCC ID validation -->
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <a href="/grantee_audit.html" target="_blank" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                    View FCC Grantee Validation Report
+                </a>
+                <button onclick="fccValidateFCCIDs()" class="inline-flex items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
+                    Validate All FCC IDs vs FCC Database
+                </button>
+            </div>
+
+            <div class="bg-gray-50 rounded-md p-4 space-y-3">
+                <p class="text-sm font-medium text-gray-700">Sync Single FCC ID or Grantee Code</p>
+                <form action="{% url 'sync_fcc_id' %}" method="post" class="flex items-center space-x-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="redirect_to" value="maintenance">
+                    <input type="text" name="fcc_id" placeholder="e.g., 2AJGM-UV5R or 2AJGM" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 flex-1 sm:text-sm border-gray-300 rounded-md p-2 border">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                        Search & Import
+                    </button>
+                </form>
+            </div>
+
+            <div id="fccValidationResult" class="mt-2">
+                <p class="text-xs text-gray-400">Click "Validate All FCC IDs" to verify each radio's FCC ID against the live FCC database. May take several minutes.</p>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+function fccLookup() {
+    var input = document.getElementById('fccLookupInput');
+    var result = document.getElementById('fccLookupResult');
+    var q = input.value.trim();
+    if (!q) { result.innerHTML = '<p class="text-sm text-red-500">Enter an FCC ID or grantee code.</p>'; return; }
+
+    result.innerHTML = '<p class="text-sm text-gray-500">Looking up...</p>';
+
+    fetch('/radios/fcc-lookup/?q=' + encodeURIComponent(q))
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+            if (data.error) {
+                result.innerHTML = '<p class="text-sm text-red-500">' + data.error + '</p>';
+                return;
+            }
+
+            var html = '<div class="bg-gray-50 rounded-md p-3 space-y-2 text-sm">';
+            var count = data.record_count || 0;
+            html += '<p class="font-medium text-gray-700">Found ' + count + ' record' + (count !== 1 ? 's' : '') + ' for <code class="bg-gray-200 px-1 rounded">' + data.query + '</code></p>';
+
+            if (data.grantee_names && data.grantee_names.length > 0) {
+                html += '<div><span class="font-medium">Grantee Name' + (data.grantee_names.length > 1 ? 's' : '') + ':</span> ';
+                html += data.grantee_names.join('; ');
+                html += '</div>';
+            }
+
+            if (data.records && data.records.length > 0) {
+                html += '<table class="w-full text-xs mt-2"><thead><tr class="bg-gray-200">';
+                var keys = Object.keys(data.records[0]);
+                keys.forEach(function(k) { html += '<th class="px-2 py-1 text-left">' + k + '</th>'; });
+                html += '</tr></thead><tbody>';
+                data.records.forEach(function(r) {
+                    html += '<tr class="border-b border-gray-200">';
+                    keys.forEach(function(k) { html += '<td class="px-2 py-1">' + (r[k] || '') + '</td>'; });
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+            }
+
+            html += '</div>';
+            result.innerHTML = html;
+        })
+        .catch(function(err) {
+            result.innerHTML = '<p class="text-sm text-red-500">Request failed: ' + err.message + '</p>';
+        });
+}
+
+function fccValidateFCCIDs() {
+    var btn = document.querySelector('button[onclick*=\"fccValidateFCCIDs\"]');
+    var result = document.getElementById('fccValidationResult');
+    btn.disabled = true;
+    btn.textContent = 'Validating... (this will take several minutes)';
+    result.innerHTML = '<p class="text-sm text-gray-500">Starting validation of all radio FCC IDs against the live FCC database. Each FCC ID requires an API call, so this may take several minutes. Please wait...</p>';
+
+    fetch('/radios/fcc-validate-fccids/')
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+            if (data.error) {
+                result.innerHTML = '<p class="text-sm text-red-500">Error: ' + data.error + '</p>';
+                btn.disabled = false;
+                btn.textContent = 'Validate All FCC IDs vs FCC Database';
+                return;
+            }
+            var invalid = data.results.filter(function(r) { return r.status !== 'VALID'; });
+            var html = '<div class="bg-gray-50 rounded-md p-3 space-y-2 text-sm">';
+            html += '<p class="font-medium text-gray-700">Validated ' + data.total + ' FCC IDs. ' + data.invalid_count + ' issue' + (data.invalid_count !== 1 ? 's' : '') + ' found.</p>';
+            if (invalid.length > 0) {
+                html += '<table class="w-full text-xs mt-2"><thead><tr class="bg-gray-200">';
+                html += '<th class="px-2 py-1 text-left">Status</th><th class="px-2 py-1 text-left">FCC ID</th><th class="px-2 py-1 text-left">Brand</th><th class="px-2 py-1 text-left">Model</th>';
+                html += '</tr></thead><tbody>';
+                invalid.forEach(function(r) {
+                    html += '<tr class="border-b border-gray-200 hover:bg-red-50">';
+                    html += '<td class="px-2 py-1"><span class="text-red-600 font-medium">' + r.status + '</span></td>';
+                    html += '<td class="px-2 py-1 font-mono">' + r.fcc_id + '</td>';
+                    html += '<td class="px-2 py-1">' + r.brand + '</td>';
+                    html += '<td class="px-2 py-1">' + r.model + '</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+            } else {
+                html += '<p class="text-green-600 font-medium">All FCC IDs are valid in the FCC database!</p>';
+            }
+            html += '</div>';
+            result.innerHTML = html;
+        })
+        .catch(function(err) {
+            result.innerHTML = '<p class="text-sm text-red-500">Validation failed: ' + err.message + '</p>';
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.textContent = 'Validate All FCC IDs vs FCC Database';
+        });
+}
+</script>
 {% endblock %}
