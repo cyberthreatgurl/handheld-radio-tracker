@@ -124,6 +124,29 @@
         </div>
     </div>
 
+    <div id="syncResult" class="hidden"></div>
+
+    <script>
+    // Show sync result from a recently completed background sync
+    (function() {
+        fetch('/radios/sync-progress/')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.in_progress && data.result) {
+                    var el = document.getElementById('syncResult');
+                    el.textContent = data.result;
+                    if (data.success) {
+                        el.className = 'bg-green-50 border-green-400 text-green-800 p-4 border-l-4 rounded-md mb-4';
+                    } else {
+                        el.className = 'bg-red-50 border-red-400 text-red-800 p-4 border-l-4 rounded-md mb-4';
+                    }
+                    el.classList.remove('hidden');
+                }
+            })
+            .catch(function() {});
+    })();
+    </script>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Country Counts -->
         <div class="bg-white shadow rounded-lg">

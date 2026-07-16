@@ -1,27 +1,53 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
-from django.contrib import messages
-from django.http import Http404, JsonResponse, HttpResponse
-from django.db.models import Q, Count, Max, Prefetch, Subquery
-from django.conf import settings
-from django.views.decorators.cache import cache_page
+"""
+View logic for the radio tracker application.
+
+Contains dashboard, CRUD views, FCC sync, brand detail, and
+maintenance pages.
+"""
+# pylint: disable=no-member, broad-exception-caught, too-many-ancestors
+# pylint: disable=too-few-public-methods, attribute-defined-outside-init
+# pylint: disable=too-many-locals, too-many-branches, too-many-statements
+# pylint: disable=too-many-lines, import-outside-toplevel
+# no-member: Django ORM / CBV metaclass false positives
+# broad-exception-caught: intentionally broad at network/service boundaries
+# too-many-ancestors, too-few-public-methods: normal for Django class-based views
+# attribute-defined-outside-init: Django CBV sets self.object in post()
+# too-many-*, too-many-lines: complex views justified by varied page requirements
+# import-outside-toplevel: lazy imports avoid circular deps
+
 import logging
 import re
 import json
+import threading
 from collections import Counter
 from pathlib import Path
+
+from curl_cffi import requests as curl_requests
+
+from django.conf import settings
+from django.contrib import messages
+from django.core.cache import cache
+from django.db import transaction
+from django.db.models import Q, Count, Max, Prefetch, Subquery
+from django.db.models.functions import ExtractYear
+from django.http import Http404, JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+
+from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
+from .fcc_utils import fetch_and_sync_fcc_id
+from .forms import (
+    RadioForm, RadioSearchForm, BrandForm, ManufacturerForm, RadioImageFormSet,
+)
+from .image_utils import ingest_radio_image
 from .models import (
     Radio, Brand, RadioManual, RadioFirmware, Manufacturer, FCCSyncState,
-    IgnoredGrantee, RadioFCCTestReport, RadioOETDocument, RadioImage,
-    delete_brand_and_related,
+    IgnoredGrantee, SyncSkippedGrantee, RadioFCCTestReport, RadioOETDocument,
+    RadioImage, delete_brand_and_related,
 )
-from .forms import RadioForm, RadioSearchForm, BrandForm, ManufacturerForm, RadioImageFormSet
-from .image_utils import ingest_radio_image
-from curl_cffi import requests as curl_requests
-from .fcc_utils import fetch_and_sync_fcc_id
-from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from .nodal_graph import build_nodal_graph_data
 
 logger = logging.getLogger(__name__)
@@ -41,7 +67,11 @@ def _normalize_model_key(value):
 
 def _build_brand_display_alias_map():
     alias_map = {}
-    for brand in Brand.objects.exclude(alias__isnull=True).exclude(alias__exact='').only('name', 'full_name', 'alias'):
+    for brand in (
+        Brand.objects.exclude(alias__isnull=True)
+        .exclude(alias__exact='')
+        .only('name', 'full_name', 'alias')
+    ):
         alias = (brand.alias or '').strip()
         if not alias:
             continue
@@ -80,7 +110,10 @@ def _normalized_query_match_ids(query, radios_qs=None):
     source_qs = radios_qs if radios_qs is not None else Radio.objects.all()
     return [
         radio['id']
-        for radio in source_qs.values('id', 'brand', 'model', 'fcc_id', 'rebadges_clones', 'white_label_vendors')
+        for radio in source_qs.values(
+            'id', 'brand', 'model', 'fcc_id', 'rebadges_clones',
+            'white_label_vendors',
+        )
         if (
             query_key in _normalize_model_key(radio.get('brand'))
             or query_key in _normalize_model_key(radio.get('model'))
@@ -98,27 +131,71 @@ def _actor_label(request):
     return 'anonymous'
 
 
+def _run_sync_fcc(fcc_id):
+    """Run a single FCC ID sync in a background thread."""
+    from django.db import close_old_connections
+    close_old_connections()
+    try:
+        added, updated, _processing_msgs = fetch_and_sync_fcc_id(fcc_id)
+        ignore_msg = next((msg for msg in _processing_msgs if 'ignore list' in msg.lower()), '')
+        result = ignore_msg or (
+            f"Success! Added {added} and updated {updated} records for FCC ID '{fcc_id}'."
+            if added > 0 or updated > 0
+            else f"No new records or updates found for '{fcc_id}'."
+        )
+        cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+            'in_progress': False,
+            'total': 1,
+            'completed': 1,
+            'current': '',
+            'message': 'Sync complete.',
+            'added': added,
+            'updated': updated,
+            'success': True,
+            'result': result,
+        }, timeout=300)
+        logger.info(
+            "Background sync_fcc result fcc_id=%s added=%s updated=%s",
+            fcc_id, added, updated,
+        )
+    except Exception as e:
+        cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+            'in_progress': False,
+            'total': 0,
+            'completed': 0,
+            'current': '',
+            'message': 'Sync error.',
+            'added': 0,
+            'updated': 0,
+            'success': False,
+            'result': f"Error processing FCC ID '{fcc_id}': {e}",
+        }, timeout=300)
+        logger.exception("Background sync_fcc error fcc_id=%s", fcc_id)
+    finally:
+        close_old_connections()
+
+
 def sync_fcc_view(request):
-    """View to handle fetching and syncing an FCC ID or grantee code."""
+    """Start a background sync for an FCC ID and return immediately."""
     redirect_to = request.POST.get('redirect_to', 'dashboard')
 
     if request.method == 'POST':
         fcc_id = request.POST.get('fcc_id', '').strip()
         logger.info("User action sync_fcc submit actor=%s fcc_id=%s", _actor_label(request), fcc_id)
         if fcc_id:
-            try:
-                added, updated, _processing_msgs = fetch_and_sync_fcc_id(fcc_id)
-                logger.info("User action sync_fcc result actor=%s fcc_id=%s added=%s updated=%s", _actor_label(request), fcc_id, added, updated)
-                ignore_message = next((msg for msg in _processing_msgs if 'ignore list' in msg.lower()), '')
-                if ignore_message:
-                    messages.warning(request, ignore_message)
-                elif added > 0 or updated > 0:
-                    messages.success(request, f"Success! Added {added} and updated {updated} records for FCC ID '{fcc_id}'.")
-                else:
-                    messages.warning(request, f"No new records or updates found for '{fcc_id}'.")
-            except Exception as e:
-                logger.exception("User action sync_fcc error actor=%s fcc_id=%s", _actor_label(request), fcc_id)
-                messages.error(request, f"Error processing FCC ID: {e}")
+            cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+                'in_progress': True,
+                'total': 1,
+                'completed': 0,
+                'current': fcc_id,
+                'message': f'Syncing {fcc_id} — this may take a while...',
+                'added': 0,
+                'updated': 0,
+            }, timeout=3600)
+            thread = threading.Thread(
+                target=_run_sync_fcc, args=(fcc_id,), daemon=True,
+            )
+            thread.start()
         else:
             messages.error(request, "Please enter a valid FCC ID.")
 
@@ -128,94 +205,187 @@ def sync_fcc_view(request):
 def sync_radio_fcc_view(request, pk):
     """View to handle fetching and syncing FCC data for a specific radio."""
     radio = get_object_or_404(Radio, pk=pk)
-    
+
     if request.method == 'POST':
         if not radio.fcc_id:
             messages.error(request, "This radio does not have an FCC ID assigned.")
             return redirect('radio_detail', pk=pk)
-        
+
         force_reload = request.POST.get('force_reload') == '1'
-        logger.info("User action sync_radio_fcc submit actor=%s radio_pk=%s fcc_id=%s force_reload=%s", _actor_label(request), pk, radio.fcc_id, force_reload)
+        logger.info(
+            "User action sync_radio_fcc submit actor=%s radio_pk=%s "
+            "fcc_id=%s force_reload=%s",
+            _actor_label(request), pk, radio.fcc_id, force_reload,
+        )
         try:
-            added, updated, _processing_msgs = fetch_and_sync_fcc_id(radio.fcc_id, force_reload=force_reload)
-            logger.info("User action sync_radio_fcc result actor=%s radio_pk=%s fcc_id=%s added=%s updated=%s force_reload=%s", 
-                       _actor_label(request), pk, radio.fcc_id, added, updated, force_reload)
-            
-            ignore_message = next((msg for msg in _processing_msgs if 'ignore list' in msg.lower()), '')
+            added, updated, _processing_msgs = fetch_and_sync_fcc_id(
+                radio.fcc_id, force_reload=force_reload,
+            )
+            logger.info(
+                "User action sync_radio_fcc result actor=%s radio_pk=%s "
+                "fcc_id=%s added=%s updated=%s force_reload=%s",
+                _actor_label(request), pk, radio.fcc_id, added, updated,
+                force_reload,
+            )
+
+            ignore_message = next(
+                (msg for msg in _processing_msgs
+                 if 'ignore list' in msg.lower()),
+                '',
+            )
             if ignore_message:
                 messages.warning(request, ignore_message)
             elif added > 0 or updated > 0:
-                messages.success(request, f"Success! Updated FCC data for '{radio.fcc_id}'. Added {added} and updated {updated} records.")
+                messages.success(
+                    request,
+                    f"Success! Updated FCC data for '{radio.fcc_id}'. "
+                    f"Added {added} and updated {updated} records.",
+                )
             else:
-                messages.info(request, f"FCC sync completed for '{radio.fcc_id}'. No new records or updates found.")
+                messages.info(
+                    request,
+                    f"FCC sync completed for '{radio.fcc_id}'. "
+                    "No new records or updates found.",
+                )
         except Exception as e:
-            logger.exception("User action sync_radio_fcc error actor=%s radio_pk=%s fcc_id=%s", _actor_label(request), pk, radio.fcc_id)
+            logger.exception(
+                "User action sync_radio_fcc error actor=%s radio_pk=%s "
+                "fcc_id=%s",
+                _actor_label(request), pk, radio.fcc_id,
+            )
             messages.error(request, f"Error syncing FCC data: {e}")
-    
+
     return redirect('radio_detail', pk=pk)
 
 
-def sync_all_grantees_view(request):
-    """View to update all existing grantees by iterating through Brand records."""
-    redirect_to = request.POST.get('redirect_to', 'dashboard')
+def _run_sync_all_grantees(start_date, end_date, grantee_codes):
+    """Run the full grantee sync in a background thread."""
+    from django.db import close_old_connections
+    close_old_connections()
+    try:
+        total_count = len(grantee_codes)
+        total_added = 0
+        total_updated = 0
 
+        for index, code in enumerate(grantee_codes, 1):
+            cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+                'in_progress': True,
+                'total': total_count,
+                'completed': index - 1,
+                'current': code,
+                'message': f'[{index}/{total_count}] Processing {code}...',
+                'added': total_added,
+                'updated': total_updated,
+            }, timeout=3600)
+
+            added, updated, _ = fetch_and_sync_fcc_id(
+                code, start_date=start_date, end_date=end_date,
+            )
+            total_added += added
+            total_updated += updated
+
+        sync_state = FCCSyncState.get_instance()
+        sync_state.last_grantee_sync_at = end_date
+        sync_state.save(update_fields=['last_grantee_sync_at'])
+
+        cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+            'in_progress': False,
+            'total': total_count,
+            'completed': total_count,
+            'current': '',
+            'message': 'Sync complete.',
+            'added': total_added,
+            'updated': total_updated,
+            'success': True,
+            'result': (
+                f"Updated grantees for grants since {start_date.strftime('%b %d, %Y')}. "
+                f"Added {total_added}, updated {total_updated} records."
+                if start_date else
+                f"Full history sync complete. Added {total_added}, updated {total_updated} records."
+            ),
+        }, timeout=300)
+
+        logger.info(
+            "Background sync_all_grantees result added=%s updated=%s last_sync=%s",
+            total_added, total_updated, end_date.isoformat(),
+        )
+    except Exception as e:
+        cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+            'in_progress': False,
+            'total': 0,
+            'completed': 0,
+            'current': '',
+            'message': 'Sync error.',
+            'added': 0,
+            'updated': 0,
+            'success': False,
+            'result': f'Error processing grantees: {e}',
+        }, timeout=300)
+        logger.exception("Background sync_all_grantees error")
+    finally:
+        close_old_connections()
+
+
+def sync_all_grantees_view(request):
+    """Start a background sync of all grantees and return immediately."""
     if request.method == 'POST':
         logger.info("User action sync_all_grantees submit actor=%s", _actor_label(request))
-        try:
-            sync_state = FCCSyncState.get_instance()
-            start_date = sync_state.last_grantee_sync_at
-            end_date = timezone.now()
 
-            if start_date:
-                logger.info(
-                    "User action sync_all_grantees date_filter actor=%s start_date=%s end_date=%s",
-                    _actor_label(request), start_date.isoformat(), end_date.isoformat(),
-                )
-            else:
-                logger.info(
-                    "User action sync_all_grantees date_filter actor=%s start_date=none (full history)",
-                    _actor_label(request),
-                )
+        sync_state = FCCSyncState.get_instance()
+        start_date = sync_state.last_grantee_sync_at
+        end_date = timezone.now()
 
-            ignored_codes = IgnoredGrantee.ignored_codes()
-            grantees = Brand.objects.exclude(grantee_code__isnull=True).exclude(grantee_code='')
-            if ignored_codes:
-                grantees = grantees.exclude(grantee_code__in=ignored_codes)
-            total_added = 0
-            total_updated = 0
-
-            for brand in grantees:
-                added, updated, _ = fetch_and_sync_fcc_id(
-                    brand.grantee_code,
-                    start_date=start_date,
-                    end_date=end_date,
-                )
-                total_added += added
-                total_updated += updated
-
-            sync_state.last_grantee_sync_at = end_date
-            sync_state.save(update_fields=['last_grantee_sync_at'])
-
+        if start_date:
             logger.info(
-                "User action sync_all_grantees result actor=%s added=%s updated=%s last_sync=%s",
-                _actor_label(request), total_added, total_updated, end_date.isoformat(),
+                "User action sync_all_grantees date_filter actor=%s start_date=%s end_date=%s",
+                _actor_label(request), start_date.isoformat(), end_date.isoformat(),
             )
-            if start_date:
-                messages.success(
-                    request,
-                    f"Updated grantees for grants since {start_date.strftime('%b %d, %Y')}. "
-                    f"Added {total_added}, updated {total_updated} records.",
-                )
-            else:
-                messages.success(
-                    request,
-                    f"Full history sync complete. Added {total_added}, updated {total_updated} records.",
-                )
-        except Exception as e:
-            logger.exception("User action sync_all_grantees error actor=%s", _actor_label(request))
-            messages.error(request, f"Error processing grantees: {e}")
+        else:
+            logger.info(
+                "User action sync_all_grantees date_filter actor=%s start_date=none (full history)",
+                _actor_label(request),
+            )
 
-    return redirect(redirect_to)
+        ignored_codes = IgnoredGrantee.ignored_codes()
+        skipped_codes = SyncSkippedGrantee.skipped_codes()
+        grantees = Brand.objects.exclude(grantee_code__isnull=True).exclude(grantee_code='')
+        if ignored_codes:
+            grantees = grantees.exclude(grantee_code__in=ignored_codes)
+        if skipped_codes:
+            grantees = grantees.exclude(grantee_code__in=skipped_codes)
+        grantee_codes = list(grantees.values_list('grantee_code', flat=True))
+
+        # Set initial progress and start background thread
+        cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+            'in_progress': True,
+            'total': len(grantee_codes),
+            'completed': 0,
+            'current': '',
+            'message': f'Starting sync of {len(grantee_codes)} grantees...',
+            'added': 0,
+            'updated': 0,
+        }, timeout=3600)
+
+        thread = threading.Thread(
+            target=_run_sync_all_grantees,
+            args=(start_date, end_date, grantee_codes),
+            daemon=True,
+        )
+        thread.start()
+
+    return redirect(request.POST.get('redirect_to', 'dashboard'))
+
+
+_GRANTEE_SYNC_PROGRESS_KEY = 'grantee_sync_progress'
+
+
+def sync_progress_view(_request):
+    """Return current grantee sync progress as JSON for the frontend progress bar."""
+    progress = cache.get(_GRANTEE_SYNC_PROGRESS_KEY)
+    if progress is None:
+        progress = {'in_progress': False, 'total': 0, 'completed': 0,
+                     'current': '', 'message': '', 'added': 0, 'updated': 0}
+    return JsonResponse(progress)
 
 
 class RadioListView(ListView):
@@ -224,7 +394,7 @@ class RadioListView(ListView):
     template_name = 'radios/radio_list.html'
     context_object_name = 'radios'
     paginate_by = 50
-    
+
     # Define allowed sort fields
     SORT_FIELDS = {
         'brand': 'brand',
@@ -236,24 +406,35 @@ class RadioListView(ListView):
         'aprs': 'aprs',
         'updated_at': 'updated_at',
     }
-    
+
     def get_queryset(self):
         manual_prefetch = Prefetch(
             'manuals',
-            queryset=RadioManual.objects.exclude(manual_pdf='').only('id', 'radio_id', 'manual_pdf', 'updated_at').order_by('-updated_at'),
+            queryset=RadioManual.objects.exclude(manual_pdf='')
+            .only('id', 'radio_id', 'manual_pdf', 'updated_at')
+            .order_by('-updated_at'),
             to_attr='available_manuals',
         )
         firmware_prefetch = Prefetch(
             'firmware_versions',
-            queryset=RadioFirmware.objects.only('id', 'radio_id', 'label', 'version', 'download_url').order_by('label'),
+            queryset=RadioFirmware.objects
+            .only('id', 'radio_id', 'label', 'version', 'download_url')
+            .order_by('label'),
             to_attr='prefetched_firmware',
         )
-        queryset = Radio.objects.all().select_related('manufacturer').prefetch_related(manual_prefetch, firmware_prefetch)
-        
+        queryset = (
+            Radio.objects.all()
+            .select_related('manufacturer')
+            .prefetch_related(manual_prefetch, firmware_prefetch)
+        )
+
         # Search functionality
         query = self.request.GET.get('query')
         if query:
-            logger.info("User action radio_search actor=%s query=%s", _actor_label(self.request), query)
+            logger.info(
+                "User action radio_search actor=%s query=%s",
+                _actor_label(self.request), query,
+            )
             normalized_match_ids = _normalized_query_match_ids(query, radios_qs=queryset)
             queryset = queryset.filter(
                 Q(brand__icontains=query) |
@@ -263,26 +444,32 @@ class RadioListView(ListView):
                 Q(white_label_vendors__icontains=query) |
                 Q(id__in=normalized_match_ids)
             )
-        
+
         # Brand filter
         brand = self.request.GET.get('brand')
         if brand:
-            logger.info("User action radio_filter_brand actor=%s brand=%s", _actor_label(self.request), brand)
+            logger.info(
+                "User action radio_filter_brand actor=%s brand=%s",
+                _actor_label(self.request), brand,
+            )
             queryset = queryset.filter(brand__icontains=brand)
-        
+
         # Sorting
         sort = self.request.GET.get('sort', 'brand')
         order = self.request.GET.get('order', 'asc')
-        logger.info("User action radio_list_sort actor=%s sort=%s order=%s", _actor_label(self.request), sort, order)
-        
+        logger.info(
+            "User action radio_list_sort actor=%s sort=%s order=%s",
+            _actor_label(self.request), sort, order,
+        )
+
         if sort in self.SORT_FIELDS:
             sort_field = self.SORT_FIELDS[sort]
             if order == 'desc':
                 sort_field = f'-{sort_field}'
             queryset = queryset.order_by(sort_field)
-        
+
         return queryset
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         alias_map = _build_brand_display_alias_map()
@@ -297,13 +484,15 @@ class RadioListView(ListView):
         # Pass current sort parameters to template
         context['current_sort'] = self.request.GET.get('sort', 'brand')
         context['current_order'] = self.request.GET.get('order', 'asc')
-        
+
         # Build query string for pagination
         query_params = self.request.GET.copy()
         if 'page' in query_params:
             del query_params['page']
-        context['query_string'] = f"&{query_params.urlencode()}" if query_params else ""
-        
+        context['query_string'] = (
+            f"&{query_params.urlencode()}" if query_params else ""
+        )
+
         return context
 
 
@@ -318,16 +507,29 @@ class RadioDetailView(DetailView):
         try:
             return super().get(request, *args, **kwargs)
         except Http404:
-            messages.error(request, f'Radio #{kwargs.get("pk")} no longer exists — it may have been deleted.')
+            messages.error(
+                request,
+                f'Radio #{kwargs.get("pk")} no longer exists '
+                '— it may have been deleted.',
+            )
             return redirect('radio_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         radio = context.get('radio')
         fcc_id = (getattr(radio, 'fcc_id', None) or '').strip().upper()
-        brand_match = Brand.objects.filter(name__iexact=radio.brand).only('id', 'grantee_code').first()
-        preferred_grantee_code = (brand_match.grantee_code or '').strip().upper() if brand_match else ''
-        fcc_lookup_id = normalize_fcc_id_for_lookup(fcc_id, preferred_grantee_code=preferred_grantee_code)
+        brand_match = (
+            Brand.objects.filter(name__iexact=radio.brand)
+            .only('id', 'grantee_code').first()
+        )
+        preferred_grantee_code = (
+            (brand_match.grantee_code or '').strip().upper()
+            if brand_match else ''
+        )
+        fcc_lookup_id = normalize_fcc_id_for_lookup(
+            fcc_id,
+            preferred_grantee_code=preferred_grantee_code,
+        )
 
         context['fcc_lookup_id'] = fcc_lookup_id
         context['brand_pk'] = brand_match.pk if brand_match else None
@@ -355,17 +557,17 @@ class RadioDetailView(DetailView):
         manufacturer = radio.manufacturer
         primary_models = []
         white_label_models = []
-        
+
         if fcc_id:
             # Group by FCC ID
             related_radios = Radio.objects.filter(fcc_id__iexact=fcc_id)
             primary_models = related_radios.filter(is_a_whitelabel=False)
             white_label_models = related_radios.filter(is_a_whitelabel=True)
-        
+
         context['manufacturer'] = manufacturer
         context['primary_models'] = primary_models
         context['white_label_models'] = white_label_models
-        
+
         return context
 
 
@@ -391,8 +593,15 @@ class RadioCreateView(CreateView):
         return self.render_to_response(self.get_context_data(form=form))
 
     def form_valid(self, form):
-        logger.info("User action radio_create submit actor=%s brand=%s model=%s", _actor_label(self.request), form.instance.brand, form.instance.model)
-        messages.success(self.request, f'Radio {form.instance} has been created successfully!')
+        logger.info(
+            "User action radio_create submit actor=%s brand=%s model=%s",
+            _actor_label(self.request), form.instance.brand,
+            form.instance.model,
+        )
+        messages.success(
+            self.request,
+            f'Radio {form.instance} has been created successfully!',
+        )
         return super().form_valid(form)
 
 
@@ -426,7 +635,11 @@ class RadioUpdateView(UpdateView):
         try:
             self.object = self.get_object()
         except Http404:
-            messages.error(request, f'Radio #{kwargs.get("pk")} no longer exists — it may have been deleted.')
+            messages.error(
+                request,
+                f'Radio #{kwargs.get("pk")} no longer exists '
+                '— it may have been deleted.',
+            )
             return redirect('radio_list')
         form = self.get_form()
         image_formset = RadioImageFormSet(
@@ -442,7 +655,12 @@ class RadioUpdateView(UpdateView):
         return self.render_to_response(context)
 
     def form_valid(self, form, image_formset=None):
-        logger.info("User action radio_update submit actor=%s radio_id=%s brand=%s model=%s", _actor_label(self.request), form.instance.pk, form.instance.brand, form.instance.model)
+        logger.info(
+            "User action radio_update submit actor=%s radio_id=%s "
+            "brand=%s model=%s",
+            _actor_label(self.request), form.instance.pk,
+            form.instance.brand, form.instance.model,
+        )
         self.object = form.save()
 
         if image_formset is not None:
@@ -484,13 +702,21 @@ def radio_image_delete(request, radio_pk, pk):
 
 
 class RadioDeleteView(DeleteView):
+    """Confirm and delete a radio record."""
     model = Radio
     success_url = reverse_lazy('radio_list')
-    
+
     def delete(self, request, *args, **kwargs):
         radio = self.get_object()
-        logger.info("User action radio_delete submit actor=%s radio_id=%s brand=%s model=%s", _actor_label(request), radio.pk, radio.brand, radio.model)
-        messages.success(request, f'Radio {radio} has been deleted successfully!')
+        logger.info(
+            "User action radio_delete submit actor=%s radio_id=%s "
+            "brand=%s model=%s",
+            _actor_label(request), radio.pk, radio.brand, radio.model,
+        )
+        messages.success(
+            request,
+            f'Radio {radio} has been deleted successfully!',
+        )
         return super().delete(request, *args, **kwargs)
 
 
@@ -541,7 +767,9 @@ class BrandListView(ListView):
         query_params = self.request.GET.copy()
         if 'page' in query_params:
             del query_params['page']
-        context['query_string'] = f"&{query_params.urlencode()}" if query_params else ""
+        context['query_string'] = (
+            f"&{query_params.urlencode()}" if query_params else ""
+        )
         return context
 
 class BrandCreateView(CreateView):
@@ -561,8 +789,14 @@ class BrandCreateView(CreateView):
         return context
 
     def form_valid(self, form):
-        logger.info("User action brand_create submit actor=%s brand=%s", _actor_label(self.request), form.instance.name)
-        messages.success(self.request, f'Brand {form.instance} has been created successfully!')
+        logger.info(
+            "User action brand_create submit actor=%s brand=%s",
+            _actor_label(self.request), form.instance.name,
+        )
+        messages.success(
+            self.request,
+            f'Brand {form.instance} has been created successfully!',
+        )
         return super().form_valid(form)
 
 
@@ -591,7 +825,11 @@ class BrandUpdateView(UpdateView):
     def form_valid(self, form):
         old_name = Brand.objects.values_list('name', flat=True).get(pk=form.instance.pk)
         new_name = form.cleaned_data['name']
-        logger.info("User action brand_update submit actor=%s brand_id=%s brand=%s", _actor_label(self.request), form.instance.pk, new_name)
+        logger.info(
+            "User action brand_update submit actor=%s brand_id=%s "
+            "brand=%s",
+            _actor_label(self.request), form.instance.pk, new_name,
+        )
         response = super().form_valid(form)
         if old_name != new_name:
             updated = Radio.objects.filter(brand__iexact=old_name).update(brand=new_name)
@@ -602,9 +840,13 @@ class BrandUpdateView(UpdateView):
             if updated:
                 messages.info(
                     self.request,
-                    f"Updated {updated} radio record(s) from brand \"{old_name}\" to \"{new_name}\".",
+                    f"Updated {updated} radio record(s) from brand "
+                    f'"{old_name}" to "{new_name}".',
                 )
-        messages.success(self.request, f'Brand {form.instance} has been saved successfully!')
+        messages.success(
+            self.request,
+            f'Brand {form.instance} has been saved successfully!',
+        )
         return response
 
 
@@ -617,13 +859,29 @@ class BrandDeleteView(DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         brand = context['object']
-        associated_radios = Radio.objects.filter(brand__iexact=brand.name).distinct()
+        associated_radios = (
+            Radio.objects.filter(brand__iexact=brand.name).distinct()
+        )
         context['associated_radio_count'] = associated_radios.count()
-        context['associated_manual_count'] = RadioManual.objects.filter(radio__in=associated_radios).count()
-        context['associated_test_report_count'] = RadioFCCTestReport.objects.filter(radio__in=associated_radios).count()
-        context['associated_oet_document_count'] = RadioOETDocument.objects.filter(radio__in=associated_radios).count()
-        context['associated_firmware_count'] = RadioFirmware.objects.filter(radio__in=associated_radios).count()
-        linked_manufacturer_ids = Manufacturer.objects.filter(brands=brand).values_list('id', flat=True)
+        context['associated_manual_count'] = (
+            RadioManual.objects.filter(radio__in=associated_radios).count()
+        )
+        context['associated_test_report_count'] = (
+            RadioFCCTestReport.objects
+            .filter(radio__in=associated_radios).count()
+        )
+        context['associated_oet_document_count'] = (
+            RadioOETDocument.objects
+            .filter(radio__in=associated_radios).count()
+        )
+        context['associated_firmware_count'] = (
+            RadioFirmware.objects
+            .filter(radio__in=associated_radios).count()
+        )
+        linked_manufacturer_ids = (
+            Manufacturer.objects.filter(brands=brand)
+            .values_list('id', flat=True)
+        )
         context['associated_manufacturer_count'] = (
             Manufacturer.objects.annotate(brand_count=Count('brands', distinct=True))
             .filter(id__in=linked_manufacturer_ids)
@@ -638,9 +896,13 @@ class BrandDeleteView(DeleteView):
         brand = self.object
 
         if request.POST.get('confirm_delete') != 'yes':
-            messages.error(request, 'Please confirm that you understand this deletion is permanent.')
+            messages.error(
+                request,
+                'Please confirm that you understand this deletion is permanent.',
+            )
             logger.info(
-                "User action brand_delete blocked_missing_confirmation actor=%s brand_id=%s brand=%s",
+                "User action brand_delete blocked_missing_confirmation "
+                "actor=%s brand_id=%s brand=%s",
                 _actor_label(request),
                 brand.pk,
                 brand.name,
@@ -648,12 +910,17 @@ class BrandDeleteView(DeleteView):
             context = self.get_context_data(object=brand)
             return render(request, self.template_name, context)
 
-        associated_radios = Radio.objects.filter(brand__iexact=brand.name).distinct()
+        associated_radios = (
+            Radio.objects.filter(brand__iexact=brand.name).distinct()
+        )
         radio_count = associated_radios.count()
-        manual_count = RadioManual.objects.filter(radio__in=associated_radios).count()
+        manual_count = (
+            RadioManual.objects.filter(radio__in=associated_radios).count()
+        )
 
         logger.warning(
-            "User action brand_delete submit actor=%s brand_id=%s brand=%s associated_radios=%s associated_manuals=%s",
+            "User action brand_delete submit actor=%s brand_id=%s "
+            "brand=%s associated_radios=%s associated_manuals=%s",
             _actor_label(request),
             brand.pk,
             brand.name,
@@ -684,9 +951,6 @@ def brand_merge_view(request, pk):
     pointers, and Manufacturer M2M links are re-pointed from source → target,
     then the source brand is deleted.
     """
-    from django.db import transaction
-    from .models import Manufacturer
-
     source = get_object_or_404(Brand, pk=pk)
 
     if request.method == 'POST':
@@ -726,7 +990,8 @@ def brand_merge_view(request, pk):
             source.delete()
 
         logger.info(
-            "Brand merge complete source=%s target=%s radios_brand=%s child_brands=%s manufacturers=%s",
+            "Brand merge complete source=%s target=%s radios_brand=%s "
+            "child_brands=%s manufacturers=%s",
             source_name, target.name, r1, r2, r3,
         )
         messages.success(
@@ -780,7 +1045,9 @@ class ManufacturerListView(ListView):
         context['filtered_count'] = context['paginator'].count if context.get('paginator') else 0
         query_params = self.request.GET.copy()
         query_params.pop('page', None)
-        context['query_string'] = f"&{query_params.urlencode()}" if query_params else ""
+        context['query_string'] = (
+            f"&{query_params.urlencode()}" if query_params else ""
+        )
         return context
 
 
@@ -794,8 +1061,14 @@ class ManufacturerCreateView(CreateView):
         return reverse_lazy('manufacturer_edit', kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
-        logger.info("User action manufacturer_create actor=%s name=%s", _actor_label(self.request), form.instance.full_name)
-        messages.success(self.request, f'Manufacturer "{form.instance.full_name}" created.')
+        logger.info(
+            "User action manufacturer_create actor=%s name=%s",
+            _actor_label(self.request), form.instance.full_name,
+        )
+        messages.success(
+            self.request,
+            f'Manufacturer "{form.instance.full_name}" created.',
+        )
         return super().form_valid(form)
 
 
@@ -814,8 +1087,15 @@ class ManufacturerUpdateView(UpdateView):
         return context
 
     def form_valid(self, form):
-        logger.info("User action manufacturer_update actor=%s pk=%s name=%s", _actor_label(self.request), self.object.pk, form.instance.full_name)
-        messages.success(self.request, f'Manufacturer "{form.instance.full_name}" updated.')
+        logger.info(
+            "User action manufacturer_update actor=%s pk=%s name=%s",
+            _actor_label(self.request), self.object.pk,
+            form.instance.full_name,
+        )
+        messages.success(
+            self.request,
+            f'Manufacturer "{form.instance.full_name}" updated.',
+        )
         return super().form_valid(form)
 
 
@@ -827,8 +1107,15 @@ class ManufacturerDeleteView(DeleteView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        logger.warning("User action manufacturer_delete actor=%s pk=%s name=%s", _actor_label(request), self.object.pk, self.object.full_name)
-        messages.success(request, f'Manufacturer "{self.object.full_name}" deleted.')
+        logger.warning(
+            "User action manufacturer_delete actor=%s pk=%s name=%s",
+            _actor_label(request), self.object.pk,
+            self.object.full_name,
+        )
+        messages.success(
+            request,
+            f'Manufacturer "{self.object.full_name}" deleted.',
+        )
         self.object.delete()
         return redirect(self.success_url)
 
@@ -923,9 +1210,8 @@ def dashboard_view(request):
     except (ValueError, TypeError):
         recent_days = 30
 
-    from django.utils import timezone as tz_utils
-    from datetime import timedelta
-    cutoff_date = tz_utils.now().date() - timedelta(days=recent_days)
+    from datetime import timedelta as _timedelta
+    cutoff_date = timezone.now().date() - _timedelta(days=recent_days)
 
     raw_brand_rows = list(
         Radio.objects.values('brand').annotate(
@@ -965,7 +1251,11 @@ def dashboard_view(request):
 
     top_brands = sorted(
         merged_brands.values(),
-        key=lambda item: ((item.get('latest_update') is not None), item.get('latest_update'), item.get('count') or 0),
+        key=lambda item: (
+            (item.get('latest_update') is not None),
+            item.get('latest_update'),
+            item.get('count') or 0,
+        ),
         reverse=True,
     )[:10]
 
@@ -1131,8 +1421,6 @@ def fcc_validate_fccids_view(request):
     """Validate unique FCC IDs against the live FCC API.
     Reports any FCC IDs that do not exist in the FCC database.
     Validates by unique FCC ID (not per radio record) to minimize API calls."""
-    from radios.fcc_id_utils import split_fcc_id
-
     # Collect unique FCC IDs and their sample radios
     unique_fcc_ids = {}
     pk_limit = int(request.GET.get('limit', '0'))
@@ -1238,16 +1526,12 @@ def maintenance_view(request):
     )
 
     # Grant_date chart data: count of radios by year of first FCC grant
-    from django.db.models.functions import ExtractYear
-    from collections import Counter
     year_counts = Counter()
     for row in Radio.objects.exclude(grant_date__isnull=True).values('grant_date'):
         year_counts[row['grant_date'].year] += 1
     grant_chart = sorted(year_counts.items())
 
     total_oet_docs = RadioOETDocument.objects.count()
-
-    import json
     context = {
         'total_radios': total_radios,
         'total_manufacturers': total_manufacturers,
@@ -1287,10 +1571,15 @@ def processing_logs_view(request):
         'XML import',
     )
     recent_processing_events = [
-        line.strip() for line in reversed(recent_log_lines) if any(marker in line for marker in event_markers)
+        line.strip()
+        for line in reversed(recent_log_lines)
+        if any(marker in line for marker in event_markers)
     ][:80]
 
-    recent_manual_events = RadioManual.objects.select_related('radio').order_by('-updated_at')[:30]
+    recent_manual_events = (
+        RadioManual.objects.select_related('radio')
+        .order_by('-updated_at')[:30]
+    )
 
     context = {
         'recent_processing_events': recent_processing_events,
@@ -1376,3 +1665,192 @@ def nodal_visualization_view(request):
         'graph_edges_json': json.dumps(graph_data.get('edges', [])),
     }
     return render(request, 'radios/nodal_visualization.html', context)
+
+
+# ---------------------------------------------------------------------------
+# Brand detail page — stats, chart, feature filtering
+# ---------------------------------------------------------------------------
+
+
+def _band_filter(band_keywords):
+    """Return a Q filter for ``freq_bands_tx`` matching any keyword."""
+    q = Q()
+    for kw in band_keywords:
+        q |= Q(freq_bands_tx__icontains=kw)
+    return q
+
+
+# Feature definitions used on the brand detail page.
+FEATURE_DEFS = {
+    'aprs': {
+        'label': 'APRS',
+        'description': 'Automatic Packet Reporting System',
+        'filter': ~Q(aprs='') & ~Q(aprs__iexact='No')
+                  & ~Q(aprs__iexact='Not specified'),
+    },
+    'gps': {
+        'label': 'GPS',
+        'description': 'Global Positioning System',
+        'filter': Q(gps__iexact='Yes') | Q(gps__iexact='Optional'),
+    },
+    'dmr': {
+        'label': 'DMR',
+        'description': 'Digital Mobile Radio',
+        'filter': Q(dmr__iexact='Yes'),
+    },
+    'vhf': {
+        'label': 'VHF',
+        'description': '144–148 MHz (2 meter)',
+        'filter': _band_filter(['vhf', '144', '2m', '2 meter']),
+    },
+    'uhf': {
+        'label': 'UHF',
+        'description': '420–450 MHz (70 cm)',
+        'filter': _band_filter(['uhf', '430', '440', '70cm', '70 cm']),
+    },
+    '5m': {
+        'label': '5 meters',
+        'description': '50–54 MHz (6 meter)',
+        'filter': _band_filter(
+            ['5m', '5 meter', '50-54', '50 mhz', '6m', '6 meter']
+        ),
+    },
+    '10m': {
+        'label': '10 meters',
+        'description': '28–29.7 MHz',
+        'filter': _band_filter(
+            ['10m', '10 meter', '28-30', '28 mhz', '29 mhz']
+        ),
+    },
+    '11m': {
+        'label': '11 meters (CB)',
+        'description': '26–27 MHz Citizens Band',
+        'filter': _band_filter(
+            ['11m', '11 meter', 'cb band', 'citizens band',
+             '26-28', '27 mhz']
+        ),
+    },
+    'frs': {
+        'label': 'FRS',
+        'description': 'Family Radio Service (462–467 MHz)',
+        'filter': _band_filter(['frs']),
+    },
+    'gmrs': {
+        'label': 'GMRS',
+        'description': 'General Mobile Radio Service (462–467 MHz)',
+        'filter': _band_filter(['gmrs']),
+    },
+}
+
+
+def brand_detail_view(request, pk):
+    """Detail page for a single brand with stats, chart, and feature
+    filtering. Shows total model count, newest model, subsidiary/white-label
+    info, a year-over-year bar chart of new models, and clickable feature
+    count tiles that filter the model list below.
+    """
+    brand = get_object_or_404(Brand, pk=pk)
+
+    # Build a broad query for radios associated with this brand.
+    # Include: direct brand name match + grantee code match (own or parent).
+    brand_radio_query = Q(brand__iexact=brand.name)
+
+    # Resolve the effective grantee code: check own code first, then parent.
+    effective_grantee = brand.grantee_code
+    if not effective_grantee and brand.parent_brand:
+        effective_grantee = brand.parent_brand.grantee_code
+
+    if effective_grantee:
+        # Include radios whose FCC ID starts with this grantee code, covering
+        # white-label brands sold under different names but from the same OEM.
+        brand_radio_query |= Q(fcc_id__istartswith=effective_grantee)
+
+    radios_qs = Radio.objects.filter(brand_radio_query)
+    total_models = radios_qs.count()
+
+    # Newest model (by FCC grant date)
+    newest_radio = (
+        radios_qs.filter(grant_date__isnull=False)
+        .order_by('-grant_date')
+        .first()
+    )
+
+    # White-label / subsidiary brands
+    subsidiary_brands = Brand.objects.filter(parent_brand=brand).order_by('name')
+
+    # Parse comma-separated white_label_vendors
+    white_label_names = []
+    if brand.white_label_vendors:
+        white_label_names = [
+            v.strip() for v in brand.white_label_vendors.split(',')
+            if v.strip()
+        ]
+
+    # Manufacturer linked via the Brand-M2M
+    manufacturer = brand.manufacturers.first()
+
+    # Year-over-year chart data
+    yearly_counts = list(
+        radios_qs.filter(grant_date__isnull=False)
+        .annotate(year=ExtractYear('grant_date'))
+        .values('year')
+        .annotate(count=Count('id'))
+        .order_by('year')
+    )
+    max_year_count = max(
+        (r['count'] for r in yearly_counts if r['year']), default=1
+    )
+
+    # Feature counts
+    feature_counts = {}
+    for key, defn in FEATURE_DEFS.items():
+        feature_counts[key] = radios_qs.filter(defn['filter']).count()
+
+    # Interactive feature filter
+    active_feature = request.GET.get('feature', '')
+    filtered_radios = None
+    if active_feature in FEATURE_DEFS:
+        filtered_radios = list(
+            radios_qs.filter(FEATURE_DEFS[active_feature]['filter'])
+            .order_by('model')
+        )
+
+    # All brand radios — use filtered list when a feature filter is active.
+    # Keep filtered_radios as a list even when empty so the template knows
+    # the user applied a filter (vs no filter at all).
+    if filtered_radios is not None:
+        brand_radios = filtered_radios
+    else:
+        brand_radios = list(
+            radios_qs.values(
+                'id', 'model', 'fcc_id', 'grant_date', 'freq_bands_tx',
+                'power_watts', 'radio_type',
+            ).order_by('model')
+        )
+
+    logger.info(
+        "User action brand_detail_view actor=%s brand_id=%s brand=%s "
+        "feature=%s",
+        _actor_label(request), brand.pk, brand.name, active_feature,
+    )
+
+    context = {
+        'brand': brand,
+        'manufacturer': manufacturer,
+        'total_models': total_models,
+        'newest_radio': newest_radio,
+        'subsidiary_brands': subsidiary_brands,
+        'white_label_names': white_label_names,
+        'yearly_counts': yearly_counts,
+        'yearly_counts_json': json.dumps([
+            [int(r['year']), r['count']]
+            for r in yearly_counts if r['year']
+        ]),
+        'max_year_count': max_year_count,
+        'feature_counts': feature_counts,
+        'feature_defs': FEATURE_DEFS,
+        'active_feature': active_feature,
+        'filtered_radios': filtered_radios,
+        'brand_radios': brand_radios,
+    }
+    return render(request, 'radios/brand_detail.html', context)

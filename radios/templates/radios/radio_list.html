@@ -105,12 +105,6 @@
                         Rebadges/Clones
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        White Label
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Firmware
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <a href="?sort=updated_at&order={% if current_sort == 'updated_at' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
                             Updated
                             {% if current_sort == 'updated_at' %}
@@ -170,24 +164,6 @@
                     <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">
                         {{ radio.rebadges_clones|default:"-" }}
                     </td>
-                    <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">
-                        {{ radio.white_label_vendors|default:"-" }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-normal text-sm text-gray-500">
-                        {% if radio.prefetched_firmware %}
-                        <ul class="space-y-1">
-                            {% for fw in radio.prefetched_firmware %}
-                            <li>
-                                {% if fw.label %}<span class="font-medium text-gray-700">{{ fw.label }}:</span> {% endif %}
-                                {% if fw.version %}<span class="font-mono">{{ fw.version }}</span>{% endif %}
-                                {% if fw.download_url %} <a href="{{ fw.download_url }}" target="_blank" class="text-indigo-500 hover:text-indigo-700" title="Download page">↗</a>{% endif %}
-                            </li>
-                            {% endfor %}
-                        </ul>
-                        {% else %}
-                        -
-                        {% endif %}
-                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {{ radio.updated_at|date:"M d, Y" }}
                     </td>
@@ -199,7 +175,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="12" class="px-6 py-12 text-center text-gray-500">
+                    <td colspan="10" class="px-6 py-12 text-center text-gray-500">
                         No radios found. <a href="{% url 'radio_add' %}" class="text-indigo-600 hover:text-indigo-900">Add your first radio</a>
                     </td>
                 </tr>

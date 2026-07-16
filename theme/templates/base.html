@@ -21,6 +21,9 @@
                         <a href="{% url 'dashboard' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                             Dashboard
                         </a>
+                        <a href="{% url 'brand_list' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Brands
+                        </a>
                         <a href="{% url 'radio_add' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                             Add Radio
                         </a>
@@ -29,7 +32,26 @@
                         </a>
                     </div>
                 </div>
-                <div class="flex items-center">
+                <div class="flex items-center space-x-3">
+                    <!-- Sync Progress Bar -->
+                    <div id="syncProgress" class="hidden items-center space-x-2 bg-indigo-700 rounded-lg px-3 py-1.5">
+                        <div class="flex items-center space-x-2">
+                            <svg class="animate-spin h-4 w-4 text-indigo-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <div class="flex flex-col">
+                                <div class="flex items-baseline space-x-2">
+                                    <span id="syncProgressLabel" class="text-xs text-indigo-100 font-medium whitespace-nowrap">Syncing...</span>
+                                    <span id="syncProgressCount" class="text-xs text-indigo-300 whitespace-nowrap">0/0</span>
+                                </div>
+                                <div class="w-32 bg-indigo-900 rounded-full h-1.5 mt-0.5">
+                                    <div id="syncProgressBar" class="bg-green-400 h-1.5 rounded-full transition-all duration-500" style="width:0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/admin/" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                     <a href="/admin/" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                         Admin
                     </a>
@@ -37,6 +59,77 @@
             </div>
         </div>
     </nav>
+
+    <!-- Sync progress polling script -->
+    <script>
+    (function() {
+        var el = document.getElementById('syncProgress');
+        var bar = document.getElementById('syncProgressBar');
+        var label = document.getElementById('syncProgressLabel');
+        var count = document.getElementById('syncProgressCount');
+        var timer = null;
+        var idleCount = 0;
+        var IDLE_INTERVAL = 15000;
+        var ACTIVE_INTERVAL = 2000;    // 2 s between polls during sync
+        var MAX_IDLE_POLLS = 6;
+
+        function render(data) {
+            el.classList.remove('hidden');
+            label.textContent = data.message || 'Syncing...';
+            if (data.total > 1) {
+                // Multi-step sync: show progress bar + count
+                count.textContent = data.completed + '/' + data.total;
+                count.classList.remove('hidden');
+                bar.style.display = 'block';
+                var pct = data.total > 0 ? Math.round(data.completed / data.total * 100) : 0;
+                bar.style.width = pct + '%';
+            } else {
+                // Single-item sync: spinner only, no bar/count
+                count.classList.add('hidden');
+                bar.style.display = 'none';
+            }
+        }
+
+        function poll() {
+            fetch('/radios/sync-progress/')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.in_progress) {
+                        render(data);
+                        idleCount = 0;
+                        timer = setTimeout(poll, ACTIVE_INTERVAL);
+                    } else {
+                        el.classList.add('hidden');
+                        bar.style.width = '0%';
+                        idleCount += 1;
+                        if (idleCount >= MAX_IDLE_POLLS) {
+                            if (timer) { clearTimeout(timer); timer = null; }
+                            return;
+                        }
+                        timer = setTimeout(poll, IDLE_INTERVAL);
+                    }
+                })
+                .catch(function() {
+                    idleCount += 1;
+                    if (idleCount >= MAX_IDLE_POLLS) {
+                        if (timer) { clearTimeout(timer); timer = null; }
+                        return;
+                    }
+                    timer = setTimeout(poll, IDLE_INTERVAL);
+                });
+        }
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (timer) { clearTimeout(timer); timer = null; }
+            } else if (!timer) {
+                timer = setTimeout(poll, IDLE_INTERVAL);
+            }
+        });
+
+        timer = setTimeout(poll, IDLE_INTERVAL);
+    })();
+    </script>
 
     <!-- Messages -->
     {% if messages %}

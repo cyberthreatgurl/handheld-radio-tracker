@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware, Manufacturer, IgnoredGrantee, FCCSyncState, delete_brand_and_related
+from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware, Manufacturer, IgnoredGrantee, SyncSkippedGrantee, FCCSyncState, delete_brand_and_related
 
 
 @admin.register(Brand)
@@ -90,6 +90,13 @@ class ManufacturerAdmin(admin.ModelAdmin):
 
 @admin.register(IgnoredGrantee)
 class IgnoredGranteeAdmin(admin.ModelAdmin):
+    list_display = ['grantee_code', 'reason', 'updated_at']
+    search_fields = ['grantee_code', 'reason', 'notes']
+    ordering = ['grantee_code']
+
+
+@admin.register(SyncSkippedGrantee)
+class SyncSkippedGranteeAdmin(admin.ModelAdmin):
     list_display = ['grantee_code', 'reason', 'updated_at']
     search_fields = ['grantee_code', 'reason', 'notes']
     ordering = ['grantee_code']

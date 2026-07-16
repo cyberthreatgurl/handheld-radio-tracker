@@ -261,6 +261,8 @@ python manage.py sync_fcc --fcc-id XH8
 `python manage.py sync_fcc --all-grantees`
 
 - Sync all known grantee codes from the `Brand` table using incremental date filtering.
+- Pass `--ignore-grantees=ICOM,MOTOROLA,YAESU` to skip ad-hoc grantee codes on the command line.
+- Grantee codes stored in the **Sync-Skipped Grantee IDs** admin page are also excluded automatically.
 
 `python manage.py sync_fcc --all-grantees --full-history`
 
@@ -336,6 +338,17 @@ python manage.py audit_oet_sync --missing-only --limit 50
 `python manage.py cleanup_duplicate_brands --force`
 
 - Actually delete duplicate blank-code Brand rows after canonicalization.
+
+### Sync-Skipped Grantee IDs
+
+**Purpose:** Skip known-stable grantees during bulk FCC sync to reduce API calls and runtime.
+
+**Mechanisms:**
+
+1. **Django Admin** (`/admin/radios/syncskippedgrantee/`) — add grantee codes like `ICOM`, `MOTOROLA`, `YAESU` to skip them on every `--all-grantees` sync. Persisted in the database.
+2. **CLI** (`--ignore-grantees=ICOM,MOTOROLA`) — ad-hoc skip for a single run, merged with any DB-stored codes.
+
+Unlike `IgnoredGrantee` (which completely blocks import of those grantees), Sync-Skipped Grantees keep their existing radios in the database — they're just not queried during bulk sync.
 
 ## FCC grantee repair and maintenance
 

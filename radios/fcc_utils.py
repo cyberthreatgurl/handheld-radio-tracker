@@ -109,25 +109,25 @@ def _find_matching_blank_code_brand(grantee_name, exclude_brand_id=None):
 
 
 def _resolve_authoritative_radio_brand_name(auth_brand, grantee_code, grantee_name):
-    norm_grantee_name = (grantee_name or '').strip()
-    if auth_brand is None or not norm_grantee_name:
-        return norm_grantee_name
+    norm_name = (grantee_name or '').strip()
+    if auth_brand is None or not norm_name:
+        return norm_name
 
     norm_brand = _normalize_brand_identity(auth_brand.name)
-    grantee_key = _normalize_brand_identity(norm_grantee_name)
+    grantee_key = _normalize_brand_identity(norm_name)
     if norm_brand == grantee_key:
         return auth_brand.name
 
     auth_code = normalize_grantee_code(getattr(auth_brand, 'grantee_code', ''))
     if auth_code != normalize_grantee_code(grantee_code):
-        return norm_grantee_name
+        return norm_name
 
     blank_brand = _find_matching_blank_code_brand(
-        norm_grantee_name,
+        norm_name,
         exclude_brand_id=auth_brand.id,
     )
     if blank_brand is None:
-        return norm_grantee_name
+        return norm_name
 
     return auth_brand.name
 
@@ -953,9 +953,9 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                     )
                     exhibit_links.append(constructed_url)
                     logger.info(
-                'FCC browser extracted application_id from HTML fcc_id=%s app_id=%s',
-                fcc_id, app_id[:20],
-            )
+                        'FCC browser extracted application_id from HTML fcc_id=%s app_id=%s',
+                        fcc_id, app_id[:20],
+                    )
             
             # Strategy 3: Try clicking on the first row to trigger navigation
             if not exhibit_links:
@@ -970,8 +970,8 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                                 logger.info('FCC browser found exhibit link via first row fcc_id=%s', fcc_id)
                 except Exception:
                     logger.info(
-                'FCC browser first row click attempt failed fcc_id=%s', fcc_id,
-            )
+                        'FCC browser first row click attempt failed fcc_id=%s', fcc_id,
+                    )
 
             # --- Background: FCC grantee/product code rules -------------------------
             # FCC IDs beginning with a digit have a 5-character grantee code;
@@ -2603,14 +2603,14 @@ def _stamp_lookup_timestamp(radio, looked_up_at):
 
 
 def _ensure_grantee_brand_and_manufacturer(grantee_code, grantee_name):
-    norm_grantee = normalize_grantee_code(grantee_code)
-    norm_grantee_name = (grantee_name or '').strip()
-    if not norm_grantee or not norm_grantee_name:
+    norm_code = normalize_grantee_code(grantee_code)
+    norm_name = (grantee_name or '').strip()
+    if not norm_code or not norm_name:
         return None, None
 
-    brand = _find_existing_grantee_brand(norm_grantee, norm_grantee_name)
+    brand = _find_existing_grantee_brand(norm_code, norm_name)
     blank_brand = _find_matching_blank_code_brand(
-        norm_grantee_name,
+        norm_name,
         exclude_brand_id=brand.id if brand is not None else None,
     )
 
@@ -2621,20 +2621,20 @@ def _ensure_grantee_brand_and_manufacturer(grantee_code, grantee_name):
 
     if brand is None:
         brand = Brand.objects.create(
-            name=norm_grantee_name,
-            grantee_code=norm_grantee,
-            full_name=norm_grantee_name,
+            name=norm_name,
+            grantee_code=norm_code,
+            full_name=norm_name,
         )
     else:
         update_fields = []
         if not brand.grantee_code:
-            brand.grantee_code = norm_grantee
+            brand.grantee_code = norm_code
             update_fields.append('grantee_code')
 
         brand_full_name_key = _normalize_brand_identity(brand.full_name)
-        grantee_name_key = _normalize_brand_identity(norm_grantee_name)
+        grantee_name_key = _normalize_brand_identity(norm_name)
         if not brand.full_name or (blank_brand is not None and brand_full_name_key != grantee_name_key):
-            brand.full_name = norm_grantee_name
+            brand.full_name = norm_name
             update_fields.append('full_name')
         if not brand.alias and blank_brand is not None and blank_brand.alias:
             brand.alias = blank_brand.alias
@@ -2642,10 +2642,10 @@ def _ensure_grantee_brand_and_manufacturer(grantee_code, grantee_name):
         if update_fields:
             brand.save(update_fields=update_fields)
 
-    manufacturer = Manufacturer.objects.filter(full_name__iexact=norm_grantee_name).first()
+    manufacturer = Manufacturer.objects.filter(full_name__iexact=norm_name).first()
     if manufacturer is None:
         manufacturer = Manufacturer.objects.create(
-            full_name=norm_grantee_name,
+            full_name=norm_name,
             alias=brand.alias or brand.name,
         )
     elif not manufacturer.alias and (brand.alias or brand.name):
@@ -2797,7 +2797,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         if not raw_brand_name:
             raw_brand_name = grantee_code
 
-        auth_brand, auth_manufacturer = _ensure_grantee_brand_and_manufacturer(
+        auth_brand, auth_mfr = _ensure_grantee_brand_and_manufacturer(
             grantee_code,
             raw_brand_name,
         )
@@ -3041,8 +3041,8 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                         radio.brand = brand_val
                         has_changes = True
 
-                if auth_manufacturer and radio.manufacturer_id != auth_manufacturer.id:
-                    radio.manufacturer = auth_manufacturer
+                if auth_mfr and radio.manufacturer_id != auth_mfr.id:
+                    radio.manufacturer = auth_mfr
                     has_changes = True
 
                 if has_changes:
@@ -3114,8 +3114,8 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     if not radio_brand_key or radio_brand_key == raw_brand_key:
                         existing_radio.brand = brand_val
 
-                if auth_manufacturer and existing_radio.manufacturer_id != auth_manufacturer.id:
-                    existing_radio.manufacturer = auth_manufacturer
+                if auth_mfr and existing_radio.manufacturer_id != auth_mfr.id:
+                    existing_radio.manufacturer = auth_mfr
 
                 existing_radio.last_fccid_lookup_at = lookup_started_at
                 existing_radio.save()
@@ -3134,7 +3134,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 created_radio = Radio.objects.create(
                     brand=brand_val,
                     model=product_code,
-                    manufacturer=auth_manufacturer,
+                    manufacturer=auth_mfr,
                     fcc_id=fcc_id,
                     notes=new_notes,
                     is_a_whitelabel=is_change_in_id,

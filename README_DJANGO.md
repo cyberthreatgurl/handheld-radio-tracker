@@ -12,7 +12,8 @@ A Django web application for managing and browsing ham radio specifications with
 - 🔍 **Search & Filter**: Find radios by brand, model, or FCC ID
 - ✏️ **CRUD Operations**: Create, read, update, and delete radio entries via web interface
 - 📊 **Dashboard**: View statistics and recently added radios
-- 🎨 **Modern UI**: Clean, responsive design with Tailwind CSS
+- �️ **Brand Detail Page**: Per-brand dashboard showing model counts, newest model with FCC grant date, year-over-year bar chart (Chart.js), and interactive feature filtering (APRS, GPS, DMR, VHF, UHF, 5m, 10m, 11m/CB, FRS, GMRS) with clickable count tiles
+- �🎨 **Modern UI**: Clean, responsive design with Tailwind CSS
 - 📱 **Mobile Friendly**: Works on all device sizes
 - 🗄️ **PostgreSQL**: Robust database with proper indexing
 - 📥 **CSV Import**: Import your existing radio data from CSV files
@@ -137,6 +138,8 @@ The application will be available at:
 4. **View Details** (`/radios/<id>/`): See complete specifications
 5. **Edit Radio** (`/radios/<id>/edit/`): Update radio information
 6. **Delete Radio** (`/radios/<id>/delete/`): Remove a radio entry
+7. **Brand List** (`/brands/`): Browse all brands with search and sort
+8. **Brand Detail** (`/brands/<id>/`): Per-brand dashboard with stats, yearly chart, and interactive feature filtering
 
 ### FCC ID Behavior (Current)
 
@@ -156,6 +159,8 @@ Access the Django admin at `/admin/` for advanced database management:
 - Advanced filtering
 - Data export
 - User management
+- **Sync-Skipped Grantee IDs** — manage grantee codes (e.g. `ICOM`, `MOTOROLA`, `YAESU`) to skip during bulk FCC sync while keeping their existing radios in the database. Also skippable at the command line via `python manage.py sync_fcc --all-grantees --ignore-grantees=ICOM,MOTOROLA`
+- **FCC Sync State** — trigger full-history grantee sync and view the last sync timestamp
 
 ## Project Structure
 
@@ -173,10 +178,16 @@ radio_database/
     ├── forms.py             # Django forms
     ├── urls.py              # App URL routing
     ├── admin.py             # Admin configuration
+    ├── templatetags/        # Custom template tags & filters
+    │   ├── __init__.py
+    │   └── radio_extras.py  # dictget filter & template helpers
     ├── templates/           # HTML templates
     │   ├── base.html        # Base template with navigation
     │   └── radios/          # Radio-specific templates
     │       ├── dashboard.html
+    │       ├── brand_list.html
+    │       ├── brand_detail.html
+    │       ├── brand_form.html
     │       ├── radio_list.html
     │       ├── radio_detail.html
     │       ├── radio_form.html

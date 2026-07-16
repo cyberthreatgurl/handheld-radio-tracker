@@ -1,16 +1,26 @@
+# pylint: disable=no-member,wrong-import-position
+"""Fetch FCC records for all active Brand grantees, excluding ignored ones."""
 import csv
+import os
+import django
 from curl_cffi import requests
 import xmltodict
+
+# Setup Django environment
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'radio_database.settings')
+django.setup()
+
+from radios.models import Brand, IgnoredGrantee
 
 # API Endpoint
 URL = "https://apps.fcc.gov/OETLabServices/getFCCIDList?"
 
 def fetch_fcc_data(grantee_code="", product_code=""):
     """Queries the FCC EAS HTTP GET API and returns a list of matching records."""
-    
+
     # Construct the URL with the parameter
     request_url = f"{URL}fccId={grantee_code}" if grantee_code else URL
-    
+
     print(f"Querying FCC API at {request_url}")
     print(f"Querying FCC with Grantee Code: {grantee_code or 'Any'}...")
     try:
@@ -20,7 +30,7 @@ def fetch_fcc_data(grantee_code="", product_code=""):
     except Exception as e:
         print(f"Request failed with error: {e}")
         return []
-    
+
     if response.status_code != 200:
         print(f"Error: Received status code {response.status_code}")
         print(f"Response text preview: {response.text[:500]}")
@@ -41,14 +51,33 @@ def fetch_fcc_data(grantee_code="", product_code=""):
         return [result]
     return result if result else []
 
+def _get_active_grantee_codes():
+    """Return all Brand grantee codes from the DB, excluding ignored ones."""
+    ignored = set(IgnoredGrantee.ignored_codes())
+    codes = (
+        Brand.objects
+        .exclude(grantee_code__isnull=True)
+        .exclude(grantee_code__exact='')
+        .values_list('grantee_code', flat=True)
+        .distinct()
+    )
+    active = [c for c in codes if c not in ignored]
+    if ignored:
+        print(f"Ignoring {len(ignored)} ignored grantee code(s): {sorted(ignored)}")
+    return active
+
+
 def main():
+    """Query the FCC API for each active grantee and save results to CSV."""
     print("Starting FCC record retrieval script...")
-    
-    # Example: Searching for all products under specific common grantee codes
-    grantee_codes = ["2AJGM", "2ANPO", "AFJ", "ALH"] 
-    print(f"Targeting grantee codes: {grantee_codes}")
+
+    grantee_codes = _get_active_grantee_codes()
+    if not grantee_codes:
+        print("No active grantee codes found in the database (all may be ignored).")
+        return
+    print(f"Targeting {len(grantee_codes)} active grantee code(s): {grantee_codes}")
     all_records = []
-    
+
     for code in grantee_codes:
         results = fetch_fcc_data(grantee_code=code)
         for res in results:

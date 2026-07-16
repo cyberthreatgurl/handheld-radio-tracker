@@ -16,6 +16,7 @@ urlpatterns = [
 
     path('sync-fcc/', views.sync_fcc_view, name='sync_fcc_id'),
     path('sync-all-grantees/', views.sync_all_grantees_view, name='sync_all_grantees'),
+    path('sync-progress/', views.sync_progress_view, name='sync_progress'),
     path('processing-logs/', views.processing_logs_view, name='processing_logs'),
     path('nodal-visualization/', views.nodal_visualization_view, name='nodal_visualization'),
     path('maintenance/', views.maintenance_view, name='maintenance'),
@@ -23,6 +24,7 @@ urlpatterns = [
     path('fcc-validate-fccids/', views.fcc_validate_fccids_view, name='fcc_validate_fccids'),
 
     path('brands/', views.BrandListView.as_view(), name='brand_list'),
+    path('brands/<int:pk>/', views.brand_detail_view, name='brand_detail'),
     path('brands/add/', views.BrandCreateView.as_view(), name='brand_add'),
     path('brands/<int:pk>/edit/', views.BrandUpdateView.as_view(), name='brand_edit'),
     path('brands/<int:pk>/delete/', views.BrandDeleteView.as_view(), name='brand_delete'),

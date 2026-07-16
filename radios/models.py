@@ -1,34 +1,81 @@
-from django.db import models, transaction
-from django.conf import settings
+"""
+Radio tracker database models.
+
+Brand, Radio, Manufacturer, and supporting models for the
+ham radio equipment database.
+"""
+# pylint: disable=no-member, broad-except, global-statement, too-few-public-methods, too-many-ancestors, import-outside-toplevel, too-many-branches
+# no-member: Django ORM metaclass-based managers are undetectable by pylint
+# broad-except: intentionally broad at module boundary call-sites
+# global-statement: used sparingly for module-level singleton patterns
+# too-few-public-methods, too-many-ancestors: normal for Django model classes
+# import-outside-toplevel: lazy imports avoid circular deps in model methods
+# too-many-branches: Radio.save() branching reflects real-world FCC ID logic
+
 import logging
+
+from django.conf import settings
+from django.db import models, transaction
+from django.urls import reverse
 
 
 logger = logging.getLogger(__name__)
 
 
 def normalize_grantee_code(value):
+    """Strip whitespace and uppercase a grantee code string."""
     return (value or '').strip().upper()
 
 
 class Brand(models.Model):
     """Model representing a radio manufacturer with FCC Grantee Code"""
-    
-    name = models.CharField(max_length=200, unique=True, help_text="Official manufacturer/brand name")
-    alias = models.CharField(max_length=100, blank=True, help_text="Short/common brand alias (e.g., Senhaix, Baofeng)")
-    grantee_code = models.CharField(max_length=20, unique=True, blank=True, null=True, help_text="FCC Grantee Code (e.g., 2AJGM, 2AZSA)")
-    full_name = models.CharField(max_length=500, blank=True, help_text="Full legal company name")
-    website = models.URLField(max_length=500, blank=True, help_text="Official website")
-    country = models.CharField(max_length=100, blank=True, help_text="Country of origin")
-    parent_brand = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subsidiaries', help_text="Select primary brand if this is a subsidiary or shell company (e.g., EVOTE -> Wouxun)")
-    white_label_vendors = models.CharField(max_length=500, blank=True, help_text="Comma-separated list of white label vendors")
-    notes = models.TextField(blank=True, help_text="Additional notes about the manufacturer")
-    
+
+    name = models.CharField(
+        max_length=200, unique=True,
+        help_text="Official manufacturer/brand name",
+    )
+    alias = models.CharField(
+        max_length=100, blank=True,
+        help_text="Short/common brand alias (e.g., Senhaix, Baofeng)",
+    )
+    grantee_code = models.CharField(
+        max_length=20, unique=True, blank=True, null=True,
+        help_text="FCC Grantee Code (e.g., 2AJGM, 2AZSA)",
+    )
+    full_name = models.CharField(
+        max_length=500, blank=True,
+        help_text="Full legal company name",
+    )
+    website = models.URLField(
+        max_length=500, blank=True,
+        help_text="Official website",
+    )
+    country = models.CharField(
+        max_length=100, blank=True,
+        help_text="Country of origin",
+    )
+    parent_brand = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='subsidiaries',
+        help_text="Select primary brand if this is a subsidiary "
+                  "or shell company (e.g., EVOTE -> Wouxun)",
+    )
+    white_label_vendors = models.CharField(
+        max_length=500, blank=True,
+        help_text="Comma-separated list of white label vendors",
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text="Additional notes about the manufacturer",
+    )
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_modified_date = models.DateTimeField(auto_now=True, null=True, blank=True, db_index=True)
-    
+
     class Meta:
+        """Model options: default ordering, verbose names, indexes."""
         ordering = ['name']
         verbose_name = 'Brand'
         verbose_name_plural = 'Brands'
@@ -36,7 +83,7 @@ class Brand(models.Model):
             models.Index(fields=['grantee_code']),
             models.Index(fields=['alias']),
         ]
-    
+
     def __str__(self):
         parts = []
         if self.name:
@@ -75,6 +122,7 @@ class IgnoredGrantee(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Model options: ordering, verbose names."""
         ordering = ['grantee_code']
         verbose_name = 'Ignored Grantee ID'
         verbose_name_plural = 'Ignored Grantee IDs'
@@ -90,37 +138,107 @@ class IgnoredGrantee(models.Model):
 
     @classmethod
     def ignored_codes(cls):
+        """Return list of all grantee codes that should be ignored."""
         return list(cls.objects.values_list('grantee_code', flat=True))
 
     @classmethod
     def is_ignored(cls, grantee_code):
+        """Return True if the given grantee code is in the ignore list."""
         normalized_code = normalize_grantee_code(grantee_code)
         if not normalized_code:
             return False
         return cls.objects.filter(grantee_code=normalized_code).exists()
 
 
+class SyncSkippedGrantee(models.Model):
+    """FCC grantee codes to skip during bulk FCC sync
+    ('Update All Known Grantees').
+
+    Unlike ``IgnoredGrantee`` (which completely blocks import workflows), this
+    model simply skips the grantee during ``--all-grantees`` sync operations.
+    Existing radios from these grantees remain in the database and are updated
+    via other pathways (e.g. individual FCC ID lookups).
+    """
+
+    grantee_code = models.CharField(
+        max_length=20,
+        unique=True,
+        db_index=True,
+        help_text="FCC grantee code to skip during bulk FCC sync (--all-grantees).",
+    )
+    reason = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Short reason this grantee is skipped during sync "
+                  "(e.g. 'Rarely adds new models').",
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text="Optional notes about why this grantee is out of sync scope.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Model options: ordering, verbose names."""
+        ordering = ['grantee_code']
+        verbose_name = 'Sync-Skipped Grantee ID'
+        verbose_name_plural = 'Sync-Skipped Grantee IDs'
+
+    def __str__(self):
+        if self.reason:
+            return f"{self.grantee_code} - {self.reason}"
+        return self.grantee_code
+
+    def save(self, *args, **kwargs):
+        self.grantee_code = normalize_grantee_code(self.grantee_code)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def skipped_codes(cls):
+        """Return all grantee codes that should be skipped during bulk sync."""
+        return list(cls.objects.values_list('grantee_code', flat=True))
+
+
 class Radio(models.Model):
-    """Model representing a ham radio device"""
-    
+    """Model representing a ham radio device."""
+
     # Radio type choices
     class RadioType(models.TextChoices):
+        """Choices for radio form factor (base/mobile/portable)."""
         BASE = 'base', 'Base'
         MOBILE = 'mobile', 'Mobile'
         PORTABLE = 'portable', 'Portable'
-    
+
     # Basic information
-    brand = models.CharField(max_length=100, db_index=True, help_text="Radio manufacturer/brand")
-    model = models.CharField(max_length=200, help_text="Radio model name/number")
-    is_a_whitelabel = models.BooleanField(default=False, help_text="Is this radio a white label model?")
-    manufacturer = models.ForeignKey('Manufacturer', on_delete=models.SET_NULL, null=True, blank=True, related_name='manufactured_models', help_text="The legal manufacturing entity that built this radio")
+    brand = models.CharField(
+        max_length=100, db_index=True,
+        help_text="Radio manufacturer/brand",
+    )
+    model = models.CharField(
+        max_length=200,
+        help_text="Radio model name/number",
+    )
+    is_a_whitelabel = models.BooleanField(
+        default=False,
+        help_text="Is this radio a white label model?",
+    )
+    manufacturer = models.ForeignKey(
+        'Manufacturer', on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='manufactured_models',
+        help_text="The legal manufacturing entity that built this radio",
+    )
     radio_type = models.CharField(
         max_length=20,
         choices=RadioType.choices,
         blank=True,
         help_text="Type of radio (Base, Mobile, Portable)"
     )
-    fcc_id = models.CharField(max_length=50, blank=True, help_text="FCC ID (e.g., 2AJGM-UV5R)")
+    fcc_id = models.CharField(
+        max_length=50, blank=True,
+        help_text="FCC ID (e.g., 2AJGM-UV5R)",
+    )
     last_fccid_lookup_at = models.DateTimeField(
         null=True,
         blank=True,
@@ -131,43 +249,95 @@ class Radio(models.Model):
         blank=True,
         help_text="FCC EAS OET exhibits page URL (auto-populated by FCC Update)",
     )
-    grant_date = models.DateField(null=True, blank=True, help_text="Date of FCC grant")
-    
+    grant_date = models.DateField(
+        null=True, blank=True,
+        help_text="Date of FCC grant",
+    )
+
     # Technical specifications
-    freq_bands_tx = models.CharField(max_length=200, blank=True, help_text="Frequency bands (TX) (e.g., VHF, UHF, 220)")
-    power_watts = models.CharField(max_length=100, blank=True, help_text="Power output (e.g., 5W, 10W)")
-    
+    freq_bands_tx = models.CharField(
+        max_length=200, blank=True,
+        help_text="Frequency bands (TX) (e.g., VHF, UHF, 220)",
+    )
+    power_watts = models.CharField(
+        max_length=100, blank=True,
+        help_text="Power output (e.g., 5W, 10W)",
+    )
+
     # Features
-    satellite_tracking = models.CharField(max_length=50, blank=True, help_text="Satellite tracking capability (Yes/No/Native)")
-    harmonic_suppression = models.CharField(max_length=100, blank=True, help_text="Harmonic suppression status (e.g., Good, Excellent, Poor)")
-    gps = models.CharField(max_length=50, blank=True, help_text="GPS capability (Yes/No/Optional)")
-    aprs = models.CharField(max_length=100, blank=True, help_text="APRS support (e.g., Yes, Analog, Digital, Beacon)")
-    air_band = models.CharField(max_length=50, blank=True, help_text="Air band receive capability (Yes/No)")
-    dmr = models.CharField(max_length=50, blank=True, help_text="DMR support (Yes/No)")
-    
+    satellite_tracking = models.CharField(
+        max_length=50, blank=True,
+        help_text="Satellite tracking capability (Yes/No/Native)",
+    )
+    harmonic_suppression = models.CharField(
+        max_length=100, blank=True,
+        help_text="Harmonic suppression status (e.g., Good, Excellent, Poor)",
+    )
+    gps = models.CharField(
+        max_length=50, blank=True,
+        help_text="GPS capability (Yes/No/Optional)",
+    )
+    aprs = models.CharField(
+        max_length=100, blank=True,
+        help_text="APRS support (e.g., Yes, Analog, Digital, Beacon)",
+    )
+    air_band = models.CharField(
+        max_length=50, blank=True,
+        help_text="Air band receive capability (Yes/No)",
+    )
+    dmr = models.CharField(
+        max_length=50, blank=True,
+        help_text="DMR support (Yes/No)",
+    )
+
     # Hardware details
-    display = models.CharField(max_length=200, blank=True, help_text="Display type (e.g., LCD, Color TFT, Dot-matrix)")
-    battery_mah = models.IntegerField(null=True, blank=True, help_text="Battery capacity in mAh")
-    
+    display = models.CharField(
+        max_length=200, blank=True,
+        help_text="Display type (e.g., LCD, Color TFT, Dot-matrix)",
+    )
+    battery_mah = models.IntegerField(
+        null=True, blank=True,
+        help_text="Battery capacity in mAh",
+    )
+
     # Pricing and related models
-    cost_approx = models.CharField(max_length=100, blank=True, help_text="Approximate cost (e.g., $50, $100-150)")
-    rebadges_clones = models.TextField(blank=True, help_text="Known rebadges or clones")
-    white_label_vendors = models.CharField(max_length=500, blank=True, help_text="Comma-separated list of white label vendors")
-    website = models.URLField(max_length=500, blank=True, help_text="Manufacturer website")
-    review_url = models.URLField(max_length=500, blank=True, help_text="Link to review (e.g., eHam.net)")
+    cost_approx = models.CharField(
+        max_length=100, blank=True,
+        help_text="Approximate cost (e.g., $50, $100-150)",
+    )
+    rebadges_clones = models.TextField(
+        blank=True,
+        help_text="Known rebadges or clones",
+    )
+    white_label_vendors = models.CharField(
+        max_length=500, blank=True,
+        help_text="Comma-separated list of white label vendors",
+    )
+    website = models.URLField(
+        max_length=500, blank=True,
+        help_text="Manufacturer website",
+    )
+    review_url = models.URLField(
+        max_length=500, blank=True,
+        help_text="Link to review (e.g., eHam.net)",
+    )
     youtube_video_urla = models.TextField(
         blank=True,
         help_text="One YouTube URL per line.",
     )
-    
+
     # Additional notes
-    notes = models.TextField(blank=True, help_text="Additional notes or specifications")
-    
+    notes = models.TextField(
+        blank=True,
+        help_text="Additional notes or specifications",
+    )
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
+        """Model options: ordering, uniqueness, indexes, verbose names."""
         ordering = ['brand', 'model']
         unique_together = ['brand', 'model']
         indexes = [
@@ -176,14 +346,14 @@ class Radio(models.Model):
         ]
         verbose_name = 'Radio'
         verbose_name_plural = 'Radios'
-    
+
     def __str__(self):
         return f"{self.brand} {self.model}"
-    
+
     def get_absolute_url(self):
-        from django.urls import reverse
+        """Return the URL for this radio's detail page."""
         return reverse('radio_detail', kwargs={'pk': self.pk})
-    
+
     def save(self, *args, **kwargs):
         """Override save to ensure brand exists in Brand table"""
         # If the radio's brand string exactly matches a known brand's alias,
@@ -193,7 +363,7 @@ class Radio(models.Model):
             alias_match = Brand.objects.filter(alias__iexact=self.brand).first()
             if alias_match and alias_match.name != self.brand:
                 self.brand = alias_match.name
-                
+
         # Automatically correlate manufacturer and white_label status using FCC ID
         if self.fcc_id and not self.manufacturer:
             fcc_upper = self.fcc_id.upper().strip()
@@ -212,7 +382,11 @@ class Radio(models.Model):
 
             if grantee_match:
                 # Walk up to the true parent brand for white-label detection
-                true_brand = grantee_match.parent_brand if grantee_match.parent_brand else grantee_match
+                true_brand = (
+                    grantee_match.parent_brand
+                    if grantee_match.parent_brand
+                    else grantee_match
+                )
 
                 # Resolve the Manufacturer record via the Brand's M2M relation
                 resolved_mfr = true_brand.manufacturers.first()
@@ -238,7 +412,10 @@ class Radio(models.Model):
             validation = validate_fcc_brand_assignment(self.fcc_id, self.brand)
             if validation.get('status') == 'white_label_possible':
                 logger.info(
-                    "FCC validation white-label candidate source=radio_model_save radio_id=%s brand=%s fcc_id=%s inferred_grantee=%s grantee_brand=%s resolved_brand=%s",
+                    "FCC validation white-label candidate "
+                    "source=radio_model_save radio_id=%s brand=%s "
+                    "fcc_id=%s inferred_grantee=%s grantee_brand=%s "
+                    "resolved_brand=%s",
                     self.pk,
                     self.brand,
                     self.fcc_id,
@@ -248,7 +425,9 @@ class Radio(models.Model):
                 )
             elif validation.get('status') == 'unknown_grantee':
                 logger.warning(
-                    "FCC validation unknown grantee source=radio_model_save radio_id=%s brand=%s fcc_id=%s inferred_grantee=%s",
+                    "FCC validation unknown grantee "
+                    "source=radio_model_save radio_id=%s brand=%s "
+                    "fcc_id=%s inferred_grantee=%s",
                     self.pk,
                     self.brand,
                     self.fcc_id,
@@ -256,55 +435,64 @@ class Radio(models.Model):
                 )
             elif validation.get('status') == 'invalid_fcc_id':
                 logger.warning(
-                    "FCC validation invalid id source=radio_model_save radio_id=%s brand=%s fcc_id=%s",
+                    "FCC validation invalid id "
+                    "source=radio_model_save radio_id=%s brand=%s "
+                    "fcc_id=%s",
                     self.pk,
                     self.brand,
                     self.fcc_id,
                 )
 
         super().save(*args, **kwargs)
-        
+
         # Automatically create Brand entry if it doesn't exist
         if self.brand:
             Brand.objects.get_or_create(name=self.brand)
 
 
-def manual_upload_to(instance, filename):
+def manual_upload_to(_instance, filename):
+    """Upload path for manual PDF files."""
     manuals_dir = getattr(settings, 'MANUALS_DIR', 'artifacts/manuals').strip('/ ')
     return f"{manuals_dir}/{filename}"
 
 
-def test_report_upload_to(instance, filename):
+def test_report_upload_to(_instance, filename):
+    """Upload path for FCC test report PDFs."""
     reports_dir = getattr(settings, 'FCC_TEST_REPORTS_DIR', 'artifacts/test_reports').strip('/ ')
     return f"{reports_dir}/{filename}"
 
 
-def oet_document_upload_to(instance, filename):
+def oet_document_upload_to(_instance, filename):
+    """Upload path for FCC OET exhibit documents."""
     oet_dir = getattr(settings, 'OET_DOCUMENTS_DIR', 'artifacts/oet_documents').strip('/ ')
     return f"{oet_dir}/{filename}"
 
 
-def firmware_upload_to(instance, filename):
+def firmware_upload_to(_instance, filename):
+    """Upload path for firmware binary files."""
     firmware_dir = getattr(settings, 'FIRMWARE_DIR', 'artifacts/firmware').strip('/ ')
     return f"{firmware_dir}/{filename}"
 
 
 def radio_image_upload_to(instance, filename):
+    """Upload path for radio product images, organised by radio PK."""
     images_dir = getattr(settings, 'RADIO_IMAGES_DIR', 'artifacts/images').strip('/ ')
     radio_pk = getattr(instance.radio, 'pk', 'unknown') if instance.radio_id else 'unknown'
     return f"{images_dir}/{radio_pk}/{filename}"
 
 
 class RadioManual(models.Model):
-    """Uploaded document files (manuals, firmware, test reports, etc.) linked to a radio."""
+    """Uploaded document files linked to a radio (manuals, test reports, etc.)."""
 
     class ProcessingStatus(models.TextChoices):
+        """Document processing state."""
         UPLOADED = 'uploaded', 'Uploaded'
         REVIEW = 'review', 'Needs Review'
         LINKED = 'linked', 'Linked'
         ERROR = 'error', 'Error'
 
     class DocType(models.TextChoices):
+        """Categorisation of uploaded document type."""
         TEST_REPORT = 'test_report', 'Test Report'
         CHANGE_IN_ID = 'change_in_id', 'Change in Identification'
         AUTHORIZATION = 'authorization', 'Authorization'
@@ -341,6 +529,7 @@ class RadioManual(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Model options: ordering, indexes, verbose names."""
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['status']),
@@ -354,7 +543,7 @@ class RadioManual(models.Model):
 
 
 class RadioFCCTestReport(models.Model):
-    """FCC test report PDFs linked to a radio record."""
+    """FCC test report PDFs linked to a radio."""
 
     radio = models.ForeignKey(
         Radio,
@@ -373,6 +562,7 @@ class RadioFCCTestReport(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Model options: ordering, indexes, verbose names."""
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['fcc_id']),
@@ -407,6 +597,7 @@ class RadioOETDocument(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Model options: ordering, indexes, constraints, verbose names."""
         ordering = ['exhibit_type', 'view_attachment', 'id']
         indexes = [
             models.Index(fields=['fcc_id']),
@@ -424,7 +615,7 @@ class RadioOETDocument(models.Model):
 
 
 class RadioFirmware(models.Model):
-    """Firmware versions for a radio (up to two per radio, e.g. main firmware and APRS module firmware)."""
+    """Firmware versions for a radio (e.g. main firmware and APRS module)."""
 
     radio = models.ForeignKey(
         Radio,
@@ -460,6 +651,7 @@ class RadioFirmware(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Model options: ordering, verbose names."""
         ordering = ['radio', 'label']
         verbose_name = 'Radio Firmware'
         verbose_name_plural = 'Radio Firmware Versions'
@@ -474,7 +666,7 @@ class RadioFirmware(models.Model):
 
 
 class Manufacturer(models.Model):
-    """A legal manufacturing entity that may sell under one or more brand labels."""
+    """Legal manufacturing entity that may sell under one or more brand labels."""
 
     full_name = models.CharField(
         max_length=500,
@@ -507,13 +699,15 @@ class Manufacturer(models.Model):
     geocode_precision = models.CharField(
         max_length=20,
         blank=True,
-        help_text="Resolution level achieved: full, city, state, country, or empty when not yet geocoded.",
+        help_text="Resolution level achieved: full, city, state, country, "
+                  "or empty when not yet geocoded.",
     )
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Model options: ordering, verbose names."""
         ordering = ['full_name']
         verbose_name = 'Manufacturer'
         verbose_name_plural = 'Manufacturers'
@@ -525,7 +719,7 @@ class Manufacturer(models.Model):
 
 
 class RadioImage(models.Model):
-    """A product image for a Radio, uploaded directly or imported from a URL."""
+    """Product image for a Radio, uploaded directly or imported from a URL."""
 
     radio = models.ForeignKey(
         Radio,
@@ -550,6 +744,7 @@ class RadioImage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Model options: ordering, verbose names."""
         ordering = ['sort_order', 'created_at']
         verbose_name = 'Radio Image'
         verbose_name_plural = 'Radio Images'
@@ -560,6 +755,10 @@ class RadioImage(models.Model):
 
 
 def delete_radios_and_related(radio_queryset):
+    """Delete a queryset of radios and all related sub-records.
+
+    Returns a dict of counts per model type.
+    """
     radio_ids = list(radio_queryset.values_list('id', flat=True))
 
     manual_count = RadioManual.objects.filter(radio_id__in=radio_ids).delete()[0]
@@ -578,6 +777,10 @@ def delete_radios_and_related(radio_queryset):
 
 
 def delete_brand_and_related(brand, *args, **kwargs):
+    """Delete a brand, its radios, and orphaned manufacturers.
+
+    Returns a dict of counts per model type.
+    """
     radio_queryset = Radio.objects.filter(brand__iexact=brand.name).distinct()
     linked_manufacturer_ids = list(
         Manufacturer.objects.filter(brands=brand).values_list('id', flat=True)
@@ -603,7 +806,7 @@ def delete_brand_and_related(brand, *args, **kwargs):
 
 
 class FCCSyncState(models.Model):
-    """Singleton model that tracks the last time 'Update All Known Grantees' was run.
+    """Singleton tracking the last 'Update All Known Grantees' sync run.
 
     Only one row (pk=1) should ever exist.  Use ``FCCSyncState.get_instance()``
     to retrieve or lazily create it.
@@ -612,11 +815,12 @@ class FCCSyncState(models.Model):
     last_grantee_sync_at = models.DateTimeField(
         null=True,
         blank=True,
-        help_text="Timestamp of the last successful 'Update All Known Grantees' FCC sync. "
-                  "Used as the start-date filter on subsequent runs to avoid re-fetching the full history.",
+        help_text="Timestamp of the last successful 'Update All Known Grantees' "
+                  "FCC sync. Used as start-date filter on subsequent runs.",
     )
 
     class Meta:
+        """Model options: verbose names."""
         verbose_name = 'FCC Sync State'
         verbose_name_plural = 'FCC Sync State'
 

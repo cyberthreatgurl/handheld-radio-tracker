@@ -119,7 +119,12 @@
                         {% for brand in brands %}
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ brand.name }}</div>
+                                <div class="text-sm font-medium">
+                                    <a href="{% url 'brand_detail' brand.pk %}"
+                                       class="text-indigo-600 hover:text-indigo-900 hover:underline">
+                                        {{ brand.name }}
+                                    </a>
+                                </div>
                                 {% if brand.alias %}<div class="text-sm text-gray-500">{{ brand.alias }}</div>{% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

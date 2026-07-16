@@ -42,6 +42,16 @@ class Command(BaseCommand):
             action='store_true',
             help='When used with --all-grantees, ignore the last-sync date and fetch the full grant history.',
         )
+        parser.add_argument(
+            '--ignore-grantees',
+            type=str,
+            default='',
+            help=(
+                'Comma-separated list of grantee codes to skip during --all-grantees. '
+                'These are merged with any codes already in the IgnoredGrantee database table. '
+                'Example: --ignore-grantees=ICOM,MOTOROLA,YAESU'
+            ),
+        )
 
     def handle(self, *args, **options):
         single_id = options['fcc_id']
@@ -86,6 +96,18 @@ class Command(BaseCommand):
                 )
 
             ignored_codes = IgnoredGrantee.ignored_codes()
+
+            # Parse ad-hoc --ignore-grantees list and merge with DB-ignored codes.
+            cli_ignore = options.get('ignore_grantees', '') or ''
+            if cli_ignore.strip():
+                extra_codes = [
+                    c.strip().upper()
+                    for c in cli_ignore.split(',')
+                    if c.strip()
+                ]
+                ignored_codes = list(set(ignored_codes) | set(extra_codes))
+                self.stdout.write(f"Ignoring {len(extra_codes)} ad-hoc grantee(s): {', '.join(extra_codes)}")
+
             grantees = Brand.objects.exclude(grantee_code__isnull=True).exclude(grantee_code='')
             if ignored_codes:
                 grantees = grantees.exclude(grantee_code__in=ignored_codes)
