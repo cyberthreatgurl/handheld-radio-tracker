@@ -16,7 +16,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 from radios.models import (
     Brand, IgnoredGrantee, Manufacturer, Radio,
-    RadioFCCTestReport, RadioManual, RadioOETDocument, normalize_grantee_code,
+    RadioFCCTestReport, RadioManual, RadioOETDocument, SyncSkippedGrantee,
+    normalize_grantee_code,
 )
 from radios.fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from radios.manual_extraction import extract_specs_from_text, extract_text_from_pdf_with_metadata
@@ -49,7 +50,7 @@ class _FCCConnectionDownError(Exception):
     and suppress the noisy full-traceback ERROR log.
     """
 
-DEFAULT_RADIO_ALLOWLIST_TERMS = "TRANSCEIVER,TRANSMITTER,RECEIVER,MURS,ORIGINAL EQUIPMENT"
+DEFAULT_RADIO_ALLOWLIST_TERMS = "TRANSCEIVER,TRANSMITTER,GMRS,FRS,RECEIVER,MURS,ORIGINAL EQUIPMENT"
 RADIO_ALLOWLIST_ENV_NAME = "FCC_RADIO_ALLOWLIST_TERMS"
 URL_PATTERN = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 _OET_APP_ID_RE = re.compile(r'application_id=([A-Za-z0-9]+)', re.IGNORECASE)
@@ -2673,6 +2674,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
     """
     messages = []
     ignored_codes = set(IgnoredGrantee.ignored_codes())
+    skipped_codes = set(SyncSkippedGrantee.skipped_codes())
     q_grantee = _exact_grantee_query(fcc_id_query)
     if not q_grantee:
         q_grantee, _ = split_fcc_id(_clean_query(fcc_id_query))
@@ -2682,6 +2684,18 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         messages.append(message)
         logger.info(
             "FCC sync skipped ignored query query=%s ignored_grantee=%s",
+            fcc_id_query,
+            q_grantee,
+        )
+        return 0, 0, messages
+    if q_grantee and q_grantee in skipped_codes:
+        message = (
+            f"Skipped FCC query '{fcc_id_query}' because grantee "
+            f"{q_grantee} is on the sync-skipped list."
+        )
+        messages.append(message)
+        logger.info(
+            "FCC sync skipped query query=%s skipped_grantee=%s",
             fcc_id_query,
             q_grantee,
         )

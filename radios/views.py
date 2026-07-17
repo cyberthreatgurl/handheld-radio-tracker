@@ -258,6 +258,71 @@ def sync_radio_fcc_view(request, pk):
     return redirect('radio_detail', pk=pk)
 
 
+
+def _discover_unknown_grantees(start_date, end_date):
+    """Scan radio FCC IDs for grantee codes not yet in the Brand table
+    and sync them. This catches grantees that were imported via CSV/XML
+    but never added to the Brand table for FCC API discovery.
+    """
+    from django.db import close_old_connections
+    close_old_connections()
+
+    known_codes = set(
+        Brand.objects.exclude(grantee_code__isnull=True)
+        .exclude(grantee_code='')
+        .values_list('grantee_code', flat=True)
+    )
+    known_codes = {c.upper() for c in known_codes}
+    ignored_codes = set(IgnoredGrantee.ignored_codes())
+    skipped_codes = set(SyncSkippedGrantee.skipped_codes())
+    excluded = known_codes | ignored_codes | skipped_codes
+
+    # Collect unknown grantee codes from radio FCC IDs
+    candidates = Counter()
+    for radio in Radio.objects.exclude(fcc_id='').exclude(
+        fcc_id__isnull=True
+    ).iterator():
+        try:
+            grantee, _ = split_fcc_id(radio.fcc_id.strip().upper())
+            if grantee and grantee not in excluded:
+                candidates[grantee] += 1
+        except (ValueError, IndexError):
+            continue
+
+    if not candidates:
+        logger.info("Grantee discovery — no unknown grantees found.")
+        return 0, 0
+
+    logger.info(
+        "Grantee discovery — found %d unknown grantee codes: %s",
+        len(candidates),
+        dict(candidates.most_common(20)),
+    )
+
+    discovered = 0
+    for code, _count in candidates.most_common():
+        # Re-check exclusion (may have been added by a prior iteration)
+        if Brand.objects.filter(grantee_code__iexact=code).exists():
+            continue
+        if code in ignored_codes or code in skipped_codes:
+            continue
+
+        logger.info("Grantee discovery — querying unknown grantee=%s", code)
+        close_old_connections()
+        added, updated, _msgs = fetch_and_sync_fcc_id(
+            code, start_date=start_date, end_date=end_date,
+        )
+        if added or updated:
+            discovered += 1
+            logger.info(
+                "Grantee discovery — synced new grantee=%s added=%s "
+                "updated=%s",
+                code, added, updated,
+            )
+
+    return discovered, len(candidates)
+
+
 def _run_sync_all_grantees(start_date, end_date, grantee_codes):
     """Run the full grantee sync in a background thread."""
     from django.db import close_old_connections
@@ -283,6 +348,18 @@ def _run_sync_all_grantees(start_date, end_date, grantee_codes):
             )
             total_added += added
             total_updated += updated
+
+        # Phase 2: discover grantee codes from radio FCC IDs that are not
+        # yet in the Brand table (e.g. imported via CSV before the Brand
+        # was added).
+        discovered, total_unknown = _discover_unknown_grantees(
+            start_date, end_date,
+        )
+        if discovered:
+            logger.info(
+                "Grantee discovery complete discovered=%s total_unknown=%s",
+                discovered, total_unknown,
+            )
 
         sync_state = FCCSyncState.get_instance()
         sync_state.last_grantee_sync_at = end_date
