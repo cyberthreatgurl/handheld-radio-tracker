@@ -37,6 +37,22 @@ It can also enrich radios from FCC sources:
 - Consistency checking and audit commands
 - Tailwind-based frontend
 
+## FCC ID Parsing
+
+FCC ID splitting and normalization is centralized in `radios/fcc_id_utils.py`:
+
+- Leading `A-Z` → 3-character grantee code (all letters, per FCC rules).
+- Leading `2-9` → 5-character grantee code.
+- Product code is the remaining characters and may contain dashes.
+- **Short-prefix absorption**: when a hyphenated prefix is shorter than
+  the expected grantee length (e.g. `2A-3456` → grantee should be 5 chars),
+  characters are absorbed from the start of the suffix.  Only valid FCC
+  grantee codes pass (no `1` or `0` anywhere; 3-char codes must be
+  all-letters).
+- **Grantee validation**: `_validate_grantee_code()` enforces FCC character
+  constraints — rejects codes containing `1`/`0` and ensures 3-char codes
+  are all A-Z.
+
 ## Repository layout
 
 ```text

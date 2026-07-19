@@ -145,9 +145,13 @@ The application will be available at:
 
 - FCC IDs are parsed using shared logic in `radios/fcc_id_utils.py`.
 - Parsing follows FCC syntax rules:
-    - If FCC ID starts with a letter (`A-Z`), grantee code is 3 characters.
+    - If FCC ID starts with a letter (`A-Z`), grantee code is 3 characters (all-letters per FCC rules).
     - If FCC ID starts with a number (`2-9`), grantee code is 5 characters.
     - Product code is the remaining portion and may include dashes.
+    - **Short-prefix absorption**: when a hyphenated prefix is shorter than
+      the expected grantee length, characters are absorbed from the suffix
+      and validated via `_validate_grantee_code()` (rejects `1`/`0` and
+      non-letter chars in 3-char codes).
 - If a brand has a known `grantee_code`, that code is preferred when splitting compact FCC IDs.
 - Radio detail links use the official FCC ID search endpoint:
     - `https://www.fcc.gov/oet/ea/fccid?id=<FCC_ID>`

@@ -72,3 +72,39 @@ Current app behavior:
    - Product code is the remaining characters and may contain dashes.
 
 If search results still fail from `fcc.gov`, verify the FCC ID value itself and retry later in case of FCC service degradation.
+
+## SynchronousOnlyOperation in Background FCC Sync Threads
+
+If you see this error during an FCC sync:
+
+```
+django.core.exceptions.SynchronousOnlyOperation: You cannot call this
+from an async context - use a thread or sync_to_async.
+```
+
+This happens when Django's dev server runs under ASGI and a background
+`threading.Thread` inherits the async context from the parent request
+handler.  The fix is built into the application — all background sync
+threads (`_run_sync_fcc`, `_run_sync_all_grantees`, `_sync_single_grantee`)
+set `DJANGO_ALLOW_ASYNC_UNSAFE=true` at thread entry, which is Django's
+documented escape hatch for background tasks that use their own database
+connection.
+
+This error should no longer occur after the improvements branch (2026-07).
+
+## Malformed FCC XML Parse Errors
+
+If you see this in the logs:
+
+```
+xml.parsers.expat.ExpatError: not well-formed (invalid token)
+ERROR [radios.fcc_utils] FCC metadata parse failed fcc_id=...
+```
+
+The FCC API sometimes returns XML responses with unescaped `&` characters
+in company names (e.g. "Test & Measurement") and invalid XML 1.0 control
+characters.  The `_sanitize_fcc_xml()` function in `radios/fcc_utils.py`
+now pre-processes XML before parsing, fixing both issues and allowing the
+parse to succeed.  If you still see this error after the improvements
+branch, the FCC response contains corruption beyond what the sanitizer
+handles — the sync will gracefully fall back to HTML-based parsing.

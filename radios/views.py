@@ -133,7 +133,11 @@ def _actor_label(request):
 
 def _run_sync_fcc(fcc_id):
     """Run a single FCC ID sync in a background thread."""
+    import os
     from django.db import close_old_connections
+    # Allow sync-only DB operations in this background thread even when the
+    # dev server's parent request runs under ASGI (Django 4.2+ async safety).
+    os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
     close_old_connections()
     try:
         added, updated, _processing_msgs = fetch_and_sync_fcc_id(fcc_id)
@@ -323,31 +327,75 @@ def _discover_unknown_grantees(start_date, end_date):
     return discovered, len(candidates)
 
 
+def _sync_single_grantee(code, start_date, end_date):
+    """Wrapper for parallel grantee sync — ensures fresh DB connection per thread."""
+    import os
+    from django.db import close_old_connections
+    os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
+    close_old_connections()
+    return fetch_and_sync_fcc_id(code, start_date=start_date, end_date=end_date)
+
+
 def _run_sync_all_grantees(start_date, end_date, grantee_codes):
     """Run the full grantee sync in a background thread."""
+    import os
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     from django.db import close_old_connections
+    from .fcc_utils import (
+        reset_sync_metadata_cache, _close_playwright_instance,
+    )
+
+    os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
     close_old_connections()
+    reset_sync_metadata_cache()
     try:
         total_count = len(grantee_codes)
         total_added = 0
         total_updated = 0
+        completed = 0
+        errors = []
 
-        for index, code in enumerate(grantee_codes, 1):
-            cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
-                'in_progress': True,
-                'total': total_count,
-                'completed': index - 1,
-                'current': code,
-                'message': f'[{index}/{total_count}] Processing {code}...',
-                'added': total_added,
-                'updated': total_updated,
-            }, timeout=3600)
+        max_workers = min(4, max(1, total_count))
+        logger.info(
+            "Background sync_all_grantees starting parallel=%s grantees=%s",
+            max_workers, total_count,
+        )
 
-            added, updated, _ = fetch_and_sync_fcc_id(
-                code, start_date=start_date, end_date=end_date,
-            )
-            total_added += added
-            total_updated += updated
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_map = {
+                executor.submit(
+                    _sync_single_grantee,
+                    code, start_date, end_date,
+                ): code
+                for code in grantee_codes
+            }
+
+            for future in as_completed(future_map):
+                code = future_map[future]
+                try:
+                    added, updated, _msgs = future.result()
+                    total_added += added
+                    total_updated += updated
+                except Exception as exc:
+                    logger.exception(
+                        "Background sync_all_grantees grantee failed "
+                        "grantee=%s",
+                        code,
+                    )
+                    errors.append(str(exc))
+
+                completed += 1
+                cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+                    'in_progress': True,
+                    'total': total_count,
+                    'completed': completed,
+                    'current': code,
+                    'message': (
+                        f'[{completed}/{total_count}] Processed {code}...'
+                    ),
+                    'added': total_added,
+                    'updated': total_updated,
+                }, timeout=3600)
 
         # Phase 2: discover grantee codes from radio FCC IDs that are not
         # yet in the Brand table (e.g. imported via CSV before the Brand
@@ -400,6 +448,7 @@ def _run_sync_all_grantees(start_date, end_date, grantee_codes):
         }, timeout=300)
         logger.exception("Background sync_all_grantees error")
     finally:
+        _close_playwright_instance()
         close_old_connections()
 
 
@@ -1288,7 +1337,8 @@ def dashboard_view(request):
         recent_days = 30
 
     from datetime import timedelta as _timedelta
-    cutoff_date = timezone.now().date() - _timedelta(days=recent_days)
+    now = timezone.now()
+    cutoff_datetime = now - _timedelta(days=recent_days)
 
     raw_brand_rows = list(
         Radio.objects.values('brand').annotate(
@@ -1395,8 +1445,8 @@ def dashboard_view(request):
 
     recent_radios = list(
         Radio.objects.select_related('manufacturer')
-        .filter(grant_date__isnull=False, grant_date__gte=cutoff_date)
-        .order_by('-grant_date')[:50]
+        .filter(created_at__gte=cutoff_datetime)
+        .order_by('-created_at')[:50]
     )
     for radio in recent_radios:
         radio.display_brand = _preferred_brand_display_name(radio, alias_map)

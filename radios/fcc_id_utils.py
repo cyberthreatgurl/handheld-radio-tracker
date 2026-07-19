@@ -1,4 +1,3 @@
-import re
 from typing import Optional, Tuple
 
 
@@ -16,14 +15,41 @@ def _infer_grantee_len(compact_fcc_id: str) -> int:
 
     first = compact_fcc_id[0]
     # FCC rule: grantee starts with A-Z => 3 chars, starts with 2-9 => 5 chars.
-    if re.match(r'^[A-Z]$', first):
+    if 'A' <= first <= 'Z':
         return 3
-    if re.match(r'^[2-9]$', first):
+    if '2' <= first <= '9':
         return 5
     return 0
 
 
-def split_fcc_id(fcc_id: Optional[str], preferred_grantee_code: Optional[str] = None) -> Tuple[str, str]:
+def _validate_grantee_code(grantee_code: str) -> bool:
+    """Return True if grantee_code passes FCC character constraints.
+
+    FCC grantee codes start with A-Z (3 chars, all letters) or 2-9
+    (5 chars, may contain any digit 2-9).  Neither type may contain
+    '1' or '0' anywhere in the code.
+    """
+    if not grantee_code:
+        return False
+    first = grantee_code[0]
+    if 'A' <= first <= 'Z':
+        expected_len = 3
+        # 3-char alpha codes must be all letters (no digits at all)
+        if not all('A' <= c <= 'Z' for c in grantee_code):
+            return False
+    elif '2' <= first <= '9':
+        expected_len = 5
+    else:
+        return False
+    if len(grantee_code) != expected_len:
+        return False
+    return '1' not in grantee_code and '0' not in grantee_code
+
+
+def split_fcc_id(
+    fcc_id: Optional[str],
+    preferred_grantee_code: Optional[str] = None,
+) -> Tuple[str, str]:
     """Split FCC ID into (grantee_code, product_code) using FCC syntax rules."""
     cleaned = _clean_fcc_id(fcc_id)
     preferred = _clean_grantee(preferred_grantee_code)
@@ -33,12 +59,20 @@ def split_fcc_id(fcc_id: Optional[str], preferred_grantee_code: Optional[str] = 
 
     if '-' in cleaned:
         hyphen_prefix, hyphen_suffix = cleaned.split('-', 1)
-        # Apply FCC grantee length rules to the prefix: letter-start → 3 chars,
-        # digit-start → 5 chars. The prefix may be longer than the grantee code
-        # (e.g. Y23DM-568 where grantee=Y23, product=DM-568).
         inferred_len = _infer_grantee_len(hyphen_prefix)
+        # When prefix is longer than expected grantee length, the excess
+        # belongs to the product code (e.g. Y23DM-568 → grantee=Y23, product=DM-568).
         if inferred_len and len(hyphen_prefix) > inferred_len:
             return hyphen_prefix[:inferred_len], hyphen_prefix[inferred_len:] + '-' + hyphen_suffix
+        # When prefix is shorter than expected (e.g. "2A-3456" where grantee should
+        # be 5 chars), absorb the missing characters from the start of the suffix.
+        if inferred_len and len(hyphen_prefix) < inferred_len:
+            needed = inferred_len - len(hyphen_prefix)
+            if len(hyphen_suffix) >= needed:
+                grantee_code = hyphen_prefix + hyphen_suffix[:needed]
+                product_code = hyphen_suffix[needed:]
+                if _validate_grantee_code(grantee_code):
+                    return grantee_code, product_code
         return hyphen_prefix.strip(), hyphen_suffix.strip()
 
     if preferred and cleaned.startswith(preferred) and len(cleaned) > len(preferred):
@@ -51,7 +85,10 @@ def split_fcc_id(fcc_id: Optional[str], preferred_grantee_code: Optional[str] = 
     return cleaned, ''
 
 
-def normalize_fcc_id_for_lookup(fcc_id: Optional[str], preferred_grantee_code: Optional[str] = None) -> str:
+def normalize_fcc_id_for_lookup(
+    fcc_id: Optional[str],
+    preferred_grantee_code: Optional[str] = None,
+) -> str:
     grantee_code, product_code = split_fcc_id(fcc_id, preferred_grantee_code=preferred_grantee_code)
     if not grantee_code or not product_code:
         return ''
