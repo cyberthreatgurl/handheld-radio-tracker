@@ -140,7 +140,9 @@ def _run_sync_fcc(fcc_id):
     os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
     close_old_connections()
     try:
-        added, updated, _processing_msgs = fetch_and_sync_fcc_id(fcc_id)
+        added, updated, _processing_msgs = fetch_and_sync_fcc_id(
+            fcc_id, honor_skip_lists=False,
+        )
         ignore_msg = next((msg for msg in _processing_msgs if 'ignore list' in msg.lower()), '')
         result = ignore_msg or (
             f"Success! Added {added} and updated {updated} records for FCC ID '{fcc_id}'."
@@ -208,6 +210,7 @@ def sync_fcc_view(request):
 
 def sync_radio_fcc_view(request, pk):
     """View to handle fetching and syncing FCC data for a specific radio."""
+    import os
     radio = get_object_or_404(Radio, pk=pk)
 
     if request.method == 'POST':
@@ -215,6 +218,7 @@ def sync_radio_fcc_view(request, pk):
             messages.error(request, "This radio does not have an FCC ID assigned.")
             return redirect('radio_detail', pk=pk)
 
+        os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
         force_reload = request.POST.get('force_reload') == '1'
         logger.info(
             "User action sync_radio_fcc submit actor=%s radio_pk=%s "
@@ -224,6 +228,7 @@ def sync_radio_fcc_view(request, pk):
         try:
             added, updated, _processing_msgs = fetch_and_sync_fcc_id(
                 radio.fcc_id, force_reload=force_reload,
+                honor_skip_lists=False,
             )
             logger.info(
                 "User action sync_radio_fcc result actor=%s radio_pk=%s "
@@ -1324,6 +1329,49 @@ def manufacturer_map_data_view(request):
     return JsonResponse({'manufacturers': results})
 
 
+def _annotate_brand_grant_dates(top_brands):
+    """Annotate each brand row with its newest FCC grant date and re-sort.
+
+    Queries all radios for the given brands to find the maximum grant_date,
+    updates each row with 'latest_grant_date', and re-sorts top_brands
+    in-place descending by that date.
+    """
+    brand_keys = {row.get('brand_key', '') for row in top_brands}
+    if not brand_keys:
+        return
+
+    # Collect all brand names across the merged groups
+    all_names = set()
+    for row in top_brands:
+        all_names.update(row.get('source_brands', set()))
+
+    grant_dates = dict(
+        Radio.objects.filter(brand__in=all_names, grant_date__isnull=False)
+        .values('brand')
+        .annotate(max_date=Max('grant_date'))
+        .values_list('brand', 'max_date')
+    )
+
+    # Map normalized keys to the max grant date for their group
+    key_dates = {}
+    for row in top_brands:
+        latest = None
+        for sb in row.get('source_brands', []):
+            d = grant_dates.get(sb)
+            if d and (latest is None or d > latest):
+                latest = d
+        key_dates[row.get('brand_key', '')] = latest
+        row['latest_grant_date'] = latest
+
+    top_brands.sort(
+        key=lambda item: (
+            key_dates.get(item.get('brand_key', '')) is not None,
+            key_dates.get(item.get('brand_key', '')) or '',
+        ),
+        reverse=True,
+    )
+
+
 @cache_page(60 * 5)  # Cache for 5 minutes
 def dashboard_view(request):
     """Dashboard view with statistics"""
@@ -1443,11 +1491,28 @@ def dashboard_view(request):
     for row in top_brands:
         row['display_brand'] = alias_map.get(row.get('brand_key', '')) or row.get('brand', '')
 
-    recent_radios = list(
-        Radio.objects.select_related('manufacturer')
-        .filter(created_at__gte=cutoff_datetime)
-        .order_by('-created_at')[:50]
-    )
+    sort_by = request.GET.get('sort', 'created')
+    if sort_by not in ('created', 'grant_date'):
+        sort_by = 'created'
+
+    if sort_by == 'grant_date':
+        _annotate_brand_grant_dates(top_brands)
+
+    if sort_by == 'grant_date':
+        recent_radios = list(
+            Radio.objects.select_related('manufacturer')
+            .filter(
+                grant_date__isnull=False,
+                grant_date__gte=now.date() - _timedelta(days=recent_days),
+            )
+            .order_by('-grant_date')[:50]
+        )
+    else:
+        recent_radios = list(
+            Radio.objects.select_related('manufacturer')
+            .filter(created_at__gte=cutoff_datetime)
+            .order_by('-created_at')[:50]
+        )
     for radio in recent_radios:
         radio.display_brand = _preferred_brand_display_name(radio, alias_map)
 
@@ -1478,6 +1543,7 @@ def dashboard_view(request):
         'recent_manual_uploads': recent_manual_uploads,
         'top_brands': top_brands,
         'recent_days': recent_days,
+        'sort_by': sort_by,
         'last_grantee_sync_at': FCCSyncState.get_instance().last_grantee_sync_at,
     }
     return render(request, 'radios/dashboard.html', context)

@@ -2789,7 +2789,7 @@ def _ensure_grantee_brand_and_manufacturer(grantee_code, grantee_name):
     manufacturer.brands.add(brand)
     return brand, manufacturer
 
-def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_reload=False):
+def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_reload=False, honor_skip_lists=True):
     """
     Fetches FCC ID data using curl_cffi and saves it to the database.
 
@@ -2802,6 +2802,9 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         force_reload:  When True, skip stale-lookup checks and re-download all documents
                        even if they are already stored.  Intended for use when the FCC has
                        issued an update to a previously synced ID.
+        honor_skip_lists: When False, ignore the SyncSkippedGrantee list (used for
+                       manual single-grantee syncs where the user explicitly chose
+                       to sync that grantee).
 
     Returns (count_added, count_updated, messages)
     """
@@ -2812,7 +2815,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
     if not q_grantee:
         q_grantee, _ = split_fcc_id(_clean_query(fcc_id_query))
     q_grantee = normalize_grantee_code(q_grantee)
-    if q_grantee and q_grantee in ignored_codes:
+    if q_grantee and q_grantee in ignored_codes and honor_skip_lists:
         message = f"Skipped FCC query '{fcc_id_query}' because grantee {q_grantee} is on the ignore list."
         messages.append(message)
         logger.info(
@@ -2821,7 +2824,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
             q_grantee,
         )
         return 0, 0, messages
-    if q_grantee and q_grantee in skipped_codes:
+    if q_grantee and q_grantee in skipped_codes and honor_skip_lists:
         message = (
             f"Skipped FCC query '{fcc_id_query}' because grantee "
             f"{q_grantee} is on the sync-skipped list."

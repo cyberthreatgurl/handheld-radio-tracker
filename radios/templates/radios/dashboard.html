@@ -51,18 +51,31 @@
                             <p class="text-xs text-gray-400 mt-0.5">Last updated on {{ last_grantee_sync_at|date:"F j, Y" }}</p>
                             {% endif %}
                         </div>
-                        <form method="get" class="flex items-center space-x-2">
-                            <label for="recent_days" class="text-xs text-gray-500">Show last</label>
-                            <select name="recent_days" id="recent_days" onchange="this.form.submit()" class="text-xs border-gray-300 rounded-md py-1 px-2">
-                                <option value="7" {% if recent_days == 7 %}selected{% endif %}>7 days</option>
-                                <option value="14" {% if recent_days == 14 %}selected{% endif %}>14 days</option>
-                                <option value="30" {% if recent_days == 30 %}selected{% endif %}>30 days</option>
-                                <option value="60" {% if recent_days == 60 %}selected{% endif %}>60 days</option>
-                                <option value="90" {% if recent_days == 90 %}selected{% endif %}>90 days</option>
-                                <option value="180" {% if recent_days == 180 %}selected{% endif %}>180 days</option>
-                                <option value="365" {% if recent_days == 365 %}selected{% endif %}>365 days</option>
-                            </select>
-                        </form>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex items-center space-x-1 text-sm">
+                                <a href="?sort=created&recent_days={{ recent_days }}"
+                                   class="px-3 py-1 rounded-l-md {% if sort_by == 'created' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                                    Added
+                                </a>
+                                <a href="?sort=grant_date&recent_days={{ recent_days }}"
+                                   class="px-3 py-1 rounded-r-md {% if sort_by == 'grant_date' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                                    Grant Date
+                                </a>
+                            </div>
+                            <form method="get" class="flex items-center space-x-2">
+                                <input type="hidden" name="sort" value="{{ sort_by }}">
+                                <label for="recent_days" class="text-xs text-gray-500">Show last</label>
+                                <select name="recent_days" id="recent_days" onchange="this.form.submit()" class="text-xs border-gray-300 rounded-md py-1 px-2">
+                                    <option value="7" {% if recent_days == 7 %}selected{% endif %}>7 days</option>
+                                    <option value="14" {% if recent_days == 14 %}selected{% endif %}>14 days</option>
+                                    <option value="30" {% if recent_days == 30 %}selected{% endif %}>30 days</option>
+                                    <option value="60" {% if recent_days == 60 %}selected{% endif %}>60 days</option>
+                                    <option value="90" {% if recent_days == 90 %}selected{% endif %}>90 days</option>
+                                    <option value="180" {% if recent_days == 180 %}selected{% endif %}>180 days</option>
+                                    <option value="365" {% if recent_days == 365 %}selected{% endif %}>365 days</option>
+                                </select>
+                            </form>
+                        </div>
                     </div>
                     <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-md">
                     <ul class="divide-y divide-gray-200">
@@ -71,10 +84,22 @@
                             <a href="{% url 'radio_detail' radio.pk %}" class="text-indigo-600 hover:text-indigo-900 font-medium truncate pr-4">
                                 {{ radio.display_brand|default:radio.brand }} {{ radio.model }}
                             </a>
-                            <span class="text-xs text-gray-400 whitespace-nowrap">{{ radio.grant_date|date:"M d, Y" }}</span>
+                            <span class="text-xs text-gray-400 whitespace-nowrap">
+                                {% if sort_by == 'grant_date' and radio.grant_date %}
+                                    {{ radio.grant_date|date:"M d, Y" }}
+                                {% else %}
+                                    {{ radio.created_at|date:"M d, Y" }}
+                                {% endif %}
+                            </span>
                         </li>
                         {% empty %}
-                        <li class="py-3 text-sm text-gray-500">No radios with grant dates in this period.</li>
+                        <li class="py-3 text-sm text-gray-500">
+                            {% if sort_by == 'grant_date' %}
+                                No radios with grant dates in this period.
+                            {% else %}
+                                No radios added in this period.
+                            {% endif %}
+                        </li>
                         {% endfor %}
                         {% if recent_radios|length >= 50 %}
                         <li class="py-2 text-center">
@@ -88,7 +113,19 @@
 
             <div class="bg-white shadow rounded-lg">
                 <div class="px-4 py-5 sm:p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Recently Updated Brands</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Recently Updated Brands</h3>
+                        <div class="flex items-center space-x-1 text-sm">
+                            <a href="?sort=created{% if recent_days != 30 %}&recent_days={{ recent_days }}{% endif %}"
+                               class="px-3 py-1 rounded-l-md {% if sort_by == 'created' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                                Added
+                            </a>
+                            <a href="?sort=grant_date{% if recent_days != 30 %}&recent_days={{ recent_days }}{% endif %}"
+                               class="px-3 py-1 rounded-r-md {% if sort_by == 'grant_date' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                                Grant Date
+                            </a>
+                        </div>
+                    </div>
                     <ul class="divide-y divide-gray-200">
                         {% for brand in top_brands %}
                         <li class="py-3 flex justify-between items-center sm:px-2 hover:bg-gray-50 rounded transition">
@@ -100,6 +137,9 @@
                             </a>
                             <span class="text-sm font-semibold text-gray-600 bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap">
                                 {{ brand.count }} models
+                                {% if sort_by == 'grant_date' and brand.latest_grant_date %}
+                                <span class="text-xs text-gray-400 ml-1">{{ brand.latest_grant_date|date:"m/d/y" }}</span>
+                                {% endif %}
                             </span>
                         </li>
                         {% endfor %}
@@ -144,7 +184,19 @@
     <!-- Recent Radios -->
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Recently Added</h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Recently Added</h3>
+                <div class="flex items-center space-x-1 text-sm">
+                    <a href="?sort=created{% if recent_days != 30 %}&recent_days={{ recent_days }}{% endif %}"
+                       class="px-3 py-1 rounded-l-md {% if sort_by == 'created' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        Added
+                    </a>
+                    <a href="?sort=grant_date{% if recent_days != 30 %}&recent_days={{ recent_days }}{% endif %}"
+                       class="px-3 py-1 rounded-r-md {% if sort_by == 'grant_date' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        Grant Date
+                    </a>
+                </div>
+            </div>
             <div class="space-y-3">
                 {% for radio in recent_radios %}
                 <div class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
@@ -156,7 +208,13 @@
                         <p class="text-sm text-gray-500">FCC ID: {{ radio.fcc_id }}</p>
                         {% endif %}
                     </div>
-                    <span class="text-xs text-gray-400">{{ radio.created_at|date:"M d, Y" }}</span>
+                    <span class="text-xs text-gray-400">
+                        {% if sort_by == 'grant_date' and radio.grant_date %}
+                            {{ radio.grant_date|date:"M d, Y" }}
+                        {% else %}
+                            {{ radio.created_at|date:"M d, Y" }}
+                        {% endif %}
+                    </span>
                 </div>
                 {% empty %}
                 <p class="text-gray-500 text-center py-4">No radios added yet</p>
