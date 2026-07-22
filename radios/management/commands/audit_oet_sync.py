@@ -57,6 +57,8 @@ class Command(BaseCommand):
         parser.add_argument('--limit', type=int, default=0, help='Cap the number of FCC ID rows printed after filtering.')
 
     def handle(self, *args, **options):
+        import os
+        os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
         explicit_fcc_ids = [value.strip() for value in options['fcc_id'] if value and value.strip()]
         explicit_grantees = [value.strip() for value in options['grantee'] if value and value.strip()]
         random_fcc_ids = max(0, int(options['random_fcc_ids'] or 0))

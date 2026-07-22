@@ -78,6 +78,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        import os
+        os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
         # pylint: disable=too-many-locals
         sync_fcc = options.get('sync_fcc', False)
         single_fcc_id = options.get('fcc_id')

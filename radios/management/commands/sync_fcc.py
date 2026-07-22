@@ -54,6 +54,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        import os
+        os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
         single_id = options['fcc_id']
         all_existing = options['all_existing']
         all_grantees = options['all_grantees']
