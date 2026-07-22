@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Radio, Brand, RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware, Manufacturer, IgnoredGrantee, SyncSkippedGrantee, FCCSyncState, delete_brand_and_related
+from .models import (
+    Radio, RadioCertification, RadioServiceType, Brand,
+    RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware,
+    Manufacturer, IgnoredGrantee, SyncSkippedGrantee, FCCSyncState,
+    delete_brand_and_related,
+)
 
 
 @admin.register(Brand)
@@ -105,13 +110,14 @@ class SyncSkippedGranteeAdmin(admin.ModelAdmin):
 @admin.register(Radio)
 class RadioAdmin(admin.ModelAdmin):
     list_display = ['brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'grant_date', 'freq_bands_tx', 'power_watts', 'cost_approx']
-    list_filter = ['brand', 'last_fccid_lookup_at', 'grant_date', 'dmr', 'gps', 'aprs']
+    list_filter = ['brand', 'last_fccid_lookup_at', 'grant_date', 'dmr', 'gps', 'aprs', 'service_types']
     search_fields = ['brand', 'model', 'fcc_id']
     ordering = ['brand', 'model']
-    
+    filter_horizontal = ['service_types']
+
     fieldsets = (
         ('Basic Information', {
-            'fields': ('brand', 'model', 'radio_type', 'is_a_whitelabel', 'manufacturer', 'fcc_id', 'last_fccid_lookup_at', 'grant_date')
+            'fields': ('brand', 'model', 'radio_type', 'is_a_whitelabel', 'manufacturer', 'service_types', 'fcc_id', 'last_fccid_lookup_at', 'grant_date')
         }),
         ('Technical Specifications', {
             'fields': ('freq_bands_tx', 'power_watts')
@@ -121,6 +127,12 @@ class RadioAdmin(admin.ModelAdmin):
         }),
         ('Hardware', {
             'fields': ('display', 'battery_mah')
+        }),
+        ('Hardware Features', {
+            'fields': ('usb_c_charging', 'removable_antenna', 'unlockable', 'firmware_updates')
+        }),
+        ('FCC Certification Summary', {
+            'fields': ('rule_parts_summary', 'emission_designators_summary', 'authorization_type_summary')
         }),
         ('Pricing & Related', {
             'fields': ('cost_approx', 'rebadges_clones', 'white_label_vendors', 'website', 'review_url', 'youtube_video_urla')
@@ -207,3 +219,24 @@ class FCCSyncStateAdmin(admin.ModelAdmin):
             f"Added {total_added}, updated {total_updated} records.",
         )
     run_full_history_sync.short_description = "Run FULL FCC sync for ALL grantees (slow)"
+
+
+@admin.register(RadioCertification)
+class RadioCertificationAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'radio', 'fcc_id', 'grant_date', 'authorization_type',
+        'rule_parts', 'power_output_watts',
+    ]
+    list_filter = ['authorization_type', 'grant_date']
+    search_fields = [
+        'radio__brand', 'radio__model', 'fcc_id', 'rule_parts',
+        'emission_designators',
+    ]
+    ordering = ['-grant_date']
+
+
+@admin.register(RadioServiceType)
+class RadioServiceTypeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'rule_part', 'sort_order', 'description']
+    search_fields = ['name', 'rule_part', 'description']
+    ordering = ['sort_order', 'name']

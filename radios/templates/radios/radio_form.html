@@ -155,6 +155,25 @@
                             <p class="mt-2 text-sm text-red-600">{{ form.radio_type.errors.0 }}</p>
                             {% endif %}
                         </div>
+                        {% if form.service_types.field.choices %}
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Service Types</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-gray-50 rounded-md p-3 border border-gray-200">
+                                {% for choice in form.service_types %}
+                                <label class="inline-flex items-center text-sm text-gray-700">
+                                    {{ choice.tag }}
+                                    <span class="ml-2">{{ choice.choice_label }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% if form.service_types.help_text %}
+                            <p class="mt-1 text-sm text-gray-500">{{ form.service_types.help_text }}</p>
+                            {% endif %}
+                            {% if form.service_types.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.service_types.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -237,8 +256,35 @@
                             {{ form.battery_mah }}
                             {% if form.battery_mah.errors %}<p class="mt-2 text-sm text-red-600">{{ form.battery_mah.errors.0 }}</p>{% endif %}
                         </div>
-                        <div>
-                            <label for="{{ form.cost_approx.id_for_label }}" class="block text-sm font-medium text-gray-700">Cost (Approx)</label>
+                    </div>
+                </div>
+
+                <!-- Hardware Features -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Hardware Features</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="flex items-center">
+                            {{ form.usb_c_charging }}
+                            <label for="{{ form.usb_c_charging.id_for_label }}" class="ml-2 block text-sm text-gray-700">USB-C Charging</label>
+                        </div>
+                        <div class="flex items-center">
+                            {{ form.removable_antenna }}
+                            <label for="{{ form.removable_antenna.id_for_label }}" class="ml-2 block text-sm text-gray-700">Removable Antenna</label>
+                        </div>
+                        <div class="flex items-center">
+                            {{ form.unlockable }}
+                            <label for="{{ form.unlockable.id_for_label }}" class="ml-2 block text-sm text-gray-700">Unlockable</label>
+                        </div>
+                        <div class="flex items-center">
+                            {{ form.firmware_updates }}
+                            <label for="{{ form.firmware_updates.id_for_label }}" class="ml-2 block text-sm text-gray-700">Firmware Updates</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing & Related -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Pricing & Related</h3>
                             {{ form.cost_approx }}
                         </div>
                         <div>
@@ -396,6 +442,68 @@
                         {% endif %}
                     </div>
                     {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- FCC Certifications -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">FCC Certifications</h3>
+                    {{ certification_formset.management_form }}
+                    {% for cert_form in certification_formset %}
+                    <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        {{ cert_form.id }}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">FCC ID</label>
+                                {{ cert_form.fcc_id }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Grant Date</label>
+                                {{ cert_form.grant_date }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Authorization Type</label>
+                                {{ cert_form.authorization_type }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Rule Parts</label>
+                                {{ cert_form.rule_parts }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Freq Lower (MHz)</label>
+                                {{ cert_form.freq_range_lower_mhz }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Freq Upper (MHz)</label>
+                                {{ cert_form.freq_range_upper_mhz }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Power (W)</label>
+                                {{ cert_form.power_output_watts }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Power Type</label>
+                                {{ cert_form.power_type }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Emission Designators</label>
+                                {{ cert_form.emission_designators }}
+                            </div>
+                        </div>
+                        {% if cert_form.instance.pk %}
+                        <div class="mt-2 flex items-center gap-2">
+                            <label class="flex items-center gap-1 text-xs text-red-600 cursor-pointer">
+                                {{ cert_form.DELETE }}
+                                <span>Remove this certification</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                        {% if cert_form.errors %}
+                        <ul class="mt-2 text-xs text-red-600">
+                            {% for error in cert_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
                     {% endfor %}
                 </div>
 

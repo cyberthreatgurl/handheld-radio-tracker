@@ -151,6 +151,16 @@
                             <p class="block text-sm font-medium text-gray-700">Type</p>
                             <p class="mt-1 text-sm text-gray-900">{{ radio.get_radio_type_display|default:"Not specified" }}</p>
                         </div>
+                        {% if service_types %}
+                        <div class="sm:col-span-2">
+                            <p class="block text-sm font-medium text-gray-700 mb-2">Service Types</p>
+                            <div class="flex flex-wrap gap-2">
+                                {% for st in service_types %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ st }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -209,6 +219,56 @@
                         <div>
                             <p class="block text-sm font-medium text-gray-700">DMR</p>
                             <p class="mt-1 text-sm text-gray-900">{{ radio.dmr|default:"Not specified" }}</p>
+                        </div>
+                        {% if radio.rule_parts_summary %}
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700">Rule Parts</p>
+                            <p class="mt-1 text-sm text-gray-900">{{ radio.rule_parts_summary }}</p>
+                        </div>
+                        {% endif %}
+                        {% if radio.emission_designators_summary %}
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700">Emission Designators</p>
+                            <p class="mt-1 text-sm text-gray-900">{{ radio.emission_designators_summary }}</p>
+                        </div>
+                        {% endif %}
+                        {% if radio.authorization_type_summary %}
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700">Authorization Type</p>
+                            <p class="mt-1 text-sm text-gray-900">{{ radio.authorization_type_summary }}</p>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700">USB-C Charging</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {% if radio.usb_c_charging %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Yes</span>
+                                {% else %}No{% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700">Removable Antenna</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {% if radio.removable_antenna %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Yes</span>
+                                {% else %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Fixed</span>{% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700">Unlockable</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {% if radio.unlockable %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">Yes</span>
+                                {% else %}No{% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700">Firmware Updates</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {% if radio.firmware_updates %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Yes</span>
+                                {% else %}No{% endif %}
+                            </p>
                         </div>
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Display</p>
@@ -350,6 +410,28 @@
                             <p class="text-sm text-gray-600">No OET documents synced.</p>
                             {% endif %}
                         </div>
+                        {% if certifications %}
+                        <div class="border rounded-md p-4 bg-gray-50">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">FCC Certifications</h4>
+                            <div class="space-y-3">
+                                {% for cert in certifications %}
+                                <div class="{% if not forloop.last %}border-b border-gray-200 pb-3{% endif %} text-sm">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {% if cert.fcc_id %}<div><span class="text-xs text-gray-500">FCC ID:</span> <span class="font-mono">{{ cert.fcc_id }}</span></div>{% endif %}
+                                        {% if cert.grant_date %}<div><span class="text-xs text-gray-500">Grant Date:</span> {{ cert.grant_date|date:"M d, Y" }}</div>{% endif %}
+                                        {% if cert.authorization_type %}<div><span class="text-xs text-gray-500">Auth Type:</span> {{ cert.get_authorization_type_display }}</div>{% endif %}
+                                        {% if cert.rule_parts %}<div class="sm:col-span-2"><span class="text-xs text-gray-500">Rule Parts:</span> {{ cert.rule_parts }}</div>{% endif %}
+                                        {% if cert.freq_range_lower_mhz and cert.freq_range_upper_mhz %}
+                                        <div class="sm:col-span-2"><span class="text-xs text-gray-500">Frequency:</span> {{ cert.freq_range_lower_mhz }} – {{ cert.freq_range_upper_mhz }} MHz</div>
+                                        {% endif %}
+                                        {% if cert.power_output_watts %}<div><span class="text-xs text-gray-500">Power:</span> {{ cert.power_output_watts }} W {% if cert.power_type %}({{ cert.power_type }}){% endif %}</div>{% endif %}
+                                        {% if cert.emission_designators %}<div class="sm:col-span-2"><span class="text-xs text-gray-500">Emission:</span> <span class="font-mono">{{ cert.emission_designators }}</span></div>{% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
                         <div class="border rounded-md p-4 bg-gray-50">
                             <h4 class="text-sm font-semibold text-gray-900 mb-3">Firmware</h4>
                             {% if radio.firmware_versions.all %}

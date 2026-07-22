@@ -209,16 +209,64 @@ radio_database/
 - **model**: Model name/number (indexed with brand)
 - **fcc_id**: FCC ID (e.g., 2AJGM-UV5R)
 - **radio_type**: Base, Mobile, or Portable
-- **manufacturer**: Linked canonical `Brand` manufacturer (for white-label mapping)
+- **manufacturer**: Linked canonical `Manufacturer` entity (for white-label mapping)
 - **is_a_whitelabel**: Indicates white-label/rebadge status
+- **service_types**: M2M to `RadioServiceType` — service classifications
+  (GMRS, FRS, Amateur, CB, MURS, Commercial, Marine, Aviation, PoC)
 - **freq_bands_tx**: Operating frequency bands (TX)
 - **power_watts**: Transmit power
 - **satellite_tracking / harmonic_suppression / gps / aprs / air_band / dmr**: Feature fields
 - **display / battery_mah / cost_approx**: Hardware and pricing details
+- **usb_c_charging**: Boolean — has USB-C charging port
+- **removable_antenna**: Boolean — antenna is user-removable (defaults to `True`)
+- **unlockable**: Boolean — can be unlocked/widened via key combo or software
+- **firmware_updates**: Boolean — manufacturer provides firmware updates
+- **rule_parts_summary**: Auto-computed unique rule parts across all certifications
+- **emission_designators_summary**: Auto-computed unique emission designators
+- **authorization_type_summary**: Auto-computed authorization type(s)
 - **notes**: Additional notes
 - **review_url**: Link to eHam.net or other reviews
+- **grant_date**: Date of first FCC grant
+- **oet_page_url**: Stored link to the FCC OET exhibits page
 - **created_at**: Creation timestamp
 - **updated_at**: Last update timestamp
+
+### Related Models
+
+#### RadioCertification
+
+Each radio can have zero or more FCC certifications. Each certification records
+per-grant metadata that may differ across grants (e.g., a radio certified under
+both Part 90 and Part 95E).
+
+- **radio**: FK to `Radio` (CASCADE)
+- **fcc_id**: FCC ID for this grant (may differ from `Radio.fcc_id` for Change-in-ID)
+- **grant_date**: Date of grant
+- **authorization_type**: Certification, SDoC, or Verification
+- **rule_parts**: Comma-separated 47 CFR parts (e.g., "Part 95E, Part 90")
+- **freq_range_lower_mhz / freq_range_upper_mhz**: Certified frequency range
+- **power_output_watts**: Certified power output
+- **power_type**: ERP, EIRP, or Conducted
+- **emission_designators**: Comma-separated (e.g., "11K0F3E, 7K60FXD")
+
+`Radio.recompute_certification_summary()` derives the summary fields from all
+linked certifications.
+
+#### RadioServiceType
+
+Canonical service type classifications seeded by a data migration.
+
+| Name | Rule Part |
+|------|-----------|
+| GMRS | Part 95E |
+| FRS | Part 95B |
+| CB | Part 95D |
+| MURS | Part 95J |
+| Amateur | Part 97 |
+| Commercial | Part 90 |
+| Marine | Part 80 |
+| Aviation | Part 87 |
+| PoC | Parts 22/24/27 |
 
 ## Development
 

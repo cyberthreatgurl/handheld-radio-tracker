@@ -200,6 +200,99 @@ class SyncSkippedGrantee(models.Model):
         return list(cls.objects.values_list('grantee_code', flat=True))
 
 
+class RadioServiceType(models.Model):
+    """Service classification for a radio (GMRS, FRS, Amateur, etc.)."""
+
+    name = models.CharField(max_length=100, unique=True)
+    rule_part = models.CharField(
+        max_length=100, blank=True,
+        help_text="Corresponding 47 CFR part, e.g. 'Part 95E'",
+    )
+    description = models.TextField(blank=True)
+    sort_order = models.IntegerField(default=0)
+
+    class Meta:
+        """Model options: ordering, verbose names."""
+        ordering = ['sort_order', 'name']
+        verbose_name = 'Radio Service Type'
+        verbose_name_plural = 'Radio Service Types'
+
+    def __str__(self):
+        if self.rule_part:
+            return f"{self.name} ({self.rule_part})"
+        return self.name
+
+
+class RadioCertification(models.Model):
+    """A single FCC grant/certification for a radio model.
+
+    A radio can have multiple certifications (e.g. Part 90 + Part 95E
+    dual-certified). Each row holds per-grant metadata: rule parts,
+    frequency range, power output, and emission designators.
+    """
+
+    class AuthorizationType(models.TextChoices):
+        """FCC authorization type choices."""
+        CERTIFICATION = 'certification', 'Certification'
+        SDOC = 'sdoc', ("Supplier's Declaration of Conformity (SDoC)")
+        VERIFICATION = 'verification', 'Verification'
+
+    radio = models.ForeignKey(
+        'Radio', on_delete=models.CASCADE,
+        related_name='certifications',
+    )
+    fcc_id = models.CharField(
+        max_length=50, blank=True,
+        help_text="May differ from radio.fcc_id for Change-in-ID grants",
+    )
+    grant_date = models.DateField(null=True, blank=True)
+    authorization_type = models.CharField(
+        max_length=20, choices=AuthorizationType.choices,
+        blank=True, default='certification',
+    )
+    rule_parts = models.CharField(
+        max_length=500, blank=True,
+        help_text="Comma-separated 47 CFR parts, e.g. 'Part 95E, Part 90'",
+    )
+    freq_range_lower_mhz = models.DecimalField(
+        max_digits=12, decimal_places=6, null=True, blank=True,
+    )
+    freq_range_upper_mhz = models.DecimalField(
+        max_digits=12, decimal_places=6, null=True, blank=True,
+    )
+    power_output_watts = models.DecimalField(
+        max_digits=10, decimal_places=4, null=True, blank=True,
+    )
+    power_type = models.CharField(
+        max_length=20, blank=True,
+        help_text="ERP, EIRP, or Conducted",
+    )
+    emission_designators = models.CharField(
+        max_length=500, blank=True,
+        help_text="Comma-separated, e.g. '11K0F3E, 7K60FXD'",
+    )
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Model options: ordering, indexes, verbose names."""
+        ordering = ['-grant_date']
+        indexes = [
+            models.Index(fields=['radio', 'fcc_id']),
+        ]
+        verbose_name = 'Radio Certification'
+        verbose_name_plural = 'Radio Certifications'
+
+    def __str__(self):
+        parts = [str(self.radio)]
+        if self.rule_parts:
+            parts.append(self.rule_parts)
+        if self.grant_date:
+            parts.append(str(self.grant_date))
+        return ' — '.join(parts)
+
+
 class Radio(models.Model):
     """Model representing a ham radio device."""
 
@@ -234,6 +327,11 @@ class Radio(models.Model):
         choices=RadioType.choices,
         blank=True,
         help_text="Type of radio (Base, Mobile, Portable)"
+    )
+    service_types = models.ManyToManyField(
+        RadioServiceType, blank=True,
+        related_name='radios',
+        help_text="Service classifications for this radio",
     )
     fcc_id = models.CharField(
         max_length=50, blank=True,
@@ -300,6 +398,24 @@ class Radio(models.Model):
         help_text="Battery capacity in mAh",
     )
 
+    # Hardware features
+    usb_c_charging = models.BooleanField(
+        default=False,
+        help_text="Has USB-C charging port",
+    )
+    removable_antenna = models.BooleanField(
+        default=True,
+        help_text="Antenna is user-removable (vs. fixed)",
+    )
+    unlockable = models.BooleanField(
+        default=False,
+        help_text="Can be unlocked/widened via key combo or software",
+    )
+    firmware_updates = models.BooleanField(
+        default=False,
+        help_text="Manufacturer provides firmware updates",
+    )
+
     # Pricing and related models
     cost_approx = models.CharField(
         max_length=100, blank=True,
@@ -324,6 +440,21 @@ class Radio(models.Model):
     youtube_video_urla = models.TextField(
         blank=True,
         help_text="One YouTube URL per line.",
+    )
+
+    # FCC certification summary (auto-computed from certifications)
+    rule_parts_summary = models.CharField(
+        max_length=500, blank=True,
+        help_text="Auto-computed: unique rule parts across all certifications",
+    )
+    emission_designators_summary = models.CharField(
+        max_length=500, blank=True,
+        help_text="Auto-computed: unique emission designators across all "
+                  "certifications",
+    )
+    authorization_type_summary = models.CharField(
+        max_length=100, blank=True,
+        help_text="Auto-computed: e.g. 'Certification' or 'Certification + SDoC'",
     )
 
     # Additional notes
@@ -353,6 +484,57 @@ class Radio(models.Model):
     def get_absolute_url(self):
         """Return the URL for this radio's detail page."""
         return reverse('radio_detail', kwargs={'pk': self.pk})
+
+    def recompute_certification_summary(self, save=True):
+        """Derive summary fields from all linked RadioCertification records.
+
+        Sets rule_parts_summary, emission_designators_summary, and
+        authorization_type_summary by collecting unique values across
+        all certifications.  Optionally persists with save().
+        """
+        certs = list(self.certifications.all())
+        if not certs:
+            self.rule_parts_summary = ''
+            self.emission_designators_summary = ''
+            self.authorization_type_summary = ''
+            if save:
+                self.save(
+                    update_fields=[
+                        'rule_parts_summary',
+                        'emission_designators_summary',
+                        'authorization_type_summary',
+                    ],
+                )
+            return
+
+        rule_parts = set()
+        emission_designators = set()
+        auth_types = set()
+        for cert in certs:
+            for part in (cert.rule_parts or '').split(','):
+                part = part.strip()
+                if part:
+                    rule_parts.add(part)
+            for ed_item in (cert.emission_designators or '').split(','):
+                ed_item = ed_item.strip()
+                if ed_item:
+                    emission_designators.add(ed_item)
+            if cert.authorization_type:
+                auth_types.add(cert.get_authorization_type_display())
+
+        self.rule_parts_summary = ', '.join(sorted(rule_parts))
+        self.emission_designators_summary = ', '.join(
+            sorted(emission_designators),
+        )
+        self.authorization_type_summary = ' + '.join(sorted(auth_types))
+        if save:
+            self.save(
+                update_fields=[
+                    'rule_parts_summary',
+                    'emission_designators_summary',
+                    'authorization_type_summary',
+                ],
+            )
 
     def save(self, *args, **kwargs):
         """Override save to ensure brand exists in Brand table"""
@@ -765,6 +947,7 @@ def delete_radios_and_related(radio_queryset):
     report_count = RadioFCCTestReport.objects.filter(radio_id__in=radio_ids).delete()[0]
     oet_count = RadioOETDocument.objects.filter(radio_id__in=radio_ids).delete()[0]
     firmware_count = RadioFirmware.objects.filter(radio_id__in=radio_ids).delete()[0]
+    cert_count = RadioCertification.objects.filter(radio_id__in=radio_ids).delete()[0]
     radio_count = radio_queryset.delete()[0]
 
     return {
@@ -773,6 +956,7 @@ def delete_radios_and_related(radio_queryset):
         'test_reports_deleted': report_count,
         'oet_documents_deleted': oet_count,
         'firmware_deleted': firmware_count,
+        'certifications_deleted': cert_count,
     }
 
 

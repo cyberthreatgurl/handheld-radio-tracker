@@ -15,6 +15,10 @@ The application stores and manages radio records with fields such as:
 - FCC ID
 - radio type
 - manufacturer / white-label relationships
+- service types (GMRS, FRS, Amateur, CB, MURS, Commercial, Marine, Aviation, PoC)
+- FCC certifications with per-grant metadata (rule parts, frequency range, power,
+  emission designators)
+- hardware features (USB-C charging, removable antenna, unlockable, firmware updates)
 - frequency bands, power, GPS, APRS, DMR, air band, display, battery, pricing, notes
 - linked FCC test reports, manuals, and OET exhibit documents
 
@@ -25,6 +29,8 @@ It can also enrich radios from FCC sources:
 - download OET attachment files such as manuals, test reports, photos, and letters
 - promote selected FCC documents into the document library
 - backfill radio specs from downloaded PDF manuals and reports when possible
+- auto-compute FCC certification summaries (rule parts, emission designators,
+  authorization types) across all linked certifications
 
 ## Main features
 
@@ -36,6 +42,12 @@ It can also enrich radios from FCC sources:
 - Manual/XML/CSV import and merge utilities
 - Consistency checking and audit commands
 - Tailwind-based frontend
+- Per-radio FCC certification tracking (multiple grants per radio, rule parts,
+  emission designators, frequency ranges, power output)
+- Radio service type classification (GMRS, FRS, Amateur, CB, MURS, Commercial,
+  Marine, Aviation, PoC) with many-to-many tagging
+- Hardware feature flags (USB-C charging, removable antenna, unlockable,
+  firmware updates)
 
 ## FCC ID Parsing
 

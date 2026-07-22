@@ -2,7 +2,10 @@ from django import forms
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.forms import inlineformset_factory
-from .models import Radio, Brand, RadioFirmware, Manufacturer, RadioManual, RadioImage
+from .models import (
+    Radio, Brand, RadioCertification, RadioFirmware,
+    RadioServiceType, Manufacturer, RadioManual, RadioImage,
+)
 
 
 class RadioForm(forms.ModelForm):
@@ -28,14 +31,25 @@ class RadioForm(forms.ModelForm):
         help_text="The legal manufacturing entity that built this radio"
     )
 
+    service_types = forms.ModelMultipleChoiceField(
+        queryset=RadioServiceType.objects.all(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded',
+        }),
+        help_text="Service classifications for this radio (GMRS, FRS, Amateur, etc.)"
+    )
+
     class Meta:
         model = Radio
         fields = [
-            'brand', 'model', 'is_a_whitelabel', 'manufacturer', 'radio_type', 'fcc_id',
+            'brand', 'model', 'is_a_whitelabel', 'manufacturer', 'radio_type',
+            'service_types', 'fcc_id',
             'freq_bands_tx', 'power_watts',
             'satellite_tracking', 'harmonic_suppression',
             'gps', 'aprs', 'air_band', 'dmr',
             'display', 'battery_mah',
+            'usb_c_charging', 'removable_antenna', 'unlockable', 'firmware_updates',
             'cost_approx', 'rebadges_clones', 'white_label_vendors', 'website', 'review_url',
             'youtube_video_urla', 'notes'
         ]
@@ -124,6 +138,18 @@ class RadioForm(forms.ModelForm):
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'rows': 4,
                 'placeholder': 'Additional notes or specifications...'
+            }),
+            'usb_c_charging': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'removable_antenna': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'unlockable': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'firmware_updates': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
         }
     
@@ -477,6 +503,91 @@ RadioImageFormSet = inlineformset_factory(
     Radio,
     RadioImage,
     form=RadioImageForm,
+    extra=1,
+    can_delete=True,
+)
+
+
+class RadioCertificationForm(forms.ModelForm):
+    """Inline form for a single FCC certification entry."""
+
+    class Meta:
+        model = RadioCertification
+        fields = [
+            'fcc_id', 'grant_date', 'authorization_type', 'rule_parts',
+            'freq_range_lower_mhz', 'freq_range_upper_mhz',
+            'power_output_watts', 'power_type', 'emission_designators',
+        ]
+        widgets = {
+            'fcc_id': forms.TextInput(attrs={
+                'class': (
+                    'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                    'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                ),
+                'placeholder': 'e.g., 2AJGM-UV5R',
+            }),
+            'grant_date': forms.DateInput(attrs={
+                'class': (
+                    'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                    'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                ),
+                'type': 'date',
+            }),
+            'authorization_type': forms.Select(attrs={
+                'class': (
+                    'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                    'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                ),
+            }),
+            'rule_parts': forms.TextInput(attrs={
+                'class': (
+                    'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                    'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                ),
+                'placeholder': "e.g., Part 95E, Part 90",
+            }),
+            'freq_range_lower_mhz': forms.NumberInput(attrs={
+                'class': (
+                    'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                    'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                ),
+                'placeholder': 'e.g., 462.5500',
+            }),
+            'freq_range_upper_mhz': forms.NumberInput(attrs={
+                'class': (
+                    'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                    'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                ),
+                'placeholder': 'e.g., 467.7250',
+            }),
+            'power_output_watts': forms.NumberInput(attrs={
+                'class': (
+                    'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                    'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                ),
+                'placeholder': 'e.g., 2.0',
+            }),
+            'power_type': forms.TextInput(attrs={
+                'class': (
+                    'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                    'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                ),
+                'placeholder': 'ERP, EIRP, or Conducted',
+            }),
+            'emission_designators': forms.TextInput(attrs={
+                'class': (
+                    'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                    'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                ),
+                'placeholder': "e.g., 11K0F3E, 7K60FXD",
+            }),
+        }
+
+
+RadioCertificationFormSet = inlineformset_factory(
+    Radio,
+    RadioCertification,
+    form=RadioCertificationForm,
     extra=1,
     can_delete=True,
 )

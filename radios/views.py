@@ -41,6 +41,7 @@ from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from .fcc_utils import fetch_and_sync_fcc_id
 from .forms import (
     RadioForm, RadioSearchForm, BrandForm, ManufacturerForm, RadioImageFormSet,
+    RadioCertificationFormSet,
 )
 from .image_utils import ingest_radio_image
 from .models import (
@@ -699,6 +700,10 @@ class RadioDetailView(DetailView):
         context['primary_models'] = primary_models
         context['white_label_models'] = white_label_models
 
+        # Certifications and service types
+        context['certifications'] = radio.certifications.all()
+        context['service_types'] = radio.service_types.all()
+
         return context
 
 
@@ -755,10 +760,19 @@ class RadioUpdateView(UpdateView):
                 instance=self.object,
                 prefix='images',
             )
+            context['certification_formset'] = RadioCertificationFormSet(
+                self.request.POST,
+                instance=self.object,
+                prefix='certifications',
+            )
         else:
             context['image_formset'] = RadioImageFormSet(
                 instance=self.object,
                 prefix='images',
+            )
+            context['certification_formset'] = RadioCertificationFormSet(
+                instance=self.object,
+                prefix='certifications',
             )
         return context
 
@@ -779,13 +793,19 @@ class RadioUpdateView(UpdateView):
             instance=self.object,
             prefix='images',
         )
-        if form.is_valid() and image_formset.is_valid():
-            return self.form_valid(form, image_formset)
+        certification_formset = RadioCertificationFormSet(
+            request.POST,
+            instance=self.object,
+            prefix='certifications',
+        )
+        if form.is_valid() and image_formset.is_valid() and certification_formset.is_valid():
+            return self.form_valid(form, image_formset, certification_formset)
         context = self.get_context_data(form=form)
         context['image_formset'] = image_formset
+        context['certification_formset'] = certification_formset
         return self.render_to_response(context)
 
-    def form_valid(self, form, image_formset=None):
+    def form_valid(self, form, image_formset=None, certification_formset=None):
         logger.info(
             "User action radio_update submit actor=%s radio_id=%s "
             "brand=%s model=%s",
@@ -813,6 +833,10 @@ class RadioUpdateView(UpdateView):
                     )
                 # file uploads are handled by image_formset.save() below
             image_formset.save()
+
+        if certification_formset is not None:
+            certification_formset.save()
+            self.object.recompute_certification_summary(save=True)
 
         messages.success(self.request, f'Radio {form.instance} has been updated successfully!')
         return redirect(self.request.path)
