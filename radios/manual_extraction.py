@@ -132,6 +132,58 @@ def _detect_bands(text):
     return ', '.join(sorted(bands))
 
 
+def _extract_fcc_part_from_standards(text):
+    """Extract FCC Part number from STANDARD(S) line in test report text.
+
+    Handles formats like:
+        STANDARD(S).   :  FCC Part 15
+        Test Standard(s): FCC Part 95E
+        STANDARD(S).   :  FCC Part 15B
+        Standard: FCC Part 90
+
+    Returns a set of cleaned FCC rule part strings (e.g. {'Part 15B', 'Part 90'}).
+    """
+    rule_parts = set()
+    if not text:
+        return rule_parts
+
+    # Match the STANDARD(S) line and capture everything after it until end of line.
+    # Handles colons, spaces, and various label formats including PDF artifacts
+    # where "STANDARD" may be split as "ST ANDARD".
+    pattern = re.compile(
+        r'(?:ST\s*ANDARD|STANDARD|TEST\s*STANDARD|APPLICABLE\s*STANDARD)'
+        r'\s*(?:\(S\))?\s*[:.]?\s*'
+        r'(.+?)(?:\n|$)',
+        re.IGNORECASE,
+    )
+    matches = pattern.findall(text)
+    for match in matches:
+        # Extract "FCC Part XXX" from the captured text
+        part_matches = re.findall(
+            r'FCC\s+Part\s+(\d+[A-Za-z]*(?:\s*Subpart\s+[A-Za-z])?)',
+            match,
+            re.IGNORECASE,
+        )
+        for part_num in part_matches:
+            part_num = part_num.strip()
+            # Normalize: "15B" or "15 B" -> "Part 15B"
+            cleaned = re.sub(r'\s+', ' ', part_num).strip()
+            rule_parts.add(f'Part {cleaned}')
+
+        # Also catch "Part 15" by itself (without "FCC" prefix in some formats)
+        part_matches2 = re.findall(
+            r'(?:^|[^A-Za-z])Part\s+(\d+[A-Za-z]*(?:\s*Subpart\s+[A-Za-z])?)',
+            match,
+            re.IGNORECASE,
+        )
+        for part_num in part_matches2:
+            part_num = part_num.strip()
+            cleaned = re.sub(r'\s+', ' ', part_num).strip()
+            rule_parts.add(f'Part {cleaned}')
+
+    return rule_parts
+
+
 def extract_specs_from_text(text, source_name=''):
     """Extract normalized radio specs from manual text."""
     logger.info("Spec parse attempt source=%s text_length=%s", source_name, len(text or ''))
@@ -156,6 +208,9 @@ def extract_specs_from_text(text, source_name=''):
     cost_approx = f'${cost}' if cost else ''
     freq_bands_tx = _detect_bands(text)
 
+    # Extract FCC rule parts from STANDARD(S) lines (for test reports)
+    fcc_rule_parts = _extract_fcc_part_from_standards(text)
+
     # Fallbacks from filename/title text
     if not model and source_name:
         model = _extract_first(r'([A-Za-z]{1,6}-?\d{2,5}[A-Za-z0-9\-]*)', source_name)
@@ -173,6 +228,7 @@ def extract_specs_from_text(text, source_name=''):
         'power_watts': _clean_text(power_watts),
         'battery_mah': int(battery) if battery else None,
         'cost_approx': _clean_text(cost_approx),
+        'fcc_rule_parts': sorted(fcc_rule_parts) if fcc_rule_parts else [],
     }
     logger.info("Spec parse result source=%s model=%s fcc_id=%s bands=%s", source_name, extracted.get('model', ''), extracted.get('fcc_id', ''), extracted.get('freq_bands_tx', ''))
     return extracted
@@ -279,6 +335,233 @@ def _parse_aliexpress(soup, title, page_text):
     }
 
 
+def _parse_retevis(soup, _title, page_text):
+    """Parse Retevis product pages for radio specs.
+
+    Retevis pages have structured spec sections with labels like
+    'Frequency Range', 'Output Power', 'Battery Capacity', etc.
+    """
+    data = {'source_hint': 'retevis'}
+
+    # Strategy 1: Look for spec rows (label / value pairs)
+    spec_map = {}
+    # Common spec patterns: <td>Label</td><td>Value</td> or <dt>Label</dt><dd>Value</dd>
+    for row in soup.find_all('tr'):
+        cells = row.find_all(['td', 'th'])
+        if len(cells) >= 2:
+            label = cells[0].get_text(' ', strip=True).rstrip(':').lower()
+            value = cells[1].get_text(' ', strip=True)
+            if label and value and len(label) < 60:
+                spec_map[label] = value
+
+    # Strategy 2: Look for definition lists
+    for dl in soup.find_all('dl'):
+        dts = dl.find_all('dt')
+        dds = dl.find_all('dd')
+        for dt_el, dd_el in zip(dts, dds):
+            label = dt_el.get_text(' ', strip=True).rstrip(':').lower()
+            value = dd_el.get_text(' ', strip=True)
+            if label and value and len(label) < 60:
+                spec_map[label] = value
+
+    # Strategy 3: Look for spec divs with label/value structure
+    for container in soup.find_all(['div', 'li'], class_=lambda c: c and any(
+        w in (c or '').lower() for w in ('spec', 'param', 'feature', 'attribute')
+    )):
+        text = container.get_text(' ', strip=True)
+        match = re.match(r'([A-Za-z][A-Za-z\s]+?)[:\s]+(.+)', text)
+        if match:
+            label = match.group(1).strip().rstrip(':').lower()
+            value = match.group(2).strip()
+            if label and value and len(label) < 60:
+                spec_map[label] = value
+
+    # Map known spec labels to our fields
+    _LABEL_MAP = {
+        'frequency range': 'freq_bands_tx',
+        'frequency': 'freq_bands_tx',
+        'tx frequency': 'freq_bands_tx',
+        'output power': 'power_watts',
+        'power output': 'power_watts',
+        'transmit power': 'power_watts',
+        'rf power': 'power_watts',
+        'battery capacity': 'battery_mah',
+        'battery': 'battery_mah',
+        'battery type': 'battery_mah',
+        'waterproof': 'waterproof_rating',
+        'waterproof rating': 'waterproof_rating',
+        'ip rating': 'waterproof_rating',
+        'gps': 'gps',
+        'gnss': 'gps',
+        'weight': 'weight',
+        'dimensions': 'dimensions',
+        'channel capacity': 'channel_capacity',
+        'modulation': 'modulation',
+    }
+
+    for label, value in spec_map.items():
+        for key, field in _LABEL_MAP.items():
+            if key in label:
+                if field == 'battery_mah':
+                    match = re.search(r'(\d{3,5})\s*m\s*ah', value, re.IGNORECASE)
+                    if match:
+                        data[field] = int(match.group(1))
+                elif field == 'power_watts':
+                    if not data.get(field):
+                        match = re.search(r'(\d+(?:\.\d+)?)\s*w', value, re.IGNORECASE)
+                        if match:
+                            data[field] = f"{match.group(1)}W"
+                elif field == 'freq_bands_tx':
+                    if not data.get(field):
+                        data[field] = _clean_text(value)
+                elif field == 'gps':
+                    if 'yes' in value.lower() or 'gps' in value.lower():
+                        data[field] = 'Yes'
+                elif field == 'waterproof_rating':
+                    match = re.search(r'IP(\d{2})', value, re.IGNORECASE)
+                    if match:
+                        data['waterproof_rating'] = f"IP{match.group(1)}"
+                break
+
+    # Fallback: extract specs from image alt text (Retevis uses info-graphic images)
+    if not data.get('freq_bands_tx') or not data.get('power_watts'):
+        img_keywords = {
+            'freq_bands_tx': [
+                r'(VHF|UHF|136[-–]\d{3}\s*MHz|400[-–]\d{3}\s*MHz|FRS|GMRS)',
+            ],
+            'power_watts': [r'(\d+W)', r'(\d+\s*Watts?)'],
+            'gps': [r'(GPS|GNSS)'],
+            'dmr': [r'(DMR|Digital Mobile Radio)'],
+        }
+        for img in soup.find_all('img', alt=True):
+            alt = img.get('alt', '')
+            for field, patterns in img_keywords.items():
+                if not data.get(field):
+                    for pattern in patterns:
+                        match = re.search(pattern, alt, re.IGNORECASE)
+                        if match:
+                            if field == 'power_watts':
+                                data[field] = match.group(1).replace(' ', '')
+                            elif field in ('freq_bands_tx',):
+                                data[field] = _clean_text(match.group(1))
+                            elif field in ('gps', 'dmr'):
+                                data[field] = 'Yes'
+                            break
+
+    # USB-C detection
+    if 'type-c' in page_text.lower() or 'usb c' in page_text.lower():
+        data['usb_c_charging'] = True
+
+    return data
+
+
+def _parse_generic_product_page(soup, _title, page_text):
+    """Parse a generic e-commerce product page using structured data patterns.
+
+    Handles sites without domain-specific parsers by looking for:
+    1. JSON-LD Product schema (@type: Product)
+    2. Meta tags (og:description, description, keywords)
+    3. Common spec table patterns
+    4. Page text fallback
+    """
+    data = {'source_hint': 'generic_product_page'}
+
+    # Strategy 1: JSON-LD Product schema
+    json_ld = _extract_json_ld_objects(soup)
+    for obj in json_ld:
+        if not isinstance(obj, dict):
+            continue
+        obj_type = obj.get('@type', '')
+        if isinstance(obj_type, list):
+            obj_type = ' '.join(obj_type)
+        if 'product' not in obj_type.lower():
+            continue
+
+        # Extract description
+        desc = obj.get('description', '')
+        if desc:
+            data['description'] = _clean_text(desc)
+            # Parse description for specs too
+            desc_specs = extract_specs_from_text(desc, source_name='json-ld')
+            for k, v in desc_specs.items():
+                if v and not data.get(k):
+                    data[k] = v
+
+        # Extract brand
+        brand_obj = obj.get('brand', {})
+        if isinstance(brand_obj, dict):
+            brand_name = brand_obj.get('name', '')
+        else:
+            brand_name = str(brand_obj) if brand_obj else ''
+        if brand_name and not data.get('brand'):
+            data['brand'] = _clean_text(brand_name)
+
+        # Extract model / name
+        name = obj.get('name', '')
+        if name and not data.get('model'):
+            data['model'] = _clean_text(name)
+
+        # Extract price
+        offers = obj.get('offers')
+        if isinstance(offers, list) and offers:
+            offers = offers[0]
+        if isinstance(offers, dict):
+            price = offers.get('price')
+            if price and not data.get('cost_approx'):
+                currency = offers.get('priceCurrency', '')
+                if str(currency).upper() == 'USD':
+                    data['cost_approx'] = f"${price}"
+                else:
+                    data['cost_approx'] = str(price)
+
+    # Strategy 2: Meta tags
+    for meta_name in ('description', 'keywords', 'og:description'):
+        content = _extract_meta_content(soup, 'name', meta_name)
+        if content:
+            meta_specs = extract_specs_from_text(content, source_name=f'meta:{meta_name}')
+            for k, v in meta_specs.items():
+                if v and not data.get(k):
+                    data[k] = v
+
+    # Strategy 3: Look for spec tables/lists with label:value patterns
+    spec_pattern = re.compile(
+        r'(frequency|power|watt|battery|mah|gps|aprs|dmr|'
+        r'weight|dimension|water|ip\d|channel|modulation|'
+        r'band|range)',
+        re.IGNORECASE,
+    )
+    # Check <tr> rows with 2 cells
+    for row in soup.find_all('tr'):
+        cells = row.find_all(['td', 'th'])
+        if len(cells) == 2:
+            label = cells[0].get_text(' ', strip=True).lower()
+            value = cells[1].get_text(' ', strip=True)
+            if spec_pattern.search(label) and value:
+                if not data.get('freq_bands_tx') and 'freq' in label:
+                    data['freq_bands_tx'] = _clean_text(value)
+                if not data.get('power_watts') and ('power' in label or 'watt' in label):
+                    match = re.search(r'(\d+(?:\.\d+)?)\s*w', value, re.IGNORECASE)
+                    if match:
+                        data['power_watts'] = f"{match.group(1)}W"
+                if not data.get('battery_mah') and 'batt' in label:
+                    match = re.search(r'(\d{3,5})\s*m\s*ah', value, re.IGNORECASE)
+                    if match:
+                        data['battery_mah'] = int(match.group(1))
+
+    # Strategy 4: Fallback to full page text
+    if not data.get('freq_bands_tx') and not data.get('power_watts'):
+        text_specs = extract_specs_from_text(page_text, source_name='page_text')
+        for k, v in text_specs.items():
+            if v and not data.get(k):
+                data[k] = v
+
+    # USB-C detection
+    if 'type-c' in page_text.lower() or 'usb c' in page_text.lower():
+        data['usb_c_charging'] = True
+
+    return data
+
+
 def enrich_specs_from_product_url(url):
     """Framework hook for website enrichment (phase 2 adapters start here)."""
     if not url:
@@ -314,8 +597,11 @@ def enrich_specs_from_product_url(url):
         domain_data = _parse_radioddity(soup, title, page_text)
     elif domain.endswith('aliexpress.com'):
         domain_data = _parse_aliexpress(soup, title, page_text)
+    elif domain.endswith('retevis.com'):
+        domain_data = _parse_retevis(soup, title, page_text)
     else:
-        domain_data = {'source_hint': 'generic'}
+        # Try generic product page parser for any e-commerce site
+        domain_data = _parse_generic_product_page(soup, title, page_text)
 
     for key, value in domain_data.items():
         if value and not extracted.get(key):

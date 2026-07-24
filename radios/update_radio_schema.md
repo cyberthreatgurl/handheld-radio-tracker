@@ -1,5 +1,10 @@
 Let me gather context about the current models, views, and templates to build a thorough plan.
 
+> ✅ **IMPLEMENTED — July 2026** — The schema expansion described below has been fully
+> implemented.  See `README.md` for current feature documentation.
+
+---
+
 Searched for files matching `**/views*.py`, 4 matches
 
 Searched for files matching `**/forms*.py`, 3 matches

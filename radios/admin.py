@@ -9,8 +9,9 @@ from .models import (
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
-    list_display = ['name', 'grantee_code', 'full_name', 'country']
+    list_display = ['name', 'grantee_code', 'full_name', 'country', 'created_at']
     search_fields = ['name', 'grantee_code', 'full_name']
+    list_filter = ['created_at']
     ordering = ['name']
 
     actions = ['rename_brand_globally', 'sync_selected_grantees']

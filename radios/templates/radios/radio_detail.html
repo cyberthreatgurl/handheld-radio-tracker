@@ -336,47 +336,15 @@
                         </div>
                         <div class="border rounded-md p-4 bg-gray-50">
                             <div class="flex items-center justify-between mb-3">
-                                <h4 class="text-sm font-semibold text-gray-900">Documents</h4>
+                                <h4 class="text-sm font-semibold text-gray-900">All Documents</h4>
                                 <a href="{% url 'manual_upload' %}?radio={{ radio.pk }}"
-                                   class="text-xs text-indigo-600 hover:underline">Upload / View all</a>
+                                   class="text-xs text-indigo-600 hover:underline">Upload / Manage</a>
                             </div>
-                            {% if radio.manuals.all %}
-                            <ul class="space-y-2">
-                                {% for doc in radio.manuals.all %}
-                                {% if doc.manual_pdf %}
-                                <li class="text-sm text-gray-700 flex items-center gap-2">
-                                    <span class="inline-block text-xs font-medium bg-gray-200 text-gray-700 rounded px-1.5 py-0.5">{{ doc.get_doc_type_display }}</span>
-                                    <a href="{{ doc.manual_pdf.url }}" target="_blank"
-                                       class="text-indigo-600 hover:underline break-all">{{ doc.manual_pdf.name|cut:"manuals/" }} ↗</a>
-                                </li>
-                                {% endif %}
-                                {% endfor %}
-                            </ul>
-                            {% else %}
-                            <p class="text-sm text-gray-600">No documents linked. <a href="{% url 'manual_upload' %}?radio={{ radio.pk }}" class="text-indigo-600 hover:underline">Upload one</a>.</p>
-                            {% endif %}
-                        </div>
-                        <div class="border rounded-md p-4 bg-gray-50">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">FCC Test Reports</h4>
-                            {% if radio.fcc_test_reports.all %}
-                            <ul class="space-y-2">
-                                {% for report in radio.fcc_test_reports.all %}
-                                <li class="text-sm text-gray-700">
-                                    <a href="{{ report.report_pdf.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ report.report_pdf.name }} ↗</a>
-                                    {% if report.product_designation %}
-                                    <span class="text-xs text-gray-500 ml-2">Designation: {{ report.product_designation }}</span>
-                                    {% endif %}
-                                </li>
-                                {% endfor %}
-                            </ul>
-                            {% else %}
-                            <p class="text-sm text-gray-600">No FCC test reports linked.</p>
-                            {% endif %}
-                        </div>
-                        <div class="border rounded-md p-4 bg-gray-50">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">OET Documents</h4>
+
+                            {# OET Documents (from FCC sync) #}
                             {% if radio.oet_documents.all %}
-                            <div class="overflow-x-auto">
+                            <h5 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">FCC OET Documents</h5>
+                            <div class="overflow-x-auto mb-4">
                                 <table class="min-w-full text-sm">
                                     <thead>
                                         <tr class="text-left text-xs text-gray-600 uppercase tracking-wider">
@@ -406,8 +374,41 @@
                                     </tbody>
                                 </table>
                             </div>
-                            {% else %}
-                            <p class="text-sm text-gray-600">No OET documents synced.</p>
+                            {% endif %}
+
+                            {# User-uploaded documents (RadioManual) #}
+                            {% if radio.manuals.all %}
+                            <h5 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Uploaded Documents</h5>
+                            <ul class="space-y-1 mb-4">
+                                {% for doc in radio.manuals.all %}
+                                {% if doc.manual_pdf %}
+                                <li class="text-sm text-gray-700 flex items-center gap-2">
+                                    <span class="inline-block text-xs font-medium bg-gray-200 text-gray-700 rounded px-1.5 py-0.5">{{ doc.get_doc_type_display }}</span>
+                                    <a href="{{ doc.manual_pdf.url }}" target="_blank"
+                                       class="text-indigo-600 hover:underline break-all">{{ doc.manual_pdf.name|cut:"manuals/" }} ↗</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+
+                            {# FCC Test Reports (RadioFCCTestReport) #}
+                            {% if radio.fcc_test_reports.all %}
+                            <h5 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">FCC Test Reports</h5>
+                            <ul class="space-y-1">
+                                {% for report in radio.fcc_test_reports.all %}
+                                <li class="text-sm text-gray-700">
+                                    <a href="{{ report.report_pdf.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ report.report_pdf.name }} ↗</a>
+                                    {% if report.product_designation %}
+                                    <span class="text-xs text-gray-500 ml-2">Designation: {{ report.product_designation }}</span>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+
+                            {% if not radio.oet_documents.all and not radio.manuals.all and not radio.fcc_test_reports.all %}
+                            <p class="text-sm text-gray-600">No documents yet. <a href="{% url 'manual_upload' %}?radio={{ radio.pk }}" class="text-indigo-600 hover:underline">Upload one</a> or run FCC Update to sync OET documents.</p>
                             {% endif %}
                         </div>
                         {% if certifications %}

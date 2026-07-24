@@ -108,3 +108,49 @@ now pre-processes XML before parsing, fixing both issues and allowing the
 parse to succeed.  If you still see this error after the improvements
 branch, the FCC response contains corruption beyond what the sanitizer
 handles — the sync will gracefully fall back to HTML-based parsing.
+
+## Service Types Not Showing After FCC Sync
+
+If a radio's service types are empty after running an FCC sync, check:
+
+1. **FCC API availability** — The FCC Generic Search and TCB Report endpoints
+   occasionally return 503.  Retry the sync later.
+
+2. **CID (Change-in-Identification) filings** — If the radio is a re-brand
+   (e.g. Retevis RB48P filed under `2ASNSRB48P`), the actual rule parts
+   are stored under the **original FCC ID** (e.g. `2A3OORB48P`).  Run:
+   ```bash
+   python manage.py backfill_cid_radios --apply --sync-fcc --fcc-id <FCCID>
+   ```
+
+3. **Part 15B/15C only** — Radios certified only under Part 15B or 15C
+   (no transmitter certification) are often amateur radios.  The system
+   will detect them and scrape the manufacturer's website for specs.
+   Ensure the radio has a `website` URL set and click "Scrape Website"
+   on the edit page.
+
+4. **Manual assignment** — Edit the radio and check the Service Types
+   checkboxes manually if automated assignment doesn't find a match.
+
+## Change-in-Identification (CID) Radios Missing Specs
+
+CID radios are re-labeled versions of existing certified devices.  The
+FCC database stores technical data under the original FCC ID, not the
+new re-label ID.  Symptoms:
+
+- Service types are empty or show only Part 15B/C
+- No power output or emission designator data
+- `is_a_whitelabel` is False but should be True
+- Notes mention "Change in Identification"
+
+To fix CID radios across the database:
+```bash
+# Preview what would change
+python manage.py backfill_cid_radios
+
+# Apply all CID backfills
+python manage.py backfill_cid_radios --apply
+
+# Re-sync a specific radio and backfill
+python manage.py backfill_cid_radios --apply --sync-fcc --fcc-id 2ASNSRB48P
+```

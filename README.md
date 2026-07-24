@@ -367,6 +367,14 @@ python manage.py audit_oet_sync --missing-only --limit 50
 
 - Actually delete duplicate blank-code Brand rows after canonicalization.
 
+`python manage.py backfill_grant_dates [--sync-fcc]`
+
+- Backfill grant_date on Radio records from existing OET document dates, optionally triggering FCC re-sync for radios still missing dates.
+
+`python manage.py backfill_cid_radios [--apply] [--sync-fcc] [--fcc-id <FCCID>]`
+
+- Backfill Change-in-Identification radios: follow the chain from a re-label FCC ID to the original certified grant, assign service types, and mark as white label.
+
 ### Sync-Skipped Grantee IDs
 
 **Purpose:** Skip known-stable grantees during bulk FCC sync to reduce API calls and runtime.
@@ -377,6 +385,80 @@ python manage.py audit_oet_sync --missing-only --limit 50
 2. **CLI** (`--ignore-grantees=ICOM,MOTOROLA`) — ad-hoc skip for a single run, merged with any DB-stored codes.
 
 Unlike `IgnoredGrantee` (which completely blocks import of those grantees), Sync-Skipped Grantees keep their existing radios in the database — they're just not queried during bulk sync.
+
+## Service Type Auto-Assignment
+
+Radio service types (GMRS, FRS, Amateur, Commercial, Marine, Aviation, PoC, Part 15 Subpart B/C) are automatically assigned during FCC sync using data from the FCC API.
+
+### How it works
+
+1. **TCB Form 731 Report** — The authoritative source. Fetched from `https://apps.fcc.gov/tcb/GetTcb731Report.do` using the `application_id` from the FCC exhibit listing. The "Equipment Specifications" table has a `Rule Parts` column containing values like `15B`, `90`, `95E`.
+
+2. **Generic Search XML/HTML** — Fallback sources when the TCB report is unavailable.
+
+3. **Mapping** — FCC rule parts are normalized (e.g. `15B` → `Part 15B`) and mapped to service types via `FCC_PART_TO_SERVICE_TYPE` in `radios/fcc_utils.py`.
+
+### Service types tracked
+
+| Rule Part | Service Type | Description |
+|---|---|---|
+| Part 95E | GMRS | General Mobile Radio Service |
+| Part 95B | FRS | Family Radio Service |
+| Part 95D | CB | Citizens Band |
+| Part 95J | MURS | Multi-Use Radio Service |
+| Part 97 | Amateur | Amateur (ham) Radio |
+| Part 90 | Commercial | Private Land Mobile Radio |
+| Part 80 | Marine | Maritime VHF |
+| Part 87 | Aviation | VHF Airband |
+| Parts 22/24/27 | PoC | Push-to-Talk over Cellular |
+| Part 15B | Part 15 Subpart B | Unintentional Radiators |
+| Part 15C | Part 15 Subpart C | Intentional Radiators |
+
+## Change-in-Identification (CID) Chain Resolution
+
+When a radio is filed as a "Change in Identification" (re-branded existing certified device), the actual technical data lives under the **original FCC ID**. The sync now follows the CID chain automatically.
+
+### How it works
+
+1. Detects CID filings from `applicationPurpose` text
+2. Extracts the original FCC ID using regex (e.g. `Original FCC ID: 2A3OORB48P`)
+3. Fetches the original grant's metadata (rule parts, frequencies, power)
+4. Merges the original's rule parts for service type assignment
+5. Marks the radio as `is_a_whitelabel=True` and records the original FCC ID in notes
+
+### Management command
+
+Backfill existing CID radios:
+
+```bash
+python manage.py backfill_cid_radios              # dry-run
+python manage.py backfill_cid_radios --apply      # apply changes
+python manage.py backfill_cid_radios --apply --sync-fcc --fcc-id 2ASNSRB48P
+```
+
+## Amateur Radio Detection & Website Scraping
+
+Amateur radios (Part 97) do not require FCC transmitter certification. Manufacturers often file them under Part 15B/15C with blank TX fields. The system detects these cases and scrapes the manufacturer's website and YouTube videos for specifications.
+
+### Detection logic
+
+A radio is flagged as a likely amateur device when ALL of:
+1. Rule parts limited to 15B/15C (no TX-certified parts like 90/95E)
+2. Power output blank/zero across all OE rows
+3. Emission designator blank
+4. Frequencies overlap 2m (144-148 MHz) or 70cm (420-450 MHz) amateur bands
+
+### Website scraping
+
+When detected, the system:
+1. Scrapes the radio's `website` URL for specs using domain-specific parsers (Retevis, Radioddity, Temu, AliExpress) or a generic JSON-LD/meta/table parser
+2. Parses YouTube video transcripts from `youtube_video_urla` for TX specs
+3. Only fills in fields that are currently empty — never overwrites existing data
+
+### Manual trigger
+
+A "Scrape Website" button on the radio edit page lets users trigger scraping on-demand. Also available as a POST endpoint at `/radios/<pk>/scrape-website/`.
+
 
 ## FCC grantee repair and maintenance
 

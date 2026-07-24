@@ -25,10 +25,44 @@ from radios.fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
 from radios.manual_extraction import extract_specs_from_text, extract_text_from_pdf_with_metadata
 from radios.fcc_validation import validate_fcc_brand_assignment
 
+# Mapping from normalized FCC rule part strings to RadioServiceType names.
+# Keys are the canonical rule_part values stored in RadioServiceType.
+FCC_PART_TO_SERVICE_TYPE = {
+    'Part 15B': 'Part 15 Subpart B',
+    'Part 15C': 'Part 15 Subpart C',
+    'Part 15': 'Part 15 Subpart B',
+    'Part 15 Subpart B': 'Part 15 Subpart B',
+    'Part 15 Subpart C': 'Part 15 Subpart C',
+    'Part 80': 'Marine',
+    'Part 87': 'Aviation',
+    'Part 90': 'Commercial',
+    'Part 95B': 'FRS',
+    'Part 95D': 'CB',
+    'Part 95E': 'GMRS',
+    'Part 95J': 'MURS',
+    'Part 97': 'Amateur',
+}
+
 URL = "https://apps.fcc.gov/OETLabServices/getFCCIDList?"
 GENERIC_SEARCH_URL = "https://apps.fcc.gov/oetcf/eas/reports/GenericSearchResult.cfm"
 GENERIC_SEARCH_FORM_URL = "https://apps.fcc.gov/oetcf/eas/reports/GenericSearch.cfm"
 OET_EXHIBITS_URL = "https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm"
+TCB_REPORT_URL = "https://apps.fcc.gov/tcb/GetTcb731Report.do"
+
+# Amateur radio detection: amateur devices (Part 97) do not require FCC
+# certification for their transmitter.  Manufacturers often file them under
+# Part 15B or 15C (unintentional/intentional radiator) with blank TX fields.
+# These frequency windows cover the two most common amateur bands.
+AMATEUR_BAND_2M = (144.0, 148.0)    # 2-Meter VHF band
+AMATEUR_BAND_70CM = (420.0, 450.0)  # 70-Centimeter UHF band
+# Rule parts that indicate a device was NOT certified for transmission.
+# Devices with ONLY these rule parts (and blank TX fields) may be amateur radios.
+_AMATEUR_SUSPECT_RULE_PARTS = {'15B', '15C', 'Part 15B', 'Part 15C'}
+# Keywords that suggest a device is a two-way radio (not a pure receiver/scanner).
+_AMATEUR_PRODUCT_KEYWORDS = [
+    'TWO WAY RADIO', 'TWO-WAY RADIO', 'DIGITAL TWO WAY RADIO',
+    'TRANSCEIVER', 'SCANNING RECEIVER', 'DMR RADIO',
+]
 logger = logging.getLogger(__name__)
 # pylint: disable=no-member, broad-except, global-statement
 # pylint: disable=too-many-locals, too-many-branches, too-many-statements
@@ -86,7 +120,7 @@ class _FCCConnectionDownError(Exception):
 DEFAULT_RADIO_ALLOWLIST_TERMS = "TRANSCEIVER,TRANSMITTER,GMRS,FRS,RECEIVER,MURS,ORIGINAL EQUIPMENT"
 RADIO_ALLOWLIST_ENV_NAME = "FCC_RADIO_ALLOWLIST_TERMS"
 URL_PATTERN = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
-_OET_APP_ID_RE = re.compile(r'application_id=([A-Za-z0-9]+)', re.IGNORECASE)
+_OET_APP_ID_RE = re.compile(r'application_id=([A-Za-z0-9%+=/]+)', re.IGNORECASE)
 FCC_RETRY_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
@@ -783,6 +817,7 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
     matched_keys = set()
     oe_rows = []
     exhibit_urls = []
+    rule_parts_set = set()
 
     body_match = re.search(
         r'<tbody[^>]*id=["\']offTblBdy["\'][^>]*>(.*?)</tbody>',
@@ -829,18 +864,32 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
             }
         )
 
+        # Extract rule parts from cell 16 (if available)
+        if len(cells) > 16:
+            raw_rule_parts = _strip_html_tags(cells[16])
+            if raw_rule_parts:
+                matched_keys.add('rule_parts')
+                for part in raw_rule_parts.replace(';', ',').split(','):
+                    part = part.strip()
+                    if part:
+                        rule_parts_set.add(part)
+
         for href in re.findall(r'href=["\']([^"\']+)["\']', cells[2], flags=re.IGNORECASE):
             url = unescape(urljoin(base_url, href.strip()))
             if 'ViewExhibitReport.cfm' in url:
                 exhibit_urls.append(url)
 
         if _is_original_equipment_purpose(application_purpose):
+            power_output = _strip_html_tags(cells[18]) if len(cells) > 18 else ''
+            emission_designator = _strip_html_tags(cells[17]) if len(cells) > 17 else ''
             oe_rows.append(
                 {
                     'grant_date': grant_date,
                     'application_purpose': application_purpose,
                     'lower_freq_mhz': lower_freq,
                     'upper_freq_mhz': upper_freq,
+                    'power_output': power_output,
+                    'emission_designator': emission_designator,
                 }
             )
 
@@ -852,11 +901,30 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
     # Callers receive an empty candidate_exhibit_urls list and should treat that
     # as "no OET exhibits found" rather than falling back to an unverified ID.
 
+    # Fallback: when the HTML table doesn't have the expected 16-cell structure
+    # (e.g. Playwright-rendered pages with different column layout), try to
+    # extract rule parts from the raw HTML text using regex.
+    if not rule_parts_set and html_text:
+        rule_part_matches = re.findall(
+            r'(?:rule\s*parts?|47\s*CFR)\s*[:.]?\s*'
+            r'((?:Part\s*\d+[A-Za-z]*(?:\s*Subpart\s+[A-Za-z])?'
+            r'(?:\s*[,;/]\s*Part\s*\d+[A-Za-z]*)*))',
+            html_text or '',
+            flags=re.IGNORECASE,
+        )
+        for match in rule_part_matches:
+            for segment in re.split(r'[,;/]', match):
+                segment = segment.strip()
+                if segment:
+                    rule_parts_set.add(segment)
+
     return {
         'record_count': len(matched_records),
         'text_blob': ' || '.join(matched_records),
         'matched_keys': sorted(matched_keys),
         'original_equipment_rows': oe_rows,
+        'rule_parts': sorted(rule_parts_set),
+        'candidate_exhibit_urls': exhibit_urls,
     }
 
 
@@ -1654,6 +1722,7 @@ def _fetch_secondary_metadata_from_html_fallback(fcc_id, _params):
             'test_report_candidates': [],
             'original_equipment_rows': [],
             'oet_documents': [],
+            'rule_parts': [],
         }
 
     html_text, base_url = _submit_generic_search_form(fcc_id)
@@ -1665,6 +1734,7 @@ def _fetch_secondary_metadata_from_html_fallback(fcc_id, _params):
             'test_report_candidates': [],
             'original_equipment_rows': [],
             'oet_documents': _fetch_oet_documents_from_html(fcc_id),
+            'rule_parts': [],
         }
 
     parsed = _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fcc_id)
@@ -1673,6 +1743,19 @@ def _fetch_secondary_metadata_from_html_fallback(fcc_id, _params):
         candidate_urls=parsed.get('candidate_exhibit_urls', []),
     )
 
+    # Try the TCB Form 731 Report for authoritative rule parts
+    rule_parts = parsed.get('rule_parts', [])
+    candidate_urls = parsed.get('candidate_exhibit_urls', [])
+    tcb_app_id = _extract_application_id_from_urls(candidate_urls)
+    if tcb_app_id:
+        tcb_rule_parts = _fetch_rule_parts_from_tcb_report(fcc_id, tcb_app_id)
+        if tcb_rule_parts:
+            rule_parts = tcb_rule_parts
+            logger.info(
+                "FCC TCB rule parts found (html fallback) fcc_id=%s rule_parts=%s",
+                fcc_id, tcb_rule_parts,
+            )
+
     return {
         'record_count': parsed.get('record_count', 0),
         'text_blob': parsed.get('text_blob', ''),
@@ -1680,6 +1763,8 @@ def _fetch_secondary_metadata_from_html_fallback(fcc_id, _params):
         'test_report_candidates': [],
         'original_equipment_rows': parsed.get('original_equipment_rows', []),
         'oet_documents': oet_documents,
+        'rule_parts': rule_parts,
+        'application_id': tcb_app_id or _extract_application_id_from_urls(candidate_urls),
     }
 
 
@@ -1959,6 +2044,102 @@ def _sync_manual_record_for_oet_document(radio, fcc_id, oet_doc):
     return created
 
 
+def _normalize_fcc_rule_part(raw_part):
+    """Normalize a raw FCC rule part string to canonical 'Part XX' format.
+
+    Handles inputs from both the FCC API (e.g. '15B', '90', '95E') and
+    parsed PDF text (e.g. 'Part 15 Subpart B', 'FCC Part 90').
+    """
+    part = raw_part.strip()
+
+    # Already canonical: 'Part 15B', 'Part 90'
+    if re.match(r'^Part\s+\d+[A-Za-z]*(?:\s+Subpart\s+[A-Za-z])?$', part, re.IGNORECASE):
+        return part
+
+    # Strip FCC prefix: 'FCC Part 90' → 'Part 90'
+    part = re.sub(r'^FCC\s+', '', part, flags=re.IGNORECASE).strip()
+
+    # Already has Part prefix after stripping FCC
+    if re.match(r'^Part\s+\d+[A-Za-z]*(?:\s+Subpart\s+[A-Za-z])?$', part, re.IGNORECASE):
+        return part
+
+    # Raw part number: '15B', '90', '95E' → 'Part 15B', 'Part 90'
+    if re.match(r'^\d+[A-Za-z]*(?:\s+Subpart\s+[A-Za-z])?$', part, re.IGNORECASE):
+        return f'Part {part}'
+
+    # Last resort: try to extract a part number from the string
+    match = re.search(r'(\d+[A-Za-z]*(?:\s+Subpart\s+[A-Za-z])?)', part, re.IGNORECASE)
+    if match:
+        return f'Part {match.group(1).strip()}'
+
+    return part
+
+
+def _assign_service_types_from_rule_parts(radio, rule_parts):
+    """Auto-assign RadioServiceTypes based on FCC rule parts.
+
+    Args:
+        radio: Radio model instance.
+        rule_parts: List of FCC rule part strings from either the FCC API
+                    (e.g. ['15B', '90']) or parsed from test report PDFs
+                    (e.g. ['Part 15B', 'Part 90']).
+
+    Returns:
+        List of RadioServiceType names that were newly assigned.
+    """
+    if not rule_parts:
+        return []
+
+    RadioServiceType = None
+    try:
+        from radios.models import RadioServiceType  # pylint: disable=redefined-outer-name,reimported
+    except ImportError:
+        return []
+
+    assigned = []
+    for rule_part in rule_parts:
+        normalized = _normalize_fcc_rule_part(rule_part)
+        service_name = FCC_PART_TO_SERVICE_TYPE.get(normalized)
+        if not service_name:
+            # Try matching without "Subpart" suffix for broader lookup
+            base_part = re.sub(r'\s*Subpart\s+[A-Za-z]', '', normalized).strip()
+            service_name = FCC_PART_TO_SERVICE_TYPE.get(base_part)
+        if not service_name:
+            logger.debug(
+                "FCC rule part has no mapped service type "
+                "rule_part=%s normalized=%s radio_id=%s",
+                rule_part,
+                normalized,
+                getattr(radio, 'id', None),
+            )
+            continue
+
+        service_type = RadioServiceType.objects.filter(name=service_name).first()
+        if not service_type:
+            logger.warning(
+                "Service type not found in DB name=%s rule_part=%s",
+                service_name,
+                normalized,
+            )
+            continue
+
+        if radio.service_types.filter(pk=service_type.pk).exists():
+            continue
+
+        radio.service_types.add(service_type)
+        assigned.append(service_name)
+        logger.info(
+            "FCC service type auto-assigned radio_id=%s fcc_id=%s "
+            "rule_part=%s service_type=%s",
+            getattr(radio, 'id', None),
+            getattr(radio, 'fcc_id', '') or '',
+            normalized,
+            service_name,
+        )
+
+    return assigned
+
+
 def _apply_extracted_specs_to_radio(radio, extracted_specs, source_label):
     changes = []
 
@@ -2014,6 +2195,33 @@ def _extract_specs_from_saved_pdf(file_field, source_name):
     return extracted_text, extracted_specs, extraction_meta
 
 
+def _ensure_fcc_rule_parts_in_specs(extracted_data, extracted_text):
+    """Backfill fcc_rule_parts into existing spec_extraction when missing.
+
+    Test reports processed before the fcc_rule_parts feature was added will
+    have spec_extraction without fcc_rule_parts.  If extracted_text is
+    available, re-parse it to extract the FCC Part and update the stored data.
+    """
+    specs = (extracted_data or {}).get('spec_extraction', {})
+    if 'fcc_rule_parts' in specs:
+        return specs.get('fcc_rule_parts', []), False
+
+    if not extracted_text:
+        return [], False
+
+    from radios.manual_extraction import _extract_fcc_part_from_standards
+    rule_parts = sorted(_extract_fcc_part_from_standards(extracted_text))
+    if rule_parts:
+        specs['fcc_rule_parts'] = rule_parts
+        extracted_data['spec_extraction'] = specs
+        return rule_parts, True
+
+    # Mark as processed so we don't retry every time
+    specs['fcc_rule_parts'] = []
+    extracted_data['spec_extraction'] = specs
+    return [], True
+
+
 def _backfill_radio_specs_from_manual_doc(radio, manual_doc):
     if not manual_doc.manual_pdf:
         return []
@@ -2021,7 +2229,20 @@ def _backfill_radio_specs_from_manual_doc(radio, manual_doc):
     existing_specs = (manual_doc.extracted_data or {}).get('spec_extraction', {})
     if existing_specs:
         source_label = manual_doc.source_url or manual_doc.manual_pdf.name or str(manual_doc.pk)
-        return _apply_extracted_specs_to_radio(radio, existing_specs, source_label)
+        changes = _apply_extracted_specs_to_radio(radio, existing_specs, source_label)
+
+        # Handle stale data: fcc_rule_parts may be missing from specs processed
+        # before the feature was added.  Re-parse from stored extracted_text.
+        rule_parts, updated = _ensure_fcc_rule_parts_in_specs(
+            manual_doc.extracted_data, manual_doc.extracted_text,
+        )
+        if updated:
+            manual_doc.save(update_fields=['extracted_data'])
+
+        assigned = _assign_service_types_from_rule_parts(radio, rule_parts)
+        if assigned:
+            changes = changes + [f'service_type:{name}' for name in assigned]
+        return changes
 
     source_name = manual_doc.manual_pdf.name or manual_doc.source_url or ''
     extracted_text, extracted_specs, extraction_meta = _extract_specs_from_saved_pdf(manual_doc.manual_pdf, source_name)
@@ -2037,7 +2258,12 @@ def _backfill_radio_specs_from_manual_doc(radio, manual_doc):
     manual_doc.extraction_confidence = max(manual_doc.extraction_confidence or 0.0, 0.85)
     manual_doc.save(update_fields=['extracted_text', 'extracted_data', 'extraction_confidence'])
 
-    return _apply_extracted_specs_to_radio(radio, extracted_specs, source_name)
+    changes = _apply_extracted_specs_to_radio(radio, extracted_specs, source_name)
+    rule_parts = extracted_specs.get('fcc_rule_parts', [])
+    assigned = _assign_service_types_from_rule_parts(radio, rule_parts)
+    if assigned:
+        changes = changes + [f'service_type:{name}' for name in assigned]
+    return changes
 
 
 def _backfill_radio_specs_from_test_report(radio, report):
@@ -2047,7 +2273,19 @@ def _backfill_radio_specs_from_test_report(radio, report):
     existing_specs = (report.extracted_data or {}).get('spec_extraction', {})
     if existing_specs:
         source_label = report.source_url or report.report_title or report.report_pdf.name or str(report.pk)
-        return _apply_extracted_specs_to_radio(radio, existing_specs, source_label)
+        changes = _apply_extracted_specs_to_radio(radio, existing_specs, source_label)
+
+        # Handle stale data: fcc_rule_parts may be missing from specs processed
+        # before the feature was added.  RadioFCCTestReport doesn't store
+        # extracted_text separately, so we'd need to re-extract the PDF.
+        # For now, just use what's available.
+        rule_parts, _updated = _ensure_fcc_rule_parts_in_specs(
+            report.extracted_data, '',
+        )
+        assigned = _assign_service_types_from_rule_parts(radio, rule_parts)
+        if assigned:
+            changes = changes + [f'service_type:{name}' for name in assigned]
+        return changes
 
     source_name = report.report_title or report.report_pdf.name or report.source_url or ''
     _, extracted_specs, extraction_meta = _extract_specs_from_saved_pdf(report.report_pdf, source_name)
@@ -2061,7 +2299,12 @@ def _backfill_radio_specs_from_test_report(radio, report):
     }
     report.save(update_fields=['extracted_data'])
 
-    return _apply_extracted_specs_to_radio(radio, extracted_specs, source_name)
+    changes = _apply_extracted_specs_to_radio(radio, extracted_specs, source_name)
+    rule_parts = extracted_specs.get('fcc_rule_parts', [])
+    assigned = _assign_service_types_from_rule_parts(radio, rule_parts)
+    if assigned:
+        changes = changes + [f'service_type:{name}' for name in assigned]
+    return changes
 
 
 def _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata, force_reload=False):
@@ -2247,7 +2490,18 @@ def _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata, force_reloa
         manual_synced,
         synced_names[:10],
     )
+    # Store application_id from secondary_metadata so the TCB report can be
+    # fetched later (the stored document URLs use numeric ids, not application_id).
     _update_radio_oet_page_url(radio, fcc_id)
+    app_id = (secondary_metadata or {}).get('application_id', '')
+    if app_id and not getattr(radio, 'oet_page_url', ''):
+        url = f"{OET_EXHIBITS_URL}?mode=Exhibits&RequestTimeout=500&application_id={app_id}"
+        Radio.objects.filter(pk=radio.pk).update(oet_page_url=url)
+        radio.oet_page_url = url
+        logger.info(
+            'FCC OET page URL stored from metadata radio_id=%s fcc_id=%s',
+            radio.pk, fcc_id,
+        )
     if fcc_id_norm and synced:
         _synced_oet_fcc_ids.add(fcc_id_norm)
     return synced
@@ -2433,6 +2687,103 @@ def _sanitize_fcc_xml(content):
     return content
 
 
+def _fetch_rule_parts_from_tcb_report(fcc_id, application_id):
+    """Fetch the TCB Form 731 Report and extract Rule Parts from the
+    Equipment Specifications table.
+
+    The TCB report is the authoritative source for rule parts (e.g. '15B',
+    '90', '95E').  The table has a 'Rule Parts' column under the 'Equipment
+    Specifications' fieldset.
+
+    Args:
+        fcc_id: FCC ID string.
+        application_id: The application ID from the FCC exhibit URL.
+
+    Returns:
+        List of rule part strings (e.g. ['15B', '90']).
+    """
+    if not application_id:
+        return []
+
+    url = f"{TCB_REPORT_URL}?applicationId={application_id}&fcc_id={fcc_id}"
+    try:
+        response = _fcc_request_with_retry(
+            'get', url, impersonate='chrome124', timeout=15,
+        )
+    except Exception:
+        logger.info(
+            "FCC TCB report fetch failed fcc_id=%s application_id=%s",
+            fcc_id, application_id,
+        )
+        return []
+
+    if response.status_code != 200:
+        logger.info(
+            "FCC TCB report non-200 fcc_id=%s status=%s",
+            fcc_id, response.status_code,
+        )
+        return []
+
+    html = response.text or ''
+    return _extract_rule_parts_from_tcb_html(html)
+
+
+def _extract_rule_parts_from_tcb_html(html):
+    """Parse the TCB Form 731 HTML and extract rule parts from the
+    Equipment Specifications table.
+
+    The table has a 'Rule Parts' column (with optional <br/> in header).
+    We locate the column by matching the header text, then collect all
+    non-empty values from that column's data cells.
+    """
+    rule_parts = set()
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # Find the Equipment Specifications fieldset
+    for fieldset in soup.find_all('fieldset'):
+        legend = fieldset.find('legend')
+        if not legend or 'equipment spec' not in (legend.get_text() or '').lower():
+            continue
+
+        # Find the table within this fieldset
+        table = fieldset.find('table')
+        if not table:
+            continue
+
+        rows = table.find_all('tr')
+        if len(rows) < 2:
+            continue
+
+        # Find the Rule Parts column index from the header row
+        header_row = rows[0]
+        headers = header_row.find_all('th')
+        rule_parts_col = None
+        for idx, th in enumerate(headers):
+            text = th.get_text(' ', strip=True).lower()
+            # Header text may be split by <br/>: 'Rule Parts' or 'Rule\nParts'
+            if 'rule' in text and 'part' in text:
+                rule_parts_col = idx
+                break
+
+        if rule_parts_col is None:
+            continue
+
+        # Collect rule parts from data rows
+        for row in rows[1:]:
+            cells = row.find_all('td')
+            if len(cells) <= rule_parts_col:
+                continue
+            value = cells[rule_parts_col].get_text(' ', strip=True)
+            if value:
+                # Split combined values like "15B, 90" or "15B;90"
+                for part in re.split(r'[,;/\s]+', value):
+                    part = part.strip()
+                    if part:
+                        rule_parts.add(part)
+
+    return sorted(rule_parts)
+
+
 def fetch_fcc_secondary_metadata(fcc_id):
     """Fetch additional FCC search metadata for a specific FCC ID."""
     # If both HTTP and Playwright are known-down for this sync run, skip all
@@ -2450,6 +2801,7 @@ def fetch_fcc_secondary_metadata(fcc_id):
             'test_report_candidates': [],
             'original_equipment_rows': [],
             'oet_documents': [],
+            'rule_parts': [],
         }
 
     grantee_code, product_code = split_fcc_id(fcc_id)
@@ -2461,6 +2813,7 @@ def fetch_fcc_secondary_metadata(fcc_id):
             'test_report_candidates': [],
             'original_equipment_rows': [],
             'oet_documents': _fetch_oet_documents_from_html(fcc_id),
+            'rule_parts': [],
         }
 
     params = {
@@ -2514,6 +2867,7 @@ def fetch_fcc_secondary_metadata(fcc_id):
     matched_keys = set()
     oe_rows = []
     exhibit_urls = []
+    rule_parts_set = set()
     for node in _iter_dict_nodes(data):
         if not isinstance(node, dict):
             continue
@@ -2550,12 +2904,35 @@ def fetch_fcc_secondary_metadata(fcc_id):
                     'application_purpose': application_purpose,
                     'lower_freq_mhz': (node.get('lower_freq_mhz') or node.get('lowerFreqMHz') or '').strip(),
                     'upper_freq_mhz': (node.get('upper_freq_mhz') or node.get('upperFreqMHz') or '').strip(),
+                    'power_output': (node.get('power_output') or node.get('powerOutput') or '').strip(),
+                    'emission_designator': (node.get('emission_designator') or node.get('emissionDesignator') or '').strip(),
                 }
             )
+
+        # Collect rule parts from the XML response.
+        # The Generic Search XML uses 'rule_parts' (snake_case) as the field name.
+        raw_rule_parts = (node.get('rule_parts') or node.get('ruleParts') or '').strip()
+        if raw_rule_parts:
+            for part in raw_rule_parts.replace(';', ',').split(','):
+                part = part.strip()
+                if part:
+                    rule_parts_set.add(part)
 
     oet_documents = _extract_oet_documents_from_xml(data, fcc_id)
     if not oet_documents:
         oet_documents = _fetch_oet_documents_from_html(fcc_id, candidate_urls=exhibit_urls)
+
+    # Extract application_id from exhibit URLs and fetch rule parts from the
+    # TCB Form 731 Report, which is the authoritative source.
+    tcb_app_id = _extract_application_id_from_urls(exhibit_urls)
+    if tcb_app_id:
+        tcb_rule_parts = _fetch_rule_parts_from_tcb_report(fcc_id, tcb_app_id)
+        if tcb_rule_parts:
+            rule_parts_set = set(tcb_rule_parts)
+            logger.info(
+                "FCC TCB rule parts found fcc_id=%s rule_parts=%s",
+                fcc_id, tcb_rule_parts,
+            )
 
     return {
         'record_count': len(matched_records),
@@ -2564,7 +2941,435 @@ def fetch_fcc_secondary_metadata(fcc_id):
         'test_report_candidates': _extract_test_report_candidates(data, fcc_id),
         'original_equipment_rows': oe_rows,
         'oet_documents': oet_documents,
+        'rule_parts': sorted(rule_parts_set),
+        'application_id': tcb_app_id,
     }
+
+
+def _extract_application_id_from_urls(urls):
+    """Extract the first application_id from a list of FCC exhibit URLs."""
+    for url in urls:
+        match = _OET_APP_ID_RE.search(url)
+        if match:
+            return match.group(1)
+    return ''
+
+
+_CID_ORIGINAL_FCC_ID_RE = re.compile(
+    r'Original\s+FCC\s+ID\s*[:#]?\s*([A-Za-z0-9\-]{3,30})',
+    re.IGNORECASE,
+)
+
+
+def _extract_original_fcc_id_from_cid(application_purpose):
+    """Extract the original FCC ID from a Change-in-Identification filing.
+
+    CID filings mention the original grant in the application purpose text:
+        "Change in identification of presently authorized equipment.
+         Original FCC ID: 2A3OORB48P Grant Date: 11/20/2025"
+
+    Args:
+        application_purpose: The full application purpose text.
+
+    Returns:
+        Original FCC ID string (e.g. '2A3OORB48P'), or empty string.
+    """
+    if not application_purpose:
+        return ''
+    match = _CID_ORIGINAL_FCC_ID_RE.search(application_purpose)
+    return (match.group(1) or '').strip().upper() if match else ''
+
+
+def _detect_amateur_radio(rule_parts, oe_rows, application_purpose=''):
+    """Detect whether an FCC filing likely represents an amateur radio.
+
+    Amateur radios (Part 97) do not require FCC transmitter certification.
+    Manufacturers often file them under Part 15B/15C with blank TX fields.
+    This function checks for the telltale combination of:
+      1. Rule parts limited to 15B/15C (no TX-certified rule parts like 90/95E)
+      2. Power output blank/zero
+      3. Emission designator blank
+      4. Frequencies overlapping 2m (144-148 MHz) or 70cm (420-450 MHz) bands
+
+    Args:
+        rule_parts: List of normalized rule part strings (e.g. ['15B']).
+        oe_rows: List of OE row dicts with lower_freq_mhz, upper_freq_mhz,
+                 power_output, emission_designator.
+        application_purpose: The application purpose string.
+
+    Returns:
+        True if the filing is likely an amateur radio.
+    """
+    if not rule_parts or not oe_rows:
+        return False
+
+    # Step 1: Rule parts must be limited to suspect non-TX parts
+    normalized_parts = {p.strip().upper() for p in rule_parts}
+    has_tx_cert = bool(normalized_parts - _AMATEUR_SUSPECT_RULE_PARTS)
+    if has_tx_cert:
+        return False
+
+    # Step 2: Check for blank/zero power and emission across all OE rows
+    has_tx_specs = False
+    for row in oe_rows:
+        power = (row.get('power_output') or '').strip()
+        emission = (row.get('emission_designator') or '').strip()
+        if power and power not in ('0', '0.0', 'NaN', 'N/A'):
+            has_tx_specs = True
+        if emission and emission.lower() not in ('nan', 'n/a'):
+            has_tx_specs = True
+    if has_tx_specs:
+        return False  # Has TX specs — likely a certified transmitter, not amateur
+
+    # Step 3: Check if frequencies overlap amateur bands
+    in_amateur_band = False
+    for row in oe_rows:
+        try:
+            lower = float(row.get('lower_freq_mhz', 0) or 0)
+            upper = float(row.get('upper_freq_mhz', 0) or 0)
+        except (ValueError, TypeError):
+            continue
+        if lower <= 0 or upper <= 0:
+            continue
+
+        # Check overlap with 2m band (144-148)
+        if lower <= AMATEUR_BAND_2M[1] and upper >= AMATEUR_BAND_2M[0]:
+            in_amateur_band = True
+            break
+        # Check overlap with 70cm band (420-450)
+        if lower <= AMATEUR_BAND_70CM[1] and upper >= AMATEUR_BAND_70CM[0]:
+            in_amateur_band = True
+            break
+
+    if not in_amateur_band:
+        return False
+
+    # Step 4: Confirm with product description keywords
+    purpose_upper = (application_purpose or '').upper()
+    has_radio_keyword = any(
+        kw in purpose_upper for kw in _AMATEUR_PRODUCT_KEYWORDS
+    )
+    if not has_radio_keyword:
+        # Still flag it — frequencies + rule parts are strong indicators
+        logger.debug(
+            "Amateur radio candidate missing product keyword "
+            "purpose=%s",
+            application_purpose,
+        )
+
+    return True
+
+
+def _scrape_website_for_tx_specs(radio):
+    """Scrape a radio's website for transmitter specifications.
+
+    Called when a radio is identified as a likely amateur device.  Uses the
+    existing website enrichment pipeline to extract TX-related specs (power,
+    frequency bands, GPS, APRS, DMR, etc.) from the manufacturer's product page.
+    Also parses YouTube video transcripts if available.
+
+    Args:
+        radio: Radio model instance.
+
+    Returns:
+        Dict of extracted specs, or empty dict on failure.
+    """
+    specs = {}
+
+    # Scrape manufacturer website
+    website = (radio.website or '').strip()
+    if website:
+        from radios.manual_extraction import enrich_specs_from_product_url
+
+        logger.info(
+            "Amateur radio website scrape start radio_id=%s fcc_id=%s url=%s",
+            getattr(radio, 'id', None),
+            getattr(radio, 'fcc_id', '') or '',
+            website,
+        )
+
+        try:
+            web_specs = enrich_specs_from_product_url(website)
+            if web_specs:
+                specs.update(web_specs)
+                logger.info(
+                    "Amateur radio website scrape result radio_id=%s "
+                    "freq_bands=%s power=%s gps=%s aprs=%s dmr=%s",
+                    getattr(radio, 'id', None),
+                    web_specs.get('freq_bands_tx', ''),
+                    web_specs.get('power_watts', ''),
+                    web_specs.get('gps', ''),
+                    web_specs.get('aprs', ''),
+                    web_specs.get('dmr', ''),
+                )
+        except Exception:
+            logger.exception(
+                "Amateur radio website scrape failed radio_id=%s url=%s",
+                getattr(radio, 'id', None),
+                website,
+            )
+
+    # Parse YouTube video transcripts
+    try:
+        yt_specs = _parse_youtube_videos_for_specs(radio)
+        if yt_specs:
+            # Merge: website specs take priority over YouTube
+            for k, v in yt_specs.items():
+                if v and not specs.get(k):
+                    specs[k] = v
+    except Exception:
+        logger.exception(
+            "Amateur radio YouTube parse failed radio_id=%s",
+            getattr(radio, 'id', None),
+        )
+
+    return specs
+
+
+def _parse_youtube_videos_for_specs(radio):
+    """Parse YouTube video transcripts linked to a radio for TX specs.
+
+    Iterates the radio's youtube_video_urla field and fetches auto-generated
+    captions/transcripts.  Parses the combined text with extract_specs_from_text.
+
+    Args:
+        radio: Radio model instance.
+
+    Returns:
+        Dict of extracted specs merged across all videos, or empty dict.
+    """
+    youtube_urls = (radio.youtube_video_urla or '').strip()
+    if not youtube_urls:
+        return {}
+
+    all_text = []
+    for line in youtube_urls.splitlines():
+        url = line.strip()
+        if not url:
+            continue
+        video_id = _extract_youtube_video_id(url)
+        if not video_id:
+            continue
+
+        transcript = _fetch_youtube_transcript(video_id)
+        if transcript:
+            all_text.append(transcript)
+
+    if not all_text:
+        return {}
+
+    combined = '\n'.join(all_text)
+    extracted = extract_specs_from_text(combined, source_name='youtube_transcripts')
+    extracted['source_hint'] = 'youtube_transcripts'
+
+    logger.info(
+        "YouTube transcript parse result radio_id=%s "
+        "freq_bands=%s power=%s gps=%s aprs=%s dmr=%s",
+        getattr(radio, 'id', None),
+        extracted.get('freq_bands_tx', ''),
+        extracted.get('power_watts', ''),
+        extracted.get('gps', ''),
+        extracted.get('aprs', ''),
+        extracted.get('dmr', ''),
+    )
+    return extracted
+
+
+def _extract_youtube_video_id(url):
+    """Extract YouTube video ID from various URL formats."""
+    patterns = [
+        r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|'
+        r'youtube\.com/v/)([A-Za-z0-9_-]{11})',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    return ''
+
+
+def _fetch_youtube_transcript(video_id):
+    """Fetch YouTube video transcript/captions.
+
+    Tries multiple strategies:
+    1. youtube-transcript-api (pip package)
+    2. yt-dlp with auto-generated subs
+    3. Direct timedtext API call
+
+    Returns combined transcript text, or empty string on failure.
+    """
+    # Strategy 1: youtube-transcript-api
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+        # Prefer manually created English captions, then auto-generated
+        try:
+            transcript = transcript_list.find_transcript(['en'])
+        except Exception:
+            try:
+                transcript = transcript_list.find_generated_transcript(['en'])
+            except Exception:
+                # Try any available language and auto-translate to English
+                for t in transcript_list:
+                    if t.is_translatable:
+                        transcript = t.translate('en')
+                        break
+                else:
+                    transcript = None
+
+        if transcript:
+            pieces = transcript.fetch()
+            return ' '.join(p.get('text', '') for p in pieces)
+    except ImportError:
+        logger.debug("youtube-transcript-api not installed, trying fallback")
+    except Exception:
+        logger.debug(
+            "YouTube transcript API failed video_id=%s, trying fallback",
+            video_id,
+        )
+
+    # Strategy 2: Direct timedtext API
+    try:
+        url = (
+            f"https://www.youtube.com/watch?v={video_id}"
+        )
+        response = requests.get(url, timeout=10, headers={
+            'User-Agent': 'Mozilla/5.0 (compatible; RadioTrackerBot/1.0)',
+        })
+        # Extract player_response JSON for captions
+        match = re.search(
+            r'ytInitialPlayerResponse\s*=\s*({.+?});',
+            response.text,
+            re.DOTALL,
+        )
+        if match:
+            import json as _json
+            player_data = _json.loads(match.group(1))
+            captions = (
+                player_data.get('captions', {})
+                .get('playerCaptionsTracklistRenderer', {})
+                .get('captionTracks', [])
+            )
+            if captions:
+                # Get the first English track
+                for track in captions:
+                    if track.get('languageCode') == 'en':
+                        base_url = track.get('baseUrl', '')
+                        if base_url:
+                            caption_resp = requests.get(base_url, timeout=10)
+                            if caption_resp.status_code == 200:
+                                # Parse XML/SRT captions to plain text
+                                text = re.sub(
+                                    r'<[^>]+>', '',
+                                    caption_resp.text,
+                                )
+                                text = re.sub(
+                                    r'\d{2}:\d{2}:\d{2}[.,]\d{3}\s*-->.*?\n',
+                                    ' ',
+                                    text,
+                                )
+                                text = re.sub(r'\n\s*\d+\s*\n', ' ', text)
+                                return text.strip()
+                        break
+    except Exception:
+        logger.debug(
+            "YouTube timedtext fallback failed video_id=%s",
+            video_id,
+        )
+
+    return ''
+
+
+def _apply_website_specs_to_radio(radio, extracted):
+    """Apply website-scraped specs to a radio model.
+
+    Only fills in fields that are currently empty on the radio.
+    """
+    field_map = {
+        'freq_bands_tx': 'freq_bands_tx',
+        'power_watts': 'power_watts',
+        'gps': 'gps',
+        'aprs': 'aprs',
+        'dmr': 'dmr',
+        'air_band': 'air_band',
+        'satellite_tracking': 'satellite_tracking',
+        'cost_approx': 'cost_approx',
+    }
+    changes = []
+    for extracted_key, radio_field in field_map.items():
+        value = extracted.get(extracted_key)
+        if value and not getattr(radio, radio_field):
+            setattr(radio, radio_field, str(value)[:200])
+            changes.append(radio_field)
+
+    # Numeric fields
+    battery_mah = extracted.get('battery_mah')
+    if battery_mah and radio.battery_mah is None:
+        try:
+            radio.battery_mah = int(battery_mah)
+        except (ValueError, TypeError):
+            pass
+        else:
+            changes.append('battery_mah')
+
+    # Boolean indicators from text
+    if not radio.usb_c_charging:
+        text_blob = (extracted.get('freq_bands_tx', '') + ' ' +
+                     extracted.get('notes', '')).lower()
+        if 'usb-c' in text_blob or 'usb c' in text_blob:
+            radio.usb_c_charging = True
+            changes.append('usb_c_charging')
+
+    if changes:
+        radio.save(update_fields=changes)
+        logger.info(
+            "Amateur radio website specs applied radio_id=%s fields=%s",
+            getattr(radio, 'id', None),
+            ','.join(changes),
+        )
+
+    return changes
+
+
+def _detect_and_scrape_amateur_radio(radio, sec_metadata):
+    """Check if a radio is likely an amateur device and scrape its website.
+
+    Called during FCC sync after service types are assigned.  If the FCC
+    metadata indicates the device is probably an amateur radio (Part 15B/15C
+    with blank TX fields and amateur-band frequencies), this function
+    scrapes the radio's website for transmitter specs.
+    """
+    if not sec_metadata:
+        return
+
+    rule_parts = sec_metadata.get('rule_parts', [])
+    oe_rows = sec_metadata.get('original_equipment_rows', [])
+    application_purpose = sec_metadata.get('text_blob', '')
+
+    # Skip if the radio already has TX specs populated
+    if radio.freq_bands_tx or radio.power_watts:
+        return
+
+    if not _detect_amateur_radio(rule_parts, oe_rows, application_purpose):
+        return
+
+    logger.info(
+        "Amateur radio detected radio_id=%s fcc_id=%s rule_parts=%s",
+        getattr(radio, 'id', None),
+        getattr(radio, 'fcc_id', '') or '',
+        rule_parts,
+    )
+
+    if not radio.website:
+        logger.info(
+            "Amateur radio no website to scrape radio_id=%s",
+            getattr(radio, 'id', None),
+        )
+        return
+
+    extracted = _scrape_website_for_tx_specs(radio)
+    if extracted:
+        _apply_website_specs_to_radio(radio, extracted)
 
 
 def _allowlist_match_terms(primary_record, secondary_metadata, allowlist_terms):
@@ -3066,9 +3871,15 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
             stale_count = len(radios_with_fcc) + (1 if existing_radio else 0)
             for radio in radios_with_fcc:
                 synced_oet_docs += _sync_oet_documents_for_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
+                _assign_service_types_from_rule_parts(
+                    radio, sec_metadata.get('rule_parts', []),
+                )
                 _stamp_lookup_timestamp(radio, lookup_started_at)
             if existing_radio:
                 synced_oet_docs += _sync_oet_documents_for_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
+                _assign_service_types_from_rule_parts(
+                    existing_radio, sec_metadata.get('rule_parts', []),
+                )
                 _stamp_lookup_timestamp(existing_radio, lookup_started_at)
             skipped_stale += stale_count
             if stale_count:
@@ -3089,6 +3900,39 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         app_purpose = (res.get('applicationPurpose', '') or '')
         is_change_in_id = 'change in identification' in app_purpose.lower()
 
+        # For Change-in-Identification filings, the technical specs (rule parts,
+        # power, emission designators) live under the original FCC ID, not the
+        # re-label ID.  Follow the chain to get the actual certification data.
+        if is_change_in_id:
+            orig_fcc_id = _extract_original_fcc_id_from_cid(app_purpose)
+            if orig_fcc_id:
+                orig_fcc_id = orig_fcc_id.upper()
+                if orig_fcc_id != (fcc_id or '').upper():
+                    orig_metadata = _sync_metadata_cache.get(orig_fcc_id)
+                    if orig_metadata is None:
+                        orig_metadata = fetch_fcc_secondary_metadata(orig_fcc_id)
+                        _sync_metadata_cache[orig_fcc_id] = orig_metadata
+                    if orig_metadata:
+                        orig_rule_parts = orig_metadata.get('rule_parts', [])
+                        if orig_rule_parts:
+                            current_parts = set(sec_metadata.get('rule_parts', []))
+                            current_parts.update(orig_rule_parts)
+                            sec_metadata['rule_parts'] = sorted(current_parts)
+                            logger.info(
+                                "FCC CID chain original rule_parts merged "
+                                "fcc_id=%s orig_fcc_id=%s orig_rule_parts=%s "
+                                "merged_rule_parts=%s",
+                                fcc_id, orig_fcc_id, orig_rule_parts,
+                                sec_metadata['rule_parts'],
+                            )
+                        # Also merge original OE rows so frequency/power data
+                        # from the original grant is available for detection
+                        orig_oe_rows = orig_metadata.get('original_equipment_rows', [])
+                        if orig_oe_rows:
+                            current_oe = list(sec_metadata.get('original_equipment_rows', []))
+                            current_oe.extend(orig_oe_rows)
+                            sec_metadata['original_equipment_rows'] = current_oe
+
         matched_terms = _allowlist_match_terms(res, sec_metadata, allowlist_terms)
         if allowlist_terms and not matched_terms and not is_specific_fcc_id and not is_change_in_id:
             # Even for non-radio classifications, ingest OET exhibits for existing FCC-linked radios.
@@ -3097,6 +3941,9 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 if should_skip:
                     continue
                 synced_oet_docs += _sync_oet_documents_for_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
+                _assign_service_types_from_rule_parts(
+                    radio, sec_metadata.get('rule_parts', []),
+                )
                 _stamp_lookup_timestamp(radio, lookup_started_at)
             skipped_non_radio += 1
             logger.info(
@@ -3116,6 +3963,10 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         grant_date = res.get("grantDate", "N/A")
         app_purpose_str = app_purpose or "N/A"
         new_notes = f"FCC Grant Date: {grant_date} | Purpose: {app_purpose_str}"
+        if is_change_in_id:
+            orig_fcc = _extract_original_fcc_id_from_cid(app_purpose)
+            if orig_fcc:
+                new_notes += f" | Original FCC ID: {orig_fcc}"
 
         # "Change in Identification" means the grantee name changed after initial filing —
         # the device was built under one company and is now sold under another, i.e. white label.
@@ -3197,6 +4048,16 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     _stamp_lookup_timestamp(radio, lookup_started_at)
                 attached_reports += _attach_test_reports_to_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
                 synced_oet_docs += _sync_oet_documents_for_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
+                # Auto-assign service types from FCC API rule_parts
+                api_rule_parts = sec_metadata.get('rule_parts', [])
+                if api_rule_parts:
+                    logger.info(
+                        "FCC API rule_parts found fcc_id=%s rule_parts=%s",
+                        fcc_id, api_rule_parts,
+                    )
+                _assign_service_types_from_rule_parts(radio, api_rule_parts)
+                # Detect amateur radios and scrape website for TX specs
+                _detect_and_scrape_amateur_radio(radio, sec_metadata)
         else:
             if existing_radio:
                 should_skip, rec_modified = stale_radios.get(existing_radio.id, (False, None))
@@ -3263,6 +4124,10 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 )
                 attached_reports += _attach_test_reports_to_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
                 synced_oet_docs += _sync_oet_documents_for_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
+                _assign_service_types_from_rule_parts(
+                    existing_radio, sec_metadata.get('rule_parts', []),
+                )
+                _detect_and_scrape_amateur_radio(existing_radio, sec_metadata)
             else:
                 created_radio = Radio.objects.create(
                     brand=brand_val,
@@ -3294,6 +4159,10 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 )
                 attached_reports += _attach_test_reports_to_radio(created_radio, fcc_id, sec_metadata, force_reload=force_reload)
                 synced_oet_docs += _sync_oet_documents_for_radio(created_radio, fcc_id, sec_metadata, force_reload=force_reload)
+                _assign_service_types_from_rule_parts(
+                    created_radio, sec_metadata.get('rule_parts', []),
+                )
+                _detect_and_scrape_amateur_radio(created_radio, sec_metadata)
 
     if exact_grantee and skipped_non_exact:
         messages.append(

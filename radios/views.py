@@ -670,7 +670,7 @@ class RadioDetailView(DetailView):
         # from the application_id embedded in any RadioOETDocument document_url.
         oet_url = radio.oet_page_url or ''
         if not oet_url and fcc_id:
-            _app_id_re = re.compile(r'application_id=([A-Za-z0-9]+)', re.IGNORECASE)
+            _app_id_re = re.compile(r'application_id=([A-Za-z0-9%+=/]+)', re.IGNORECASE)
             doc_with_url = RadioOETDocument.objects.filter(
                 radio=radio, fcc_id__iexact=fcc_id
             ).exclude(document_url='').first()
@@ -840,6 +840,40 @@ class RadioUpdateView(UpdateView):
 
         messages.success(self.request, f'Radio {form.instance} has been updated successfully!')
         return redirect(self.request.path)
+
+
+def scrape_radio_website_view(request, pk):
+    """POST-only: trigger website + YouTube scraping for a radio."""
+    radio = get_object_or_404(Radio, pk=pk)
+    if request.method == 'POST':
+        logger.info(
+            "User action scrape_website actor=%s radio_pk=%s",
+            _actor_label(request), pk,
+        )
+        from radios.fcc_utils import _scrape_website_for_tx_specs, _apply_website_specs_to_radio
+
+        extracted = _scrape_website_for_tx_specs(radio)
+        if extracted:
+            changes = _apply_website_specs_to_radio(radio, extracted)
+            if changes:
+                messages.success(
+                    request,
+                    f"Scraped {len(changes)} field(s) from website: "
+                    f"{', '.join(changes)}",
+                )
+            else:
+                messages.info(
+                    request,
+                    "Website scraped successfully, but no new data to apply "
+                    "(all target fields already populated).",
+                )
+        else:
+            messages.warning(
+                request,
+                "Could not extract any specs from the radio's website "
+                "or YouTube videos.",
+            )
+    return redirect('radio_edit', pk=pk)
 
 
 def radio_image_delete(request, radio_pk, pk):

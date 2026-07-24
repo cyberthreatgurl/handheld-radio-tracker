@@ -13,6 +13,7 @@ urlpatterns = [
     path('radios/<int:pk>/edit/', views.RadioUpdateView.as_view(), name='radio_edit'),
     path('radios/<int:pk>/delete/', views.RadioDeleteView.as_view(), name='radio_delete'),
     path('radios/<int:pk>/sync-fcc/', views.sync_radio_fcc_view, name='sync_radio_fcc'),
+    path('radios/<int:pk>/scrape-website/', views.scrape_radio_website_view, name='scrape_radio_website'),
 
     path('sync-fcc/', views.sync_fcc_view, name='sync_fcc_id'),
     path('sync-all-grantees/', views.sync_all_grantees_view, name='sync_all_grantees'),

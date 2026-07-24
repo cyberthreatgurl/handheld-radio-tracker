@@ -6,7 +6,7 @@ class MergeRadiosFieldsForm(forms.Form):
         super().__init__(*args, **kwargs)
         # For each field, let user pick which radio's value to keep
         for field in [
-            'brand', 'model', 'fcc_id', 'intro_year', 'freq_bands_tx', 'power_watts',
+            'brand', 'model', 'fcc_id', 'freq_bands_tx', 'power_watts',
             'satellite_tracking', 'harmonic_suppression', 'gps', 'aprs', 'air_band', 'dmr',
             'display', 'battery_mah', 'cost_approx', 'rebadges_clones', 'website', 'notes']:
             choices = [(str(r.pk), getattr(r, field, '')) for r in radios]

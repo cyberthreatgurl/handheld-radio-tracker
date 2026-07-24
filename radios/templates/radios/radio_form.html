@@ -31,6 +31,19 @@
                     </div>
                 </form>
                 {% endif %}
+                {% if form.instance.pk and form.instance.website or form.instance.youtube_video_urla %}
+                <form action="{% url 'scrape_radio_website' form.instance.pk %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-emerald-300 text-sm font-medium rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                            title="Scrape the manufacturer's website and YouTube videos for TX specs (power, frequency, GPS, APRS, DMR)">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                        Scrape Website
+                    </button>
+                </form>
+                {% endif %}
             </div>
         </div>
 
@@ -326,16 +339,36 @@
                             {{ form.review_url }}
                         </div>
                         <div class="border rounded-md p-4 bg-gray-50">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-2">Documents</h4>
+                            <h4 class="text-sm font-semibold text-gray-900 mb-2">All Documents</h4>
                             {% if form.instance.pk %}
                             <p class="text-sm text-gray-600 mb-3">
                                 Upload test reports, manuals, firmware, and other files in the
                                 <a href="{% url 'manual_upload' %}?radio={{ form.instance.pk }}"
                                    class="text-indigo-600 hover:underline">Document Library</a>.
                             </p>
+
+                            {# OET Documents (from FCC sync) #}
+                            {% if form.instance.oet_documents.all %}
+                            <h5 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">FCC OET Documents</h5>
+                            <ul class="space-y-1 mb-3">
+                                {% for doc in form.instance.oet_documents.all %}
+                                <li class="text-xs text-gray-700">
+                                    {% if doc.document_file %}
+                                    <a href="{{ doc.document_file.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ doc.view_attachment|default:doc.exhibit_type }}</a>
+                                    {% else %}
+                                    <span class="text-gray-500">{{ doc.view_attachment|default:doc.exhibit_type }} (not downloaded)</span>
+                                    {% endif %}
+                                    <span class="ml-2 text-gray-500">{{ doc.exhibit_type }}{% if doc.display_type %} · {{ doc.display_type }}{% endif %}{% if doc.date_submitted_to_fcc %} · {{ doc.date_submitted_to_fcc|date:"m/d/Y" }}{% endif %}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+
+                            {# User-uploaded documents (RadioManual) #}
                             {% if form.instance.manuals.exists %}
-                            <ul class="space-y-1">
-                                {% for doc in form.instance.manuals.all|slice:":5" %}
+                            <h5 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Uploaded Documents</h5>
+                            <ul class="space-y-1 mb-3">
+                                {% for doc in form.instance.manuals.all %}
                                 <li class="text-xs text-gray-700">
                                     <span class="font-medium text-gray-500">{{ doc.get_doc_type_display }}:</span>
                                     {% if doc.manual_pdf %}
@@ -346,28 +379,30 @@
                                 {% endfor %}
                             </ul>
                             {% endif %}
+
+                            {# FCC Test Reports #}
+                            {% if form.instance.fcc_test_reports.all %}
+                            <h5 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">FCC Test Reports</h5>
+                            <ul class="space-y-1">
+                                {% for report in form.instance.fcc_test_reports.all %}
+                                <li class="text-xs text-gray-700">
+                                    <a href="{{ report.report_pdf.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ report.report_pdf.name }}</a>
+                                    {% if report.product_designation %}
+                                    <span class="text-gray-500 ml-1">({{ report.product_designation }})</span>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+
+                            {% if not form.instance.oet_documents.all and not form.instance.manuals.exists and not form.instance.fcc_test_reports.all %}
+                            <p class="text-sm text-gray-500">No documents yet. Upload some or run FCC Update to sync OET documents.</p>
+                            {% endif %}
+
                             {% else %}
                             <p class="text-sm text-gray-500">Save the radio first, then you can add documents.</p>
                             {% endif %}
                         </div>
-                        {% if form.instance.pk and form.instance.oet_documents.all %}
-                        <div class="border rounded-md p-4 bg-gray-50">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">OET Documents</h4>
-                            <ul class="space-y-1">
-                                {% for doc in form.instance.oet_documents.all|slice:":8" %}
-                                <li class="text-xs text-gray-700">
-                                    {% if doc.document_file %}
-                                    <a href="{{ doc.document_file.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ doc.view_attachment|default:doc.exhibit_type }} (open)</a>
-                                    {% else %}
-                                    <span class="text-gray-500">{{ doc.view_attachment|default:doc.exhibit_type }} (not downloaded)</span>
-                                    {% endif %}
-                                    <span class="ml-2 text-gray-500">{{ doc.exhibit_type }}{% if doc.display_type %} · {{ doc.display_type }}{% endif %}</span>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                            <p class="mt-2 text-xs text-gray-500">OET documents are synced from FCC data using the radio FCC ID.</p>
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
 
