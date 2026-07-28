@@ -230,35 +230,48 @@
                             {% if form.power_watts.errors %}<p class="mt-2 text-sm text-red-600">{{ form.power_watts.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
-                            <label for="{{ form.satellite_tracking.id_for_label }}" class="block text-sm font-medium text-gray-700">Satellite Tracking</label>
-                            {{ form.satellite_tracking }}
-                            {% if form.satellite_tracking.errors %}<p class="mt-2 text-sm text-red-600">{{ form.satellite_tracking.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div>
                             <label for="{{ form.harmonic_suppression.id_for_label }}" class="block text-sm font-medium text-gray-700">Harmonic Suppression</label>
                             {{ form.harmonic_suppression }}
                             {% if form.harmonic_suppression.errors %}<p class="mt-2 text-sm text-red-600">{{ form.harmonic_suppression.errors.0 }}</p>{% endif %}
                         </div>
+                    </div>
+                </div>
+
+                {# --- Capabilities — unified toggle grid --- #}
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Capabilities</h3>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {% for field in form %}
+                        {% if field.name in 'gps,aprs,dmr,air_band,satellite_tracking' %}
                         <div>
-                            <label for="{{ form.gps.id_for_label }}" class="block text-sm font-medium text-gray-700">GPS</label>
-                            {{ form.gps }}
-                            {% if form.gps.errors %}<p class="mt-2 text-sm text-red-600">{{ form.gps.errors.0 }}</p>{% endif %}
+                            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<p class="mt-2 text-sm text-red-600">{{ field.errors.0 }}</p>{% endif %}
                         </div>
-                        <div>
-                            <label for="{{ form.aprs.id_for_label }}" class="block text-sm font-medium text-gray-700">APRS</label>
-                            {{ form.aprs }}
-                            {% if form.aprs.errors %}<p class="mt-2 text-sm text-red-600">{{ form.aprs.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div>
-                            <label for="{{ form.air_band.id_for_label }}" class="block text-sm font-medium text-gray-700">Air Band</label>
-                            {{ form.air_band }}
-                            {% if form.air_band.errors %}<p class="mt-2 text-sm text-red-600">{{ form.air_band.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div>
-                            <label for="{{ form.dmr.id_for_label }}" class="block text-sm font-medium text-gray-700">DMR</label>
-                            {{ form.dmr }}
-                            {% if form.dmr.errors %}<p class="mt-2 text-sm text-red-600">{{ form.dmr.errors.0 }}</p>{% endif %}
-                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {% for field in form %}
+                        {% if field.name in 'bluetooth,noaa_wx,usb_c_charging,removable_antenna,unlockable,firmware_updates' %}
+                        <label class="relative inline-flex items-center gap-3 rounded-lg border {% if field.value %}border-indigo-300 bg-indigo-50{% else %}border-gray-200 bg-white hover:border-gray-300{% endif %} px-3.5 py-3 cursor-pointer transition-colors select-none">
+                            {{ field }}
+                            {# Toggle track #}
+                            <span class="pointer-events-none relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 {% if field.value %}bg-indigo-500{% else %}bg-gray-200{% endif %}">
+                                {# Toggle thumb #}
+                                <span class="pointer-events-none relative inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200 {% if field.value %}translate-x-4{% else %}translate-x-0{% endif %}"></span>
+                            </span>
+                            <span class="text-sm font-medium {% if field.value %}text-indigo-700{% else %}text-gray-600{% endif %}">{{ field.label }}</span>
+                        </label>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# --- Hardware --- #}
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Hardware</h3>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
                             <label for="{{ form.display.id_for_label }}" class="block text-sm font-medium text-gray-700">Display</label>
                             {{ form.display }}
@@ -272,45 +285,29 @@
                     </div>
                 </div>
 
-                <!-- Hardware Features -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Hardware Features</h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div class="flex items-center">
-                            {{ form.usb_c_charging }}
-                            <label for="{{ form.usb_c_charging.id_for_label }}" class="ml-2 block text-sm text-gray-700">USB-C Charging</label>
-                        </div>
-                        <div class="flex items-center">
-                            {{ form.removable_antenna }}
-                            <label for="{{ form.removable_antenna.id_for_label }}" class="ml-2 block text-sm text-gray-700">Removable Antenna</label>
-                        </div>
-                        <div class="flex items-center">
-                            {{ form.unlockable }}
-                            <label for="{{ form.unlockable.id_for_label }}" class="ml-2 block text-sm text-gray-700">Unlockable</label>
-                        </div>
-                        <div class="flex items-center">
-                            {{ form.firmware_updates }}
-                            <label for="{{ form.firmware_updates.id_for_label }}" class="ml-2 block text-sm text-gray-700">Firmware Updates</label>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Pricing & Related -->
                 <div class="border-b border-gray-200 pb-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Pricing & Related</h3>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="{{ form.cost_approx.id_for_label }}" class="block text-sm font-medium text-gray-700">Cost (Approx)</label>
                             {{ form.cost_approx }}
+                            {% if form.cost_approx.errors %}<p class="mt-2 text-sm text-red-600">{{ form.cost_approx.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.rebadges_clones.id_for_label }}" class="block text-sm font-medium text-gray-700">Known Rebadges / Clones</label>
                             {{ form.rebadges_clones }}
+                            {% if form.rebadges_clones.errors %}<p class="mt-2 text-sm text-red-600">{{ form.rebadges_clones.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.white_label_vendors.id_for_label }}" class="block text-sm font-medium text-gray-700">White Label Vendors</label>
                             {{ form.white_label_vendors }}
+                            {% if form.white_label_vendors.errors %}<p class="mt-2 text-sm text-red-600">{{ form.white_label_vendors.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700">Website</label>
                             {{ form.website }}
+                            {% if form.website.errors %}<p class="mt-2 text-sm text-red-600">{{ form.website.errors.0 }}</p>{% endif %}
                         </div>
                         <div class="sm:col-span-2">
                             <label for="{{ form.youtube_video_urla.id_for_label }}" class="block text-sm font-medium text-gray-700">YouTube Video URLs</label>
@@ -599,6 +596,40 @@
 
     mfgSelect.addEventListener('change', updateMfgLink);
     updateMfgLink();
+})();
+
+// Toggle switches — update visual state on click
+(function() {
+    document.querySelectorAll('input[type=checkbox][class*="opacity-0"]').forEach(function(cb) {
+        var label = cb.closest('label');
+        if (!label) return;
+        var spans = label.querySelectorAll('span');
+        // Track is the first span after the input (the toggle background)
+        var track = cb.nextElementSibling;
+        // Thumb is inside the track
+        var thumb = track ? track.querySelector('span') : null;
+        // Label text is the last span in the label
+        var labelText = spans.length >= 3 ? spans[spans.length - 1] : null;
+
+        function updateVisuals(checked) {
+            if (checked) {
+                label.classList.add('border-indigo-300', 'bg-indigo-50');
+                label.classList.remove('border-gray-200', 'bg-white', 'hover:border-gray-300');
+                if (track) { track.classList.add('bg-indigo-500'); track.classList.remove('bg-gray-200'); }
+                if (thumb) { thumb.classList.add('translate-x-4'); thumb.classList.remove('translate-x-0'); }
+                if (labelText) { labelText.classList.add('text-indigo-700'); labelText.classList.remove('text-gray-600'); }
+            } else {
+                label.classList.remove('border-indigo-300', 'bg-indigo-50');
+                label.classList.add('border-gray-200', 'bg-white', 'hover:border-gray-300');
+                if (track) { track.classList.remove('bg-indigo-500'); track.classList.add('bg-gray-200'); }
+                if (thumb) { thumb.classList.remove('translate-x-4'); thumb.classList.add('translate-x-0'); }
+                if (labelText) { labelText.classList.remove('text-indigo-700'); labelText.classList.add('text-gray-600'); }
+            }
+        }
+        cb.addEventListener('change', function() { updateVisuals(this.checked); });
+        // Run once on load to ensure server-rendered state is reflected
+        updateVisuals(cb.checked);
+    });
 })();
 </script>
 {% endblock %}

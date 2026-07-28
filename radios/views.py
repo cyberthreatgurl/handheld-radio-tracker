@@ -1669,9 +1669,15 @@ def fcc_lookup_view(request):
 
 
 def fcc_validate_fccids_view(request):
-    """Validate unique FCC IDs against the live FCC API.
-    Reports any FCC IDs that do not exist in the FCC database.
-    Validates by unique FCC ID (not per radio record) to minimize API calls."""
+    """Validate unique FCC IDs against the live FCC API and local database.
+
+    For each unique FCC ID in the database:
+    1. First checks if its stripped (no-hyphen) form matches a radio that
+       already has OET documents downloaded — these are hyphen-placement
+       duplicates and are marked VALID locally.
+    2. Falls back to querying the live FCC API with both the original and
+       compact (no-hyphen) forms.
+    """
     # Collect unique FCC IDs and their sample radios
     unique_fcc_ids = {}
     pk_limit = int(request.GET.get('limit', '0'))
@@ -1688,11 +1694,57 @@ def fcc_validate_fccids_view(request):
             if pk_limit and count >= pk_limit:
                 break
 
+    # Build local valid-FCC-ID lookup: {stripped: original} for radios
+    # that have OET documents downloaded.
+    local_valid = _build_local_fcc_id_map()
+
+    logger.info(
+        "FCC validation start total_unique=%d local_valid_count=%d",
+        len(unique_fcc_ids), len(local_valid),
+    )
+
     results = []
     checked = 0
+    auto_deleted = 0
+    api_checked = 0
+    api_errors = 0
+    not_found_count = 0
+    local_match_count = 0
+
     for fcc_id, info in sorted(unique_fcc_ids.items()):
         checked += 1
-        # FCC API may need compact (no dash) format for some IDs
+        stripped = fcc_id.replace('-', '')
+
+        # ── Step 1: check local DB for hyphen-placement duplicate ──
+        if stripped in local_valid:
+            correct = local_valid[stripped]
+            deleted_count, _details = Radio.objects.filter(
+                fcc_id__iexact=fcc_id,
+            ).delete()
+            auto_deleted += deleted_count
+            local_match_count += 1
+            logger.info(
+                "FCC validation local_match fcc_id=%s correct=%s deleted=%d",
+                fcc_id, correct, deleted_count,
+            )
+            results.append({
+                'fcc_id': fcc_id, 'status': 'VALID',
+                'brand': info['brand'], 'model': info['model'],
+                'source': 'local',
+                'correct_fcc_id': correct,
+                'deleted': deleted_count,
+            })
+            continue
+
+        # ── Step 2: query the live FCC API ──
+        api_checked += 1
+        if api_checked % 50 == 0:
+            logger.info(
+                "FCC validation api_progress checked=%d/%d local=%d "
+                "not_found=%d errors=%d",
+                api_checked, len(unique_fcc_ids) - local_match_count,
+                local_match_count, not_found_count, api_errors,
+            )
         compact_id = fcc_id.replace('-', '')
         candidates = list(set([fcc_id, compact_id]))
 
@@ -1705,9 +1757,17 @@ def fcc_validate_fccids_view(request):
                     timeout=15,
                 )
             except Exception:
+                logger.warning(
+                    "FCC validation api_error fcc_id=%s candidate=%s",
+                    fcc_id, candidate, exc_info=True,
+                )
                 continue
 
             if resp.status_code != 200:
+                logger.warning(
+                    "FCC validation api_status=%d fcc_id=%s candidate=%s",
+                    resp.status_code, fcc_id, candidate,
+                )
                 continue
 
             try:
@@ -1718,12 +1778,21 @@ def fcc_validate_fccids_view(request):
                 if isinstance(records, dict):
                     records = [records]
             except Exception:
+                logger.warning(
+                    "FCC validation xml_parse_error fcc_id=%s candidate=%s",
+                    fcc_id, candidate, exc_info=True,
+                )
                 continue
 
             if records:
                 break
 
         if not records:
+            not_found_count += 1
+            logger.debug(
+                "FCC validation not_found fcc_id=%s candidates=%s",
+                fcc_id, candidates,
+            )
             results.append({
                 'fcc_id': fcc_id, 'status': 'NOT_FOUND',
                 'brand': info['brand'], 'model': info['model'],
@@ -1733,16 +1802,40 @@ def fcc_validate_fccids_view(request):
             results.append({
                 'fcc_id': fcc_id, 'status': 'VALID',
                 'brand': info['brand'], 'model': info['model'],
+                'source': 'fcc_api',
                 'has_grant_date': has_grant_date,
             })
 
     invalid_count = sum(1 for r in results if r['status'] != 'VALID')
+    logger.info(
+        "FCC validation complete total=%d local=%d api=%d not_found=%d "
+        "api_errors=%d auto_deleted=%d",
+        checked, local_match_count, api_checked,
+        not_found_count, api_errors, auto_deleted,
+    )
     return JsonResponse({
         'total_unique': len(unique_fcc_ids),
         'checked': checked,
         'invalid_count': invalid_count,
+        'auto_deleted': auto_deleted,
         'results': results,
     })
+
+
+def _build_local_fcc_id_map():
+    """Return {stripped_fcc_id: original_fcc_id} for radios with OET docs."""
+    valid_ids = (
+        RadioOETDocument.objects
+        .exclude(radio__fcc_id='')
+        .values_list('radio__fcc_id', flat=True)
+        .distinct()
+    )
+    mapping = {}
+    for fcc_id in valid_ids:
+        if fcc_id:
+            stripped = fcc_id.replace('-', '').strip().upper()
+            mapping.setdefault(stripped, fcc_id)
+    return mapping
 
 
 def maintenance_view(request):

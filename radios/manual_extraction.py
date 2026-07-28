@@ -1,6 +1,7 @@
 import re
 import json
 import logging
+import urllib3
 from difflib import SequenceMatcher
 from urllib.parse import urlparse
 
@@ -9,6 +10,10 @@ from bs4 import BeautifulSoup
 
 from .fcc_id_utils import normalize_fcc_id_for_lookup
 from .models import Radio
+
+# Suppress "InsecureRequestWarning" when falling back to verify=False for
+# sites with self-signed or misconfigured SSL certificates.
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logger = logging.getLogger(__name__)
 
@@ -563,54 +568,170 @@ def _parse_generic_product_page(soup, _title, page_text):
 
 
 def enrich_specs_from_product_url(url):
-    """Framework hook for website enrichment (phase 2 adapters start here)."""
+    """Fetch and parse a product page for radio specifications.
+
+    Downloads the HTML at *url*, extracts visible text, runs the generic
+    spec-extraction pipeline, then applies any domain-specific parsers
+    (Temu, Radioddity, AliExpress, Retevis) on top.
+
+    Every significant data point on the way in and out of the pipeline is
+    logged so the operator can diagnose scraping problems (missing fields,
+    parser failures, or empty pages) from the logfile alone.
+    """
     if not url:
+        logger.info("Web enrichment skipped — no URL provided")
         return {}
 
-    logger.info("Web enrichment API call start url=%s", url)
+    domain = _domain_from_url(url)
+    logger.info(
+        "Web enrichment fetch start url=%s domain=%s",
+        url, domain,
+    )
 
+    # ── HTTP fetch ───────────────────────────────────────────────────
     try:
         response = requests.get(
             url,
             timeout=15,
-            headers={'User-Agent': 'Mozilla/5.0 (compatible; RadioTrackerBot/1.0)'},
+            headers={
+                'User-Agent': (
+                    'Mozilla/5.0 (compatible; RadioTrackerBot/1.0)'
+                ),
+            },
         )
         response.raise_for_status()
+    except requests.exceptions.SSLError:
+        logger.warning(
+            "Web enrichment SSL failed, retrying without verification "
+            "url=%s domain=%s", url, domain,
+        )
+        try:
+            response = requests.get(
+                url,
+                timeout=15,
+                verify=False,
+                headers={
+                    'User-Agent': (
+                        'Mozilla/5.0 (compatible; RadioTrackerBot/1.0)'
+                    ),
+                },
+            )
+            response.raise_for_status()
+            logger.info(
+                "Web enrichment fetch ok (no-verify) url=%s domain=%s "
+                "status=%s", url, domain, response.status_code,
+            )
+        except requests.RequestException:
+            logger.exception(
+                "Web enrichment fetch failed url=%s domain=%s", url, domain,
+            )
+            return {}
     except requests.RequestException:
-        logger.exception("Web enrichment API call failed url=%s", url)
+        logger.exception(
+            "Web enrichment fetch failed url=%s domain=%s", url, domain,
+        )
         return {}
 
-    soup = BeautifulSoup(response.text, 'html.parser')
-    page_text = soup.get_text(' ', strip=True)
-    title = soup.title.string if soup.title and soup.title.string else ''
+    content_type = response.headers.get('Content-Type', '')
+    content_length = len(response.content or b'')
+    logger.info(
+        "Web enrichment fetch ok url=%s domain=%s "
+        "status=%s content_type=%s content_bytes=%s",
+        url, domain, response.status_code,
+        content_type, content_length,
+    )
 
+    # ── Text extraction ──────────────────────────────────────────────
+    soup = BeautifulSoup(response.text, 'html.parser')
+    title = (
+        soup.title.string.strip()
+        if soup.title and soup.title.string
+        else ''
+    )
+    page_text = soup.get_text(' ', strip=True)
+    text_len = len(page_text)
+    logger.info(
+        "Web enrichment text extracted url=%s domain=%s "
+        "title=%s text_chars=%s",
+        url, domain, title[:120] if title else '(none)', text_len,
+    )
+
+    if text_len < 100:
+        logger.warning(
+            "Web enrichment short page url=%s domain=%s "
+            "text_chars=%s — page may be JS-rendered or paywalled",
+            url, domain, text_len,
+        )
+
+    # ── Generic spec extraction ──────────────────────────────────────
     extracted = extract_specs_from_text(page_text, source_name=title)
     extracted['website'] = url
-    extracted['source_domain'] = _domain_from_url(url)
+    extracted['source_domain'] = domain
+    logger.info(
+        "Web enrichment generic parse url=%s domain=%s "
+        "fields_found=%s keys=%s",
+        url, domain,
+        sum(1 for v in extracted.values() if v),
+        ','.join(k for k, v in extracted.items() if v),
+    )
 
-    # Domain-specific parsers
-    domain = extracted['source_domain']
+    # ── Domain-specific parser ───────────────────────────────────────
     domain_data = {}
+    parser_name = 'none'
     if domain.endswith('temu.com'):
+        parser_name = 'temu'
         domain_data = _parse_temu(soup, title, page_text)
     elif domain.endswith('radiooddity.com') or domain.endswith('radioddity.com'):
+        parser_name = 'radioddity'
         domain_data = _parse_radioddity(soup, title, page_text)
     elif domain.endswith('aliexpress.com'):
+        parser_name = 'aliexpress'
         domain_data = _parse_aliexpress(soup, title, page_text)
     elif domain.endswith('retevis.com'):
+        parser_name = 'retevis'
         domain_data = _parse_retevis(soup, title, page_text)
     else:
-        # Try generic product page parser for any e-commerce site
+        parser_name = 'generic_product_page'
         domain_data = _parse_generic_product_page(soup, title, page_text)
 
+    if domain_data:
+        logger.info(
+            "Web enrichment domain parser url=%s domain=%s "
+            "parser=%s fields_found=%s keys=%s",
+            url, domain, parser_name,
+            sum(1 for v in domain_data.values() if v),
+            ','.join(k for k, v in domain_data.items() if v),
+        )
+    else:
+        logger.info(
+            "Web enrichment domain parser url=%s domain=%s "
+            "parser=%s — returned no data",
+            url, domain, parser_name,
+        )
+
+    # ── Merge and final summary ──────────────────────────────────────
     for key, value in domain_data.items():
         if value and not extracted.get(key):
             extracted[key] = value
 
     if 'source_hint' not in extracted:
-        extracted['source_hint'] = domain_data.get('source_hint', 'generic')
+        extracted['source_hint'] = domain_data.get(
+            'source_hint', 'generic',
+        )
 
-    logger.info("Web enrichment parsed url=%s domain=%s source_hint=%s", url, extracted.get('source_domain', ''), extracted.get('source_hint', ''))
+    # Log every non-empty field so the operator can see exactly what was
+    # extracted from the page without needing to open the URL manually.
+    final_fields = {
+        k: v for k, v in sorted(extracted.items())
+        if v and k not in {'website', 'source_domain'}
+    }
+    logger.info(
+        "Web enrichment complete url=%s domain=%s parser=%s "
+        "total_fields=%s extracted=%s",
+        url, domain, parser_name,
+        len(final_fields),
+        final_fields,
+    )
 
     return extracted
 

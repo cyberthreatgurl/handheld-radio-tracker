@@ -403,6 +403,16 @@ class Radio(models.Model):
         default=False,
         help_text="Has USB-C charging port",
     )
+    bluetooth = models.BooleanField(
+        default=False,
+        help_text="Has Bluetooth (2.4 GHz ISM band: 2402-2480 MHz). "
+                  "Used for programming and/or wireless audio accessories.",
+    )
+    noaa_wx = models.BooleanField(
+        default=False,
+        help_text="Receives NOAA Weather Radio (162.40-162.55 MHz). "
+                  "Receive-only VHF weather band.",
+    )
     removable_antenna = models.BooleanField(
         default=True,
         help_text="Antenna is user-removable (vs. fixed)",

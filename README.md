@@ -243,6 +243,39 @@ Important operational note:
 - **Stale-skip guard:** when a radio was already processed within the current sync date window, it is skipped automatically — even if the FCC API returned 503 and could not provide a record last-modified date. This prevents redundant full re-processing on consecutive daily syncs.
 - A Playwright circuit-breaker fires after 2 consecutive page-load timeouts per FCC ID, abandoning remaining direct-URL attempts and falling through to the grantee-search fallback to avoid burning ~30 s per URL when the FCC site is unreachable.
 
+## FCC ID Validation
+
+The application includes a built-in validation workflow that checks every FCC ID
+in the database against the FCC API and the local database.  Access it at
+`/radios/fcc-validate-fccids/`.
+
+### How it works
+
+Validation runs in two stages:
+
+1. **Local deduplication (instant).**  Before any API call, the validator strips all
+   hyphens from each FCC ID and checks whether a radio with the same stripped ID
+   already has OET documents downloaded.  If a match is found, the duplicate
+   radio (which differs only in hyphen placement) is **automatically deleted** and
+   the FCC ID is marked valid.  This catches common data-entry errors like
+   `2AJGM-UV-5R` vs. the correct `2AJGM-UV5R`.
+
+2. **FCC API query.**  Remaining FCC IDs are checked against the live FCC API.
+   Both the original (hyphenated) and compact (no-hyphen) forms are tried.
+
+### Management command
+
+For offline batch processing, the `find_fcc_id_hyphens` management command
+reads a CSV of not-found FCC IDs and reports which ones can be matched locally:
+
+```bash
+# Preview matches without deleting
+python manage.py find_fcc_id_hyphens artifacts/imports/nofinds.csv --dry-run
+
+# Delete matched duplicates
+python manage.py find_fcc_id_hyphens artifacts/imports/nofinds.csv
+```
+
 ## Cron / scheduled usage
 
 Two useful scheduled workflows are:

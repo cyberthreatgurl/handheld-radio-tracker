@@ -40,6 +40,55 @@ class RadioForm(forms.ModelForm):
         help_text="Service classifications for this radio (GMRS, FRS, Amateur, etc.)"
     )
 
+    # Pseudo-boolean capability fields — use selects for cleaner UX
+    gps = forms.ChoiceField(
+        label='GPS',
+        choices=[('', '—'), ('Yes', 'Yes'), ('No', 'No'), ('Optional', 'Optional')],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+        }),
+    )
+    aprs = forms.ChoiceField(
+        label='APRS',
+        choices=[('', '—'), ('Yes', 'Yes'), ('No', 'No'),
+                 ('Analog', 'Analog'), ('Digital', 'Digital'),
+                 ('Beacon', 'Beacon')],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+        }),
+    )
+    air_band = forms.ChoiceField(
+        label='Air Band',
+        choices=[('', '—'), ('Yes', 'Yes'), ('No', 'No')],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+        }),
+    )
+    dmr = forms.ChoiceField(
+        label='DMR',
+        choices=[('', '—'), ('Yes', 'Yes'), ('No', 'No')],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+        }),
+    )
+    satellite_tracking = forms.ChoiceField(
+        label='Satellite Tracking',
+        choices=[('', '—'), ('Yes', 'Yes'), ('No', 'No'), ('Native', 'Native')],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
+                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+        }),
+    )
+
     class Meta:
         model = Radio
         fields = [
@@ -50,12 +99,49 @@ class RadioForm(forms.ModelForm):
             'gps', 'aprs', 'air_band', 'dmr',
             'display', 'battery_mah',
             'usb_c_charging', 'removable_antenna', 'unlockable', 'firmware_updates',
+            'bluetooth', 'noaa_wx',
             'cost_approx', 'rebadges_clones', 'white_label_vendors', 'website', 'review_url',
             'youtube_video_urla', 'notes'
         ]
         widgets = {
             'is_a_whitelabel': forms.CheckboxInput(attrs={
                 'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'bluetooth': forms.CheckboxInput(attrs={
+                'class': (
+                    'appearance-none absolute inset-0 w-full h-full '
+                    'opacity-0 cursor-pointer z-10'
+                )
+            }),
+            'noaa_wx': forms.CheckboxInput(attrs={
+                'class': (
+                    'appearance-none absolute inset-0 w-full h-full '
+                    'opacity-0 cursor-pointer z-10'
+                )
+            }),
+            'usb_c_charging': forms.CheckboxInput(attrs={
+                'class': (
+                    'appearance-none absolute inset-0 w-full h-full '
+                    'opacity-0 cursor-pointer z-10'
+                )
+            }),
+            'removable_antenna': forms.CheckboxInput(attrs={
+                'class': (
+                    'appearance-none absolute inset-0 w-full h-full '
+                    'opacity-0 cursor-pointer z-10'
+                )
+            }),
+            'unlockable': forms.CheckboxInput(attrs={
+                'class': (
+                    'appearance-none absolute inset-0 w-full h-full '
+                    'opacity-0 cursor-pointer z-10'
+                )
+            }),
+            'firmware_updates': forms.CheckboxInput(attrs={
+                'class': (
+                    'appearance-none absolute inset-0 w-full h-full '
+                    'opacity-0 cursor-pointer z-10'
+                )
             }),
             'model': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
@@ -138,18 +224,6 @@ class RadioForm(forms.ModelForm):
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'rows': 4,
                 'placeholder': 'Additional notes or specifications...'
-            }),
-            'usb_c_charging': forms.CheckboxInput(attrs={
-                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
-            }),
-            'removable_antenna': forms.CheckboxInput(attrs={
-                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
-            }),
-            'unlockable': forms.CheckboxInput(attrs={
-                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
-            }),
-            'firmware_updates': forms.CheckboxInput(attrs={
-                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
         }
     
