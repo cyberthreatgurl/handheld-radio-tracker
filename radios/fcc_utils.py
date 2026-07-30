@@ -3,6 +3,7 @@ import os
 import re
 import threading as _threading
 import time
+from collections import Counter
 from decimal import Decimal, InvalidOperation
 from html import unescape
 from datetime import datetime, time as datetime_time, timezone as datetime_timezone, date
@@ -21,7 +22,9 @@ from radios.models import (
     RadioFCCTestReport, RadioManual, RadioOETDocument, SyncSkippedGrantee,
     normalize_grantee_code,
 )
-from radios.fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
+from radios.fcc_id_utils import (
+    normalize_fcc_id_for_lookup, split_fcc_id, _validate_grantee_code,
+)
 from radios.manual_extraction import extract_specs_from_text, extract_text_from_pdf_with_metadata
 from radios.fcc_validation import validate_fcc_brand_assignment
 
@@ -157,8 +160,65 @@ class _FCCConnectionDownError(Exception):
     and suppress the noisy full-traceback ERROR log.
     """
 
-DEFAULT_RADIO_ALLOWLIST_TERMS = "TRANSCEIVER,TRANSMITTER,GMRS,FRS,RECEIVER,MURS,ORIGINAL EQUIPMENT"
+# Allowlist: keywords that identify a device as a two-way radio.  Matched
+# case-insensitively against the combined text of FCC ID, grantee name,
+# application purpose, and secondary metadata.
+#
+# Set FCC_RADIO_ALLOWLIST_TERMS in the environment to override.
+DEFAULT_RADIO_ALLOWLIST_TERMS = (
+    "TWO WAY RADIO,TWO-WAY RADIO,DIGITAL TWO WAY RADIO,"
+    "TRANSCEIVER,SCANNING RECEIVER,DMR RADIO,"
+    "FM TRANSCEIVER,VHF/UHF TRANSCEIVER,VHF UHF TRANSCEIVER,"
+    "DUAL BAND TRANSCEIVER,DUAL-BAND TRANSCEIVER,TRI-BAND TRANSCEIVER,"
+    "PORTABLE TRANSCEIVER,MOBILE TRANSCEIVER,HANDHELD TRANSCEIVER,"
+    "RADIO TRANSCEIVER,AMATEUR RADIO TRANSCEIVER,"
+    "AMATEUR RADIO,AMATEUR,"
+    "HAM,"
+    "BASE STATION TRANSCEIVER,REPEATER TRANSCEIVER,"
+    "RF TRANSCEIVER,WIRELESS TRANSCEIVER,"
+    "LMR TRANSCEIVER,PMR TRANSCEIVER,"
+    "COMMUNICATION RECEIVER,COMMUNICATIONS RECEIVER,"
+    "SCANNER RECEIVER,MULTI-BAND RECEIVER,WIDEBAND RECEIVER,"
+    "WALKIE TALKIE,WALKIE-TALKIE,WALKIE TALKIES,"
+    "PORTABLE RADIO,HANDHELD RADIO,HANDHELD TWO WAY RADIO,"
+    "PORTABLE TWO WAY RADIO,PORTABLE TWO-WAY RADIO,"
+    "MOBILE RADIO,MOBILE TWO WAY RADIO,PERSONAL RADIO,"
+    "HANDHELD TERMINAL,PORTABLE TERMINAL,"
+    "DMR TRANSCEIVER,DMR PORTABLE RADIO,DMR MOBILE RADIO,"
+    "DIGITAL PORTABLE RADIO,DIGITAL MOBILE RADIO,DIGITAL TRANSCEIVER,"
+    "P25 TRANSCEIVER,NXDN TRANSCEIVER,dPMR TRANSCEIVER,"
+    "POC RADIO,POC TERMINAL,IP RADIO,LTE TWO WAY RADIO,"
+    "GMRS TRANSCEIVER,GMRS RADIO,GENERAL MOBILE RADIO SERVICE,GMRS,"
+    "FRS TRANSCEIVER,FRS RADIO,FAMILY RADIO SERVICE,FRS,"
+    "CB TRANSCEIVER,CB RADIO,CITIZENS BAND,CB,"
+    "MURS TRANSCEIVER,MURS RADIO,MURS,"
+    "MARINE TRANSCEIVER,VHF MARINE RADIO,"
+    "AIRBAND TRANSCEIVER,AVIATION TRANSCEIVER,"
+    "LoRa TRANSCEIVER,LORA MODULE,MESH RADIO,"
+    "900MHz TRANSCEIVER,DIGITAL DATA TRANSCEIVER"
+)
 RADIO_ALLOWLIST_ENV_NAME = "FCC_RADIO_ALLOWLIST_TERMS"
+
+# Allowlist terms that require word-boundary matching (\\b) to prevent
+# false positives from technical identifiers.  For example, "CB" should
+# match "CB RADIO" but NOT "2ASCB" or "FSCBT9104DI".
+_STRICT_ALLOWLIST_TERMS = frozenset({'CB', 'FRS', 'GMRS', 'MURS', 'HAM'})
+
+
+def _term_matches_text(term, text):
+    """Check if a term matches text, using word boundaries for strict terms.
+
+    Short standalone terms like CB, FRS, GMRS, MURS, HAM use regex
+    ``\\b`` word-boundary matching to prevent false positives from
+    technical identifiers like grantee codes (e.g. "2ASCB" should
+    NOT match "CB").
+
+    All other terms use simple substring matching.
+    """
+    if term in _STRICT_ALLOWLIST_TERMS:
+        pattern = r'\b' + re.escape(term) + r'\b'
+        return bool(re.search(pattern, text, re.IGNORECASE))
+    return term in text
 
 # Denylist: accessories and non-radio devices that should NOT be tracked
 # even if they match an allowlist term like "RECEIVER".  Terms are
@@ -182,8 +242,177 @@ DEFAULT_RADIO_DENYLIST_TERMS = (
 )
 RADIO_DENYLIST_ENV_NAME = "FCC_RADIO_DENYLIST_TERMS"
 
+# Rule parts to exclude from import (e.g. 15.231 covers low-power
+# periodic transmitters like garage door openers, car key fobs,
+# remote sensors — these are not handheld radios we care about).
+_DEFAULT_IGNORED_RULE_PARTS = frozenset({
+    '15.231',
+    '15.231(e)',
+})
+_IGNORED_RULE_PARTS_ENV = 'FCC_IGNORED_RULE_PARTS'
+
+# Rule parts that indicate a licensed or type-accepted radio transmitter
+# (not just an unintentional radiator under Part 15).
+# Override via FCC_RADIO_RULE_PARTS env var (comma-separated).
+# Set to 'none' to disable this classifier check.
+_DEFAULT_RADIO_RULE_PARTS: frozenset[str] = frozenset({
+    '90', 'Part 90',       # LMR / Commercial
+    '95', 'Part 95',       # Personal Radio Services (GMRS/FRS/CB/MURS)
+    '95A', 'Part 95A',     # GMRS (legacy)
+    '95B', 'Part 95B',     # FRS
+    '95D', 'Part 95D',     # CB
+    '95E', 'Part 95E',     # GMRS
+    '95J', 'Part 95J',     # MURS
+    '80', 'Part 80',       # Marine
+    '87', 'Part 87',       # Aviation
+    '97', 'Part 97',       # Amateur
+    '22', 'Part 22',       # Cellular / Wide-area (some PoC radios)
+    '24', 'Part 24',       # PCS (some PoC radios)
+    '74', 'Part 74',       # Broadcast Auxiliary
+})
+_RADIO_RULE_PARTS_ENV = 'FCC_RADIO_RULE_PARTS'
+
+# Frequency bands (MHz) that are characteristic of two-way radios.
+# Format per env entry: lower-upper:label (e.g. "136-174:VHF").
+# Override via FCC_RADIO_FREQ_BANDS env var (comma-separated).
+# Set to 'none' to disable this classifier check.
+_DEFAULT_RADIO_FREQ_BANDS: tuple[tuple[float, float, str], ...] = (
+    (26.0, 28.0, 'CB'),           # HF CB band
+    (118.0, 136.975, 'Airband'),    # Aviation VHF
+    (136.0, 174.0, 'VHF'),        # VHF LMR / Marine / MURS
+    (150.0, 155.0, 'MURS'),       # MURS specific
+    (156.0, 174.0, 'Marine'),     # Marine VHF
+    (400.0, 520.0, 'UHF'),        # UHF LMR / GMRS / FRS
+    (462.0, 468.0, 'GMRS/FRS'),   # GMRS/FRS specific
+    (28.000, 29.700, 'Amateur'),  # 10m amateur
+    (420.0, 450.0, 'Amateur'),    # 70cm amateur
+    (144.0, 148.0, 'Amateur'),    # 2m amateur
+    (902.0, 928.0, 'LoRa/ISM'),   # 900 MHz ISM / LoRa
+    (700.0, 800.0, 'LTE/PoC'),    # LTE / PoC radios
+)
+_RADIO_FREQ_BANDS_ENV = 'FCC_RADIO_FREQ_BANDS'
+
+# Emission designator prefixes that indicate a voice or data radio
+# transmitter (not WiFi, Bluetooth, or telemetry-only devices).
+# Override via FCC_RADIO_EMISSION_PREFIXES env var (comma-separated).
+# Set to 'none' to disable this classifier check.
+_DEFAULT_RADIO_EMISSION_PREFIXES: frozenset[str] = frozenset({
+    # Analog voice
+    '11K0F3E', '16K0F3E', '6K00F3E', '8K00F3E', '20K0F3E',
+    '11K0F3D', '16K0F3D', '8K00F1D',
+    'A3E',  # AM voice (airband)
+    # Digital voice (DMR)
+    '7K60FXE', '7K60FXD', '7K60FXW',
+    '7K60F1E', '7K60F1D', '7K60F1W',
+    # Digital voice (NXDN / P25 Phase 1)
+    '8K10F1E', '8K10F1D', '8K30F1E', '8K30F1D',
+    '8K10FXE', '8K10FXD', '8K30FXE', '8K30FXD',
+    '4K00F1E', '4K00F1D', '4K00F7W',
+    # P25 Phase 2
+    '8K70D1W', '8K70D1E',
+    # Digital voice (dPMR / NXDN narrow)
+    '4K00F7W', '4K00F7E',
+    # Data/telemetry (but still a transmitter)
+    'G7D', 'F1D', 'F2D', 'G1D', 'G7W',
+})
+_RADIO_EMISSION_PREFIXES_ENV = 'FCC_RADIO_EMISSION_PREFIXES'
+
+# Application purposes that always pass the allowlist pre-filter.
+# Override via FCC_ALWAYS_PASS_PURPOSES env var (comma-separated).
+# Set to 'none' to disable (no purposes auto-pass).
+_DEFAULT_ALWAYS_PASS_PURPOSES: frozenset[str] = frozenset({
+    'original equipment',
+    'change in identification',
+    'class ii permissive change',
+    'class i permissive change',
+    'grant of equipment authorization',
+})
+_ALWAYS_PASS_PURPOSES_ENV = 'FCC_ALWAYS_PASS_PURPOSES'
+
+
+# ── Env-var accessor helpers ───────────────────────────────────────────
+
+
+def _parse_env_frozenset(env_name, default):
+    """Parse a comma-separated env var into a frozenset.
+
+    Returns *default* when the env var is unset or empty.
+    Set to 'none' to return an empty frozenset (disable check).
+    """
+    raw = os.environ.get(env_name, '').strip()
+    if not raw:
+        return default
+    if raw.lower() == 'none':
+        return frozenset()
+    return frozenset(p.strip() for p in raw.split(',') if p.strip())
+
+
+def _parse_env_freq_bands(env_name, default):
+    """Parse comma-separated 'lo-hi:label' env var into freq band tuples.
+
+    Returns *default* when the env var is unset or empty.
+    Set to 'none' to return an empty tuple (disable check).
+    """
+    raw = os.environ.get(env_name, '').strip()
+    if not raw:
+        return default
+    if raw.lower() == 'none':
+        return ()
+    result = []
+    for entry in raw.split(','):
+        entry = entry.strip()
+        if not entry:
+            continue
+        label = ''
+        if ':' in entry:
+            range_part, label = entry.split(':', 1)
+            label = label.strip()
+        else:
+            range_part = entry
+        parts = range_part.split('-')
+        if len(parts) != 2:
+            continue
+        try:
+            lo = float(parts[0].strip())
+            hi = float(parts[1].strip())
+        except ValueError:
+            continue
+        result.append((lo, hi, label or f'{lo}-{hi}'))
+    return tuple(result) if result else default
+
+
+def _get_radio_rule_parts():
+    """Return the effective radio rule parts set (env-overridable)."""
+    return _parse_env_frozenset(_RADIO_RULE_PARTS_ENV, _DEFAULT_RADIO_RULE_PARTS)
+
+
+def _get_radio_freq_bands():
+    """Return the effective radio frequency band list (env-overridable)."""
+    return _parse_env_freq_bands(_RADIO_FREQ_BANDS_ENV, _DEFAULT_RADIO_FREQ_BANDS)
+
+
+def _get_radio_emission_prefixes():
+    """Return the effective emission designator prefixes (env-overridable)."""
+    return _parse_env_frozenset(
+        _RADIO_EMISSION_PREFIXES_ENV, _DEFAULT_RADIO_EMISSION_PREFIXES,
+    )
+
+
+def _get_always_pass_purposes():
+    """Return the effective always-pass purposes set (env-overridable)."""
+    return _parse_env_frozenset(
+        _ALWAYS_PASS_PURPOSES_ENV, _DEFAULT_ALWAYS_PASS_PURPOSES,
+ )
+
+
+# ── End of classifier constants ────────────────────────────────────────
+
+
 URL_PATTERN = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 _OET_APP_ID_RE = re.compile(r'application_id=([A-Za-z0-9%+=/]+)', re.IGNORECASE)
+# TCB Form 731 links use applicationId= (camelCase, no underscore) —
+# e.g. /tcb/GetTcb731Report.do?applicationId=KRN6OLNepnfjuhLB5CIO0Q%3D%3D&fcc_id=DBZT20A
+_TCB_APP_ID_RE = re.compile(r'applicationId=([A-Za-z0-9%+=/]+)', re.IGNORECASE)
 FCC_RETRY_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
@@ -386,6 +615,34 @@ def _radio_denylist_terms():
         return _parse_allowlist_terms(raw)
     # No env var: use built-in defaults.
     return _parse_allowlist_terms(DEFAULT_RADIO_DENYLIST_TERMS)
+
+
+def _ignored_rule_parts():
+    """Return the set of rule parts to exclude from import.
+
+    Override via the ``FCC_IGNORED_RULE_PARTS`` env var (comma-separated).
+    Set to an empty string to disable all rule-part filtering.
+    """
+    raw = os.environ.get(_IGNORED_RULE_PARTS_ENV, '').strip()
+    if raw == '':
+        return set(_DEFAULT_IGNORED_RULE_PARTS)
+    if raw.lower() == 'none':
+        return set()
+    return {part.strip() for part in raw.split(',') if part.strip()}
+
+
+def _rule_parts_match_ignored(rule_parts):
+    """Return True if any rule part is in the ignored set."""
+    if not rule_parts:
+        return False
+    ignored = _ignored_rule_parts()
+    if not ignored:
+        return False
+    norm_ignored = {p.strip().upper() for p in ignored}
+    for rp in rule_parts:
+        if (rp or '').strip().upper() in norm_ignored:
+            return True
+    return False
 
 
 def _iter_dict_nodes(payload):
@@ -969,6 +1226,9 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
     )
     row_source = body_match.group(1) if body_match else (html_text or '')
 
+    tcb_application_ids = []
+    seen_tcb_ids = set()
+
     for row_html in re.findall(r'<tr[^>]*>(.*?)</tr>', row_source, flags=re.IGNORECASE | re.DOTALL):
         cells = re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', row_html, flags=re.IGNORECASE | re.DOTALL)
         if len(cells) < 16:
@@ -1017,6 +1277,17 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
                     if part:
                         rule_parts_set.add(part)
 
+        # Extract applicationId from the TCB Form 731 link (cell 1, "View Form").
+        # This is the most direct source — the link format is:
+        #   /tcb/GetTcb731Report.do?applicationId=XXX&fcc_id=YYY
+        for href in re.findall(r'href=["\']([^"\']+)["\']', cells[1], flags=re.IGNORECASE):
+            tcb_match = _TCB_APP_ID_RE.search(unescape(href))
+            if tcb_match:
+                app_id = tcb_match.group(1)
+                if app_id not in seen_tcb_ids:
+                    seen_tcb_ids.add(app_id)
+                    tcb_application_ids.append(app_id)
+
         for href in re.findall(r'href=["\']([^"\']+)["\']', cells[2], flags=re.IGNORECASE):
             url = unescape(urljoin(base_url, href.strip()))
             if 'ViewExhibitReport.cfm' in url:
@@ -1061,6 +1332,29 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
                 if segment:
                     rule_parts_set.add(segment)
 
+    # Fallback: also extract applicationId from any TCB 731 link in cells[1]
+    # for rows that didn't match the target FCC ID (useful for grantee-wide
+    # searches where the first matching row is the right one).
+    if not tcb_application_ids:
+        for row_html in re.findall(
+            r'<tr[^>]*>(.*?)</tr>', row_source, flags=re.IGNORECASE | re.DOTALL
+        ):
+            cells = re.findall(
+                r'<t[dh][^>]*>(.*?)</t[dh]>', row_html,
+                flags=re.IGNORECASE | re.DOTALL,
+            )
+            if len(cells) < 12:
+                continue
+            for href in re.findall(
+                r'href=["\']([^"\']+)["\']', cells[1], flags=re.IGNORECASE
+            ):
+                tcb_match = _TCB_APP_ID_RE.search(unescape(href))
+                if tcb_match:
+                    app_id = tcb_match.group(1)
+                    if app_id not in seen_tcb_ids:
+                        seen_tcb_ids.add(app_id)
+                        tcb_application_ids.append(app_id)
+
     return {
         'record_count': len(matched_records),
         'text_blob': ' || '.join(matched_records),
@@ -1068,6 +1362,7 @@ def _extract_secondary_metadata_from_generic_search_html(html_text, base_url, fc
         'original_equipment_rows': oe_rows,
         'rule_parts': sorted(rule_parts_set),
         'candidate_exhibit_urls': exhibit_urls,
+        'tcb_application_ids': tcb_application_ids,
     }
 
 
@@ -1264,7 +1559,7 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                     current_url = hp_url_4a
                     raw_hrefs = page.evaluate(
                         """() => Array.from(document.querySelectorAll(
-                            'a[href*="ViewExhibitReport.cfm"]'
+                            'a[href*="ViewETRANxhibitReport.cfm"]'
                         )).filter(a => a.href.includes('application_id='))
                           .map(a => a.href).slice(0, 20)"""
                     )
@@ -1396,6 +1691,235 @@ def _submit_generic_search_form_via_playwright(fcc_id):
         else:
             logger.exception('FCC browser fallback search failed fcc_id=%s', fcc_id)
         return '', GENERIC_SEARCH_FORM_URL
+
+
+def discover_new_grantees_from_fcc(start_date, end_date):
+    """Find grantee codes not yet in the Brand table.
+
+    Phase 1: scans the local Radio table for FCC IDs with unknown
+    grantee prefixes (instant, reliable).
+
+    Phase 2: submits the FCC GenericSearch form via Playwright with
+    only a date range (no other filters), then scrapes the results
+    for entirely new grantee codes that have never appeared in any
+    radio record.
+
+    Args:
+        start_date: datetime or date for the start of the search window.
+        end_date:   datetime or date for the end of the search window.
+
+    Returns:
+        Set of grantee code strings (uppercase) discovered.
+    """
+    known_codes = set(
+        Brand.objects.exclude(grantee_code__isnull=True)
+        .exclude(grantee_code='')
+        .values_list('grantee_code', flat=True)
+    )
+    known_codes = {c.strip().upper() for c in known_codes}
+    ignored_codes = set(IgnoredGrantee.ignored_codes())
+    skipped_codes = set(SyncSkippedGrantee.skipped_codes())
+    excluded = known_codes | ignored_codes | skipped_codes
+
+    sd = start_date if hasattr(start_date, 'strftime') else start_date
+    ed = end_date if hasattr(end_date, 'strftime') else end_date
+    date_from = sd.strftime('%m/%d/%Y') if hasattr(sd, 'strftime') else str(sd)
+    date_to = ed.strftime('%m/%d/%Y') if hasattr(ed, 'strftime') else str(ed)
+
+    logger.info(
+        "Grantee discovery start known=%d date_from=%s date_to=%s",
+        len(known_codes), date_from, date_to,
+    )
+
+    discovered = set()
+
+    # ── Phase 1: scan local radio FCC IDs for unknown prefixes ──
+    candidates = Counter()
+    for radio in Radio.objects.exclude(fcc_id='').exclude(
+        fcc_id__isnull=True,
+    ).iterator():
+        try:
+            grantee, _product = split_fcc_id(
+                radio.fcc_id.strip().upper(),
+            )
+            if (
+                grantee
+                and grantee not in excluded
+                and _validate_grantee_code(grantee)
+            ):
+                candidates[grantee] += 1
+        except (ValueError, IndexError):
+            continue
+
+    if candidates:
+        local = set(candidates.keys())
+        discovered.update(local)
+        logger.info(
+            "Grantee discovery local found=%d codes=%s",
+            len(local), sorted(local)[:20],
+        )
+        excluded.update(local)
+
+    # ── Phase 2: HTTP POST to FCC GenericSearch, fetch XML export ──
+    # Uses curl_cffi with Chrome impersonation to POST the date range
+    # to the FCC GenericSearch form, then fetches the XML export.
+    #
+    # NOTE: The FCC server has a hardcoded ~500ms RequestTimeout that
+    # frequently blocks programmatic date-range queries.  When this
+    # happens, Phase 2 silently returns no results.  Use the
+    # discover_grantees --xml-file command to import from a manually
+    # saved FCC XML export as a reliable alternative.
+    if start_date is not None and end_date is not None:
+        try:
+            session = requests.Session()
+            # Step 1: GET the form page to obtain session cookies
+            _fcc_request_with_retry(
+                'get', GENERIC_SEARCH_FORM_URL,
+                session=session,
+                impersonate='chrome124',
+                timeout=15,
+            )
+            # Step 2: POST the date range to trigger the search
+            post_data = {
+                'grant_date_from': date_from,
+                'grant_date_to': date_to,
+                'submit': 'Start Search',
+            }
+            search_resp = _fcc_request_with_retry(
+                'post', GENERIC_SEARCH_FORM_URL,
+                session=session,
+                data=post_data,
+                impersonate='chrome124',
+                timeout=30,
+                headers={
+                    'Referer': GENERIC_SEARCH_FORM_URL,
+                },
+            )
+            # Step 3: Fetch XML export from the results page
+            xml_url = GENERIC_SEARCH_URL + '?export=xml'
+            xml_resp = _fcc_request_with_retry(
+                'get', xml_url,
+                session=session,
+                impersonate='chrome124',
+                timeout=30,
+                headers={
+                    'Referer': GENERIC_SEARCH_URL,
+                },
+            )
+            xml_text = xml_resp.text
+            html_text = search_resp.text
+            timed_out = 'RequestTimeout' in (html_text or '')
+
+            if xml_text and '<Row>' in xml_text:
+                fcc_grantees = _parse_grantees_from_xml(
+                    xml_text, excluded,
+                )
+                if fcc_grantees:
+                    logger.info(
+                        "Grantee discovery HTTP XML found=%d",
+                        len(fcc_grantees),
+                    )
+                    discovered.update(fcc_grantees)
+            elif html_text and 'offTblBdy' in html_text:
+                fcc_grantees = _parse_grantees_from_html(
+                    html_text, excluded,
+                )
+                if fcc_grantees:
+                    logger.info(
+                        "Grantee discovery HTTP HTML found=%d",
+                        len(fcc_grantees),
+                    )
+                    discovered.update(fcc_grantees)
+            elif timed_out:
+                logger.info(
+                    "Grantee discovery HTTP timed out by FCC server "
+                    "(RequestTimeout) date_from=%s date_to=%s",
+                    date_from, date_to,
+                )
+            else:
+                logger.info(
+                    "Grantee discovery HTTP no results "
+                    "date_from=%s date_to=%s "
+                    "xml_status=%s html_len=%s",
+                    date_from, date_to,
+                    xml_resp.status_code, len(html_text or ''),
+                )
+        except _FCCConnectionDownError:
+            logger.warning(
+                "Grantee discovery HTTP skipped — FCC connection down",
+            )
+        except Exception:
+            logger.warning(
+                "Grantee discovery HTTP failed", exc_info=True,
+            )
+
+    return discovered
+
+
+def _parse_grantees_from_xml(xml_text, excluded_codes):
+    """Extract unique grantee codes from the FCC GenericSearch XML export.
+
+    The XML uses ``<Row>`` elements with ``<fcc_id>`` containing the
+    full FCC ID from which we extract the grantee code prefix.
+    """
+    if not xml_text:
+        return set()
+
+    discovered = set()
+    try:
+        soup = BeautifulSoup(xml_text, 'xml')
+        rows = soup.find_all('Row')
+        if not rows:
+            rows = soup.find_all('row')
+        for row in rows:
+            fcc_elem = row.find('fcc_id')
+            if not fcc_elem or not fcc_elem.string:
+                continue
+            fcc_id = fcc_elem.string.strip().upper()
+            grantee_code, _product_code = split_fcc_id(fcc_id)
+            if (
+                grantee_code
+                and _validate_grantee_code(grantee_code)
+                and grantee_code not in excluded_codes
+            ):
+                discovered.add(grantee_code)
+    except Exception:
+        logger.warning("Grantee discovery XML parse failed", exc_info=True)
+
+    return discovered
+
+
+def _parse_grantees_from_html(html_text, excluded_codes):
+    """Extract unique grantee codes from the GenericSearch results table.
+
+    The FCC GenericSearch results table has ``tbody#offTblBdy`` with
+    rows containing the grantee code in the first column.
+    """
+    if not html_text:
+        return set()
+
+    discovered = set()
+    try:
+        soup = BeautifulSoup(html_text, 'html.parser')
+        table = soup.find('tbody', id='offTblBdy')
+        if not table:
+            return set()
+        for row in table.find_all('tr'):
+            cells = row.find_all('td')
+            if not cells:
+                continue
+            cell_text = cells[0].get_text(' ', strip=True)
+            grantee_code, _product_code = split_fcc_id(cell_text)
+            if (
+                grantee_code
+                and _validate_grantee_code(grantee_code)
+                and grantee_code not in excluded_codes
+            ):
+                discovered.add(grantee_code)
+    except Exception:
+        logger.warning("Grantee discovery HTML parse failed", exc_info=True)
+
+    return discovered
 
 
 def _get_playwright_instance():
@@ -1892,9 +2416,32 @@ def _fetch_secondary_metadata_from_html_fallback(fcc_id, _params):
     # rule parts (e.g. 15B for receiver, 95E for transmitter).
     rule_parts = list(parsed.get('rule_parts', []))
     candidate_urls = parsed.get('candidate_exhibit_urls', [])
-    tcb_app_ids = _extract_application_id_from_urls(candidate_urls)
+
+    # Collect application IDs from two sources:
+    # 1. TCB Form 731 links (cells[1]) — most direct, uses applicationId=
+    # 2. ViewExhibitReport.cfm links (cells[2]) — uses application_id=
+    tcb_app_ids = list(parsed.get('tcb_application_ids', []))
+    url_app_ids = _extract_application_id_from_urls(candidate_urls)
+    for app_id in url_app_ids:
+        if app_id not in tcb_app_ids:
+            tcb_app_ids.append(app_id)
+
+    orig_fcc_id_from_tcb = ''
+    tcb_oe_rows = []
     for tcb_app_id in tcb_app_ids:
-        tcb_rule_parts = _fetch_rule_parts_from_tcb_report(fcc_id, tcb_app_id)
+        tcb_result = _fetch_rule_parts_from_tcb_report(fcc_id, tcb_app_id)
+        if isinstance(tcb_result, dict):
+            tcb_rule_parts = tcb_result.get('rule_parts', [])
+            tcb_orig_fcc_id = tcb_result.get('original_fcc_id', '')
+            tcb_freq_rows = tcb_result.get('oe_rows', [])
+        elif isinstance(tcb_result, tuple):
+            # Legacy tuple format (backward compat)
+            tcb_rule_parts, tcb_orig_fcc_id = tcb_result
+            tcb_freq_rows = []
+        else:
+            tcb_rule_parts = tcb_result
+            tcb_orig_fcc_id = ''
+            tcb_freq_rows = []
         if tcb_rule_parts:
             for part in tcb_rule_parts:
                 if part not in rule_parts:
@@ -1904,13 +2451,26 @@ def _fetch_secondary_metadata_from_html_fallback(fcc_id, _params):
                 "app_id=%s rule_parts=%s",
                 fcc_id, tcb_app_id[:20], tcb_rule_parts,
             )
+        if tcb_orig_fcc_id:
+            orig_fcc_id_from_tcb = tcb_orig_fcc_id
+        if tcb_freq_rows:
+            tcb_oe_rows.extend(tcb_freq_rows)
+
+    # Merge TCB frequency rows into OE rows
+    parsed_oe = list(parsed.get('original_equipment_rows', []))
+    if tcb_oe_rows:
+        parsed_oe.extend(tcb_oe_rows)
+        logger.info(
+            "FCC TCB frequency rows merged fcc_id=%s tcb_row_count=%s",
+            fcc_id, len(tcb_oe_rows),
+        )
 
     return {
         'record_count': parsed.get('record_count', 0),
         'text_blob': parsed.get('text_blob', ''),
         'matched_keys': parsed.get('matched_keys', []),
         'test_report_candidates': [],
-        'original_equipment_rows': parsed.get('original_equipment_rows', []),
+        'original_equipment_rows': parsed_oe,
         'oet_documents': oet_documents,
         'rule_parts': rule_parts,
         'application_id': (
@@ -2885,18 +3445,32 @@ def _fetch_rule_parts_from_tcb_report(fcc_id, application_id):
         return []
 
     html = response.text or ''
-    return _extract_rule_parts_from_tcb_html(html)
+    tcb_data = _extract_data_from_tcb_html(html)
+    rule_parts = tcb_data.get('rule_parts', [])
+    oe_rows = tcb_data.get('oe_rows', [])
+    # Also extract original FCC ID for Change-in-Identification filings.
+    # The TCB 731 report is the authoritative source — it contains the full
+    # application purpose text including "Original FCC ID: XXX" that the
+    # XML API and HTML table often truncate to just "Change in Identification".
+    orig_fcc_id = _CID_ORIGINAL_FCC_ID_RE.search(html)
+    orig_fcc_id = (orig_fcc_id.group(1) or '').strip().upper() if orig_fcc_id else ''
+    return {
+        'rule_parts': rule_parts,
+        'original_fcc_id': orig_fcc_id,
+        'oe_rows': oe_rows,
+    }
 
 
-def _extract_rule_parts_from_tcb_html(html):
-    """Parse the TCB Form 731 HTML and extract rule parts from the
-    Equipment Specifications table.
+def _extract_data_from_tcb_html(html):
+    """Parse the TCB Form 731 HTML and extract rule parts and frequency
+    data from the Equipment Specifications table.
 
-    The table has a 'Rule Parts' column (with optional <br/> in header).
-    We locate the column by matching the header text, then collect all
-    non-empty values from that column's data cells.
+    Returns a dict with:
+        rule_parts: list of rule part strings (e.g. ['15B', '90'])
+        oe_rows: list of dicts with freq/power/emission data
     """
     rule_parts = set()
+    oe_rows = []
     soup = BeautifulSoup(html, 'html.parser')
 
     # Find the Equipment Specifications fieldset
@@ -2914,34 +3488,83 @@ def _extract_rule_parts_from_tcb_html(html):
         if len(rows) < 2:
             continue
 
-        # Find the Rule Parts column index from the header row
+        # Find column indices from header row
         header_row = rows[0]
         headers = header_row.find_all('th')
-        rule_parts_col = None
+        col_map = {}
         for idx, th in enumerate(headers):
             text = th.get_text(' ', strip=True).lower()
-            # Header text may be split by <br/>: 'Rule Parts' or 'Rule\nParts'
-            if 'rule' in text and 'part' in text:
-                rule_parts_col = idx
-                break
+            if 'lower' in text and 'freq' in text:
+                col_map['lower_freq'] = idx
+            elif 'upper' in text and 'freq' in text:
+                col_map['upper_freq'] = idx
+            elif 'rule' in text and 'part' in text:
+                col_map['rule_parts'] = idx
+            elif 'power' in text and 'output' in text:
+                col_map['power_output'] = idx
+            elif 'emission' in text and 'design' in text:
+                col_map['emission_designator'] = idx
 
-        if rule_parts_col is None:
-            continue
-
-        # Collect rule parts from data rows
+        # Collect rule parts and frequency data from data rows
         for row in rows[1:]:
             cells = row.find_all('td')
-            if len(cells) <= rule_parts_col:
+            if len(cells) < 2:
                 continue
-            value = cells[rule_parts_col].get_text(' ', strip=True)
-            if value:
-                # Split combined values like "15B, 90" or "15B;90"
-                for part in re.split(r'[,;/\s]+', value):
-                    part = part.strip()
-                    if part:
-                        rule_parts.add(part)
 
-    return sorted(rule_parts)
+            # Rule parts
+            rp_idx = col_map.get('rule_parts')
+            if rp_idx is not None and len(cells) > rp_idx:
+                value = cells[rp_idx].get_text(' ', strip=True)
+                if value:
+                    for part in re.split(r'[,;/\s]+', value):
+                        part = part.strip()
+                        if part:
+                            rule_parts.add(part)
+
+            # Frequency data
+            lo_idx = col_map.get('lower_freq')
+            hi_idx = col_map.get('upper_freq')
+            if lo_idx is not None and hi_idx is not None:
+                lo_val = cells[lo_idx].get_text(' ', strip=True) if len(cells) > lo_idx else ''
+                hi_val = cells[hi_idx].get_text(' ', strip=True) if len(cells) > hi_idx else ''
+                if lo_val or hi_val:
+                    pw_idx = col_map.get('power_output')
+                    em_idx = col_map.get('emission_designator')
+                    # Capture this row's specific rule part(s) so each
+                    # frequency range gets its own rule part assignment
+                    # (critical for PoC radios where LTE Band 2=24E,
+                    # Band 12=27, Band 5=22H, etc.)
+                    row_rule_parts = []
+                    if rp_idx is not None and len(cells) > rp_idx:
+                        rp_val = cells[rp_idx].get_text(' ', strip=True)
+                        if rp_val:
+                            for part in re.split(r'[,;/\s]+', rp_val):
+                                part = part.strip()
+                                if part:
+                                    row_rule_parts.append(part)
+                    oe_rows.append({
+                        'lower_freq_mhz': lo_val,
+                        'upper_freq_mhz': hi_val,
+                        'power_output': (
+                            cells[pw_idx].get_text(' ', strip=True)
+                            if pw_idx is not None and len(cells) > pw_idx else ''
+                        ),
+                        'emission_designator': (
+                            cells[em_idx].get_text(' ', strip=True)
+                            if em_idx is not None and len(cells) > em_idx else ''
+                        ),
+                        'rule_parts': row_rule_parts,
+                    })
+
+    return {
+        'rule_parts': sorted(rule_parts),
+        'oe_rows': oe_rows,
+    }
+
+
+def _extract_rule_parts_from_tcb_html(html):
+    """Legacy wrapper: extract only rule parts from TCB HTML."""
+    return _extract_data_from_tcb_html(html).get('rule_parts', [])
 
 
 def fetch_fcc_secondary_metadata(fcc_id):
@@ -2962,6 +3585,7 @@ def fetch_fcc_secondary_metadata(fcc_id):
             'original_equipment_rows': [],
             'oet_documents': [],
             'rule_parts': [],
+            'original_fcc_id_from_tcb': '',
         }
 
     grantee_code, product_code = split_fcc_id(fcc_id)
@@ -2974,8 +3598,11 @@ def fetch_fcc_secondary_metadata(fcc_id):
             'original_equipment_rows': [],
             'oet_documents': _fetch_oet_documents_from_html(fcc_id),
             'rule_parts': [],
+            'original_fcc_id_from_tcb': '',
         }
 
+    matched_records = []
+    orig_fcc_id_from_tcb = ''
     params = {
         'grantee_code': grantee_code,
         'product_code': product_code,
@@ -3088,14 +3715,98 @@ def fetch_fcc_secondary_metadata(fcc_id):
     # transmitter certification under Part 95E), so we fetch the TCB report
     # for *every* application_id and merge — not replace — the rule parts.
     tcb_app_ids = _extract_application_id_from_urls(exhibit_urls)
+    tcb_oe_rows = []
     for tcb_app_id in tcb_app_ids:
-        tcb_rule_parts = _fetch_rule_parts_from_tcb_report(fcc_id, tcb_app_id)
+        tcb_result = _fetch_rule_parts_from_tcb_report(fcc_id, tcb_app_id)
+        if isinstance(tcb_result, dict):
+            tcb_rule_parts = tcb_result.get('rule_parts', [])
+            tcb_orig_fcc_id = tcb_result.get('original_fcc_id', '')
+            tcb_freq_rows = tcb_result.get('oe_rows', [])
+        elif isinstance(tcb_result, tuple):
+            tcb_rule_parts, tcb_orig_fcc_id = tcb_result
+            tcb_freq_rows = []
+        else:
+            tcb_rule_parts = tcb_result
+            tcb_orig_fcc_id = ''
+            tcb_freq_rows = []
         if tcb_rule_parts:
             rule_parts_set.update(tcb_rule_parts)
             logger.info(
                 "FCC TCB rule parts found fcc_id=%s app_id=%s rule_parts=%s",
                 fcc_id, tcb_app_id[:20], tcb_rule_parts,
             )
+        if tcb_orig_fcc_id:
+            orig_fcc_id_from_tcb = tcb_orig_fcc_id
+        if tcb_freq_rows:
+            tcb_oe_rows.extend(tcb_freq_rows)
+
+    # The FCC GenericSearch XML format (outputformat=XML) omits critical
+    # technical fields: rule_parts, emission_designator, and power_output.
+    # These fields ARE present in the HTML table (cells 16-18).  When the
+    # XML parse succeeded but left these fields empty, supplement with the
+    # HTML fallback so _classify_fcc_device has the data it needs.
+    xml_has_emission = any(
+        (row.get('emission_designator') or '').strip()
+        for row in oe_rows
+    )
+    if not rule_parts_set or not xml_has_emission:
+        logger.info(
+            "FCC metadata XML missing technical fields fcc_id=%s "
+            "rule_parts=%s has_emission=%s — supplementing with HTML fallback",
+            fcc_id,
+            sorted(rule_parts_set),
+            xml_has_emission,
+        )
+        html_result = _fetch_secondary_metadata_from_html_fallback(
+            fcc_id, html_fallback_params,
+        )
+        # Merge HTML rule_parts (already includes TCB report results)
+        for part in html_result.get('rule_parts', []):
+            rule_parts_set.add(part)
+        # Merge HTML oe_rows — prefer HTML rows (they have emission data)
+        html_oe = html_result.get('original_equipment_rows', [])
+        if html_oe:
+            if not xml_has_emission:
+                oe_rows = html_oe
+            else:
+                # Merge: deduplicate by grant_date + freq range
+                seen_oe = set()
+                merged_oe = list(html_oe)
+                for row in html_oe:
+                    key = (
+                        row.get('grant_date', ''),
+                        row.get('lower_freq_mhz', ''),
+                        row.get('upper_freq_mhz', ''),
+                    )
+                    seen_oe.add(key)
+                for row in oe_rows:
+                    key = (
+                        row.get('grant_date', ''),
+                        row.get('lower_freq_mhz', ''),
+                        row.get('upper_freq_mhz', ''),
+                    )
+                    if key not in seen_oe:
+                        seen_oe.add(key)
+                        merged_oe.append(row)
+                oe_rows = merged_oe
+        # Merge text_blob from HTML
+        html_blob = html_result.get('text_blob', '')
+        if html_blob:
+            matched_records.append(html_blob)
+        # Merge original_fcc_id_from_tcb from HTML fallback (CID chain)
+        html_orig_fcc = html_result.get('original_fcc_id_from_tcb', '')
+        if html_orig_fcc and not orig_fcc_id_from_tcb:
+            orig_fcc_id_from_tcb = html_orig_fcc
+
+    # Merge TCB frequency rows into OE rows (supplements XML/HTML data
+    # when the FCC GenericSearch returns 503 but TCB reports succeed).
+    if tcb_oe_rows:
+        oe_rows = list(oe_rows) + tcb_oe_rows
+        logger.info(
+            "FCC TCB frequency rows merged into OE rows fcc_id=%s "
+            "tcb_row_count=%s total_oe_rows=%s",
+            fcc_id, len(tcb_oe_rows), len(oe_rows),
+        )
 
     return {
         'record_count': len(matched_records),
@@ -3106,6 +3817,7 @@ def fetch_fcc_secondary_metadata(fcc_id):
         'oet_documents': oet_documents,
         'rule_parts': sorted(rule_parts_set),
         'application_id': tcb_app_ids[0] if tcb_app_ids else '',
+        'original_fcc_id_from_tcb': orig_fcc_id_from_tcb,
     }
 
 
@@ -3221,7 +3933,7 @@ def _detect_amateur_radio(rule_parts, oe_rows, application_purpose=''):
     # Step 4: Confirm with product description keywords
     purpose_upper = (application_purpose or '').upper()
     has_radio_keyword = any(
-        kw in purpose_upper for kw in _AMATEUR_PRODUCT_KEYWORDS
+        kw in purpose_upper for kw in AMATEUR_PRODUCT_KEYWORDS
     )
     if not has_radio_keyword:
         # Still flag it — frequencies + rule parts are strong indicators
@@ -3566,6 +4278,152 @@ def _detect_and_scrape_amateur_radio(radio, sec_metadata):
     if not sec_metadata:
         return
 
+
+def _sync_radio_certifications(radio, fcc_id, sec_metadata):
+    """Create or update RadioCertification records from FCC metadata.
+
+    Each original_equipment_row in sec_metadata represents one FCC grant
+    with its own frequency range, rule parts, emission designators, and
+    power output.  This function creates a RadioCertification record per
+    unique grant (deduplicated by frequency range).
+
+    Args:
+        radio: The Radio model instance.
+        fcc_id: The FCC ID string (may differ from radio.fcc_id for CID).
+        sec_metadata: The dictionary from fetch_fcc_secondary_metadata.
+    """
+    from radios.models import RadioCertification
+
+    if not sec_metadata or not radio:
+        return
+
+    oe_rows = sec_metadata.get('original_equipment_rows', [])
+    rule_parts = sec_metadata.get('rule_parts', [])
+
+    if not oe_rows:
+        # No OE rows — still create a single cert with rule parts if available
+        if rule_parts:
+            _upsert_certification(
+                radio, fcc_id,
+                lower_mhz=None, upper_mhz=None,
+                rule_parts_str=', '.join(rule_parts),
+                emission_designators='',
+                power_watts=None,
+                grant_date=radio.grant_date,
+                authorization_type='certification',
+            )
+        return
+
+    # Deduplicate by frequency range — same FCC ID can have multiple
+    # rows with identical frequencies (e.g. different modulation modes).
+    seen_ranges = set()
+    for row in oe_rows:
+        lower_str = (row.get('lower_freq_mhz') or '').strip()
+        upper_str = (row.get('upper_freq_mhz') or '').strip()
+        if not lower_str or not upper_str:
+            continue
+
+        try:
+            lower = float(lower_str)
+            upper = float(upper_str)
+        except (ValueError, TypeError):
+            continue
+
+        range_key = (lower, upper)
+        if range_key in seen_ranges:
+            continue
+        seen_ranges.add(range_key)
+
+        emission = (row.get('emission_designator') or '').strip()
+        power_str = (row.get('power_output') or '').strip()
+        try:
+            power = float(power_str) if power_str else None
+        except (ValueError, TypeError):
+            power = None
+
+        row_grant_date = (row.get('grant_date') or '').strip()
+        try:
+            grant_date = datetime.strptime(row_grant_date, '%m/%d/%Y').date() if row_grant_date else radio.grant_date
+        except (ValueError, TypeError):
+            grant_date = radio.grant_date
+
+        # Use per-row rule parts when available (from TCB extraction),
+        # falling back to the global rule_parts list (from XML/HTML).
+        row_rule_parts = row.get('rule_parts', [])
+        if row_rule_parts:
+            cert_rule_parts_str = ', '.join(row_rule_parts)
+        else:
+            cert_rule_parts_str = ', '.join(rule_parts) if rule_parts else ''
+
+        _upsert_certification(
+            radio, fcc_id,
+            lower_mhz=lower, upper_mhz=upper,
+            rule_parts_str=cert_rule_parts_str,
+            emission_designators=emission,
+            power_watts=power,
+            grant_date=grant_date,
+            authorization_type='certification',
+        )
+
+
+def _upsert_certification(radio, fcc_id, lower_mhz, upper_mhz, rule_parts_str,
+                          emission_designators, power_watts, grant_date,
+                          authorization_type):
+    """Create or update a single RadioCertification record."""
+    from radios.models import RadioCertification
+
+    existing = RadioCertification.objects.filter(
+        radio=radio,
+        fcc_id__iexact=fcc_id,
+        freq_range_lower_mhz=lower_mhz,
+        freq_range_upper_mhz=upper_mhz,
+    ).first()
+
+    if existing:
+        changed = False
+        if rule_parts_str and existing.rule_parts != rule_parts_str:
+            existing.rule_parts = rule_parts_str
+            changed = True
+        if emission_designators and existing.emission_designators != emission_designators:
+            existing.emission_designators = emission_designators
+            changed = True
+        if power_watts is not None and existing.power_output_watts != power_watts:
+            existing.power_output_watts = power_watts
+            changed = True
+        if grant_date and existing.grant_date != grant_date:
+            existing.grant_date = grant_date
+            changed = True
+        if authorization_type and existing.authorization_type != authorization_type:
+            existing.authorization_type = authorization_type
+            changed = True
+        if changed:
+            existing.save()
+            logger.info(
+                "FCC cert updated radio_id=%s fcc_id=%s "
+                "lower=%s upper=%s rule_parts=%s",
+                radio.pk, fcc_id, lower_mhz, upper_mhz, rule_parts_str,
+            )
+    else:
+        RadioCertification.objects.create(
+            radio=radio,
+            fcc_id=fcc_id,
+            freq_range_lower_mhz=lower_mhz,
+            freq_range_upper_mhz=upper_mhz,
+            rule_parts=rule_parts_str,
+            emission_designators=emission_designators,
+            power_output_watts=power_watts,
+            grant_date=grant_date,
+            authorization_type=authorization_type,
+        )
+        logger.info(
+            "FCC cert created radio_id=%s fcc_id=%s "
+            "lower=%s upper=%s rule_parts=%s",
+            radio.pk, fcc_id, lower_mhz, upper_mhz, rule_parts_str,
+        )
+
+
+def _detect_and_scrape_amateur_radio(radio, sec_metadata):
+
     rule_parts = sec_metadata.get('rule_parts', [])
     oe_rows = sec_metadata.get('original_equipment_rows', [])
     application_purpose = sec_metadata.get('text_blob', '')
@@ -3596,21 +4454,200 @@ def _detect_and_scrape_amateur_radio(radio, sec_metadata):
         _apply_website_specs_to_radio(radio, extracted)
 
 
+# ── FCC Technical Field Classifier ─────────────────────────────────────
+# Maps FCC rule parts, frequency ranges, and emission designators to
+# radio service types.  This is the authoritative classification — FCC
+# certification data (rule parts, frequencies, emission codes) tells us
+# what the device IS, not marketing keywords in user manuals.
+
+def _classify_fcc_device(primary_record, sec_metadata):
+    """Classify a device as a two-way radio using FCC technical fields.
+
+    Checks rule parts, frequency ranges, and emission designators from
+    the FCC secondary metadata.  These are the authoritative technical
+    fields — they tell us what the device IS, not what marketing calls it.
+
+    Args:
+        primary_record: Dict from the FCC primary API (getFCCIDList).
+        sec_metadata: Dict from ``fetch_fcc_secondary_metadata``.
+
+    Returns:
+        Tuple of (is_radio: bool, matched_tags: list[str]).
+        ``is_radio`` is True if the FCC technical fields indicate a
+        two-way radio transmitter.  ``matched_tags`` lists which
+        service types were matched (e.g. ['GMRS', 'VHF']).
+    """
+    matched_tags: list[str] = []
+    reasons: list[str] = []
+
+    # ── Rule Parts check (highest weight) ──
+    rule_parts = set(sec_metadata.get('rule_parts', []))
+    radio_parts = rule_parts & _get_radio_rule_parts()
+    if radio_parts:
+        matched_tags.extend(sorted(radio_parts))
+        reasons.append(f'rule_parts={sorted(radio_parts)}')
+
+    # ── Frequency Range check ──
+    oe_rows = sec_metadata.get('original_equipment_rows', [])
+    freq_matched: set[str] = set()
+    for row in oe_rows:
+        try:
+            lower = float(row.get('lower_freq_mhz', 0) or 0)
+            upper = float(row.get('upper_freq_mhz', 0) or 0)
+        except (ValueError, TypeError):
+            continue
+        if lower <= 0 or upper <= 0:
+            continue
+        if lower > upper:
+            lower, upper = upper, lower
+
+        for band_low, band_high, label in _get_radio_freq_bands():
+            if lower <= band_high and upper >= band_low:
+                freq_matched.add(label)
+
+    if freq_matched:
+        matched_tags.extend(sorted(freq_matched))
+        reasons.append(f'freq_bands={sorted(freq_matched)}')
+
+    # ── Emission Designator check ──
+    has_radio_emission = False
+    for row in oe_rows:
+        emission = (row.get('emission_designator') or '').strip().upper()
+        if not emission:
+            continue
+        # Check if any known radio emission prefix is in this designator
+        for prefix in _get_radio_emission_prefixes():
+            if emission.startswith(prefix):
+                has_radio_emission = True
+                break
+        if has_radio_emission:
+            break
+
+    if has_radio_emission:
+        reasons.append('emission=radio_modulation')
+        matched_tags.append('RADIO_EMISSION')
+
+    # ── Text blob (grant notes) supplementary check ──
+    text_blob = (sec_metadata.get('text_blob', '') or '').upper()
+    if text_blob:
+        # Look for equipment-specific descriptors in the text_blob
+        # These are the FCC's own descriptors, not marketing terms
+        if 'TRANSCEIVER' in text_blob or 'TWO WAY RADIO' in text_blob:
+            reasons.append('text_blob=transceiver')
+            matched_tags.append('TRANSCEIVER')
+
+    # ── Decision ──
+    # A device is a two-way radio if:
+    # 1. It has a radio rule part (90, 95, 80, 87, 97, etc.) OR
+    # 2. It has a radio frequency band AND a radio emission designator OR
+    # 3. It has both radio frequency AND emission (strong signal even
+    #    without explicit radio rule parts — covers Part 15C amateur
+    #    radios filed as intentional radiators)
+    is_radio = (
+        bool(radio_parts)
+        or (bool(freq_matched) and has_radio_emission)
+        or ('TRANSCEIVER' in matched_tags)
+    )
+
+    # Log classification for debugging
+    if is_radio:
+        logger.info(
+            "FCC device classifier: radio detected "
+            "fcc_id=%s reasons=%s",
+            primary_record.get('FCCId', ''),
+            '; '.join(reasons),
+        )
+    else:
+        logger.info(
+            "FCC device classifier: non-radio "
+            "fcc_id=%s reasons=none "
+            "rule_parts=%s freq_bands=%s emission=%s",
+            primary_record.get('FCCId', ''),
+            sorted(rule_parts), sorted(freq_matched),
+            has_radio_emission,
+        )
+
+    return is_radio, matched_tags
+
+
+def _primary_record_matches_allowlist(primary_record, allowlist_terms):
+    """Quick check: does the primary FCC API record alone match any allowlist term?
+
+    Used as a pre-filter before the expensive secondary metadata fetch
+    (curl_cffi + Playwright).  Only checks the grantee name and
+    application purpose — the fields available without an extra
+    FCC round-trip.  The FCC ID is intentionally excluded: it is a
+    technical identifier, not a product description, and product codes
+    can accidentally match short allowlist terms (e.g. FSCBT9104DI
+    matching 'CB').
+
+    Records with common FCC equipment authorization purposes always
+    pass: grantee names are company names ("Kenwood", "Hytera") that
+    never contain radio keywords, so the allowlist-terms check on
+    grantee+name alone would reject every legitimate radio filing.
+    The expensive secondary metadata fetch is still required for the
+    definitive allowlist check on text_blob.
+
+    Returns True if at least one term matches or the purpose is a
+    known equipment authorization type.
+    """
+    app_purpose = (primary_record.get('applicationPurpose', '') or '').strip().lower()
+    if app_purpose in _get_always_pass_purposes():
+        return True
+
+    # Secondary check: the purpose may contain radio keywords directly
+    # (e.g. "Original Equipment - TWO WAY RADIO" from some FCC records).
+    sources = [
+        (primary_record.get('grantee', '') or ''),
+        app_purpose,
+    ]
+    text = ' | '.join(str(v) for v in sources if v).upper()
+    return any(_term_matches_text(term, text) for term in allowlist_terms)
+
+
 def _allowlist_match_terms(primary_record, secondary_metadata, allowlist_terms):
     """Return which allowlist terms appear in the FCC record metadata.
 
-    Searches the combined text of FCC ID, grantee name, application purpose,
-    grant date, and secondary metadata for case-insensitive substring matches.
+    Searches the combined text of grantee name, application purpose,
+    grant date, and secondary metadata for case-insensitive substring
+    matches.  The FCC ID is intentionally excluded: it is a technical
+    identifier, not a product description, and product codes can
+    accidentally match short allowlist terms.
     """
     sources = [
-        (primary_record.get('FCCId', '') or ''),
         (primary_record.get('grantee', '') or ''),
         (primary_record.get('applicationPurpose', '') or ''),
         (primary_record.get('grantDate', '') or ''),
-        (secondary_metadata.get('text_blob', '') or ''),
+        _strip_fcc_id_from_blob(
+            secondary_metadata.get('text_blob', ''),
+            primary_record.get('FCCId', ''),
+        ),
     ]
     text = ' | '.join(str(v) for v in sources if v).upper()
-    return [term for term in allowlist_terms if term in text]
+    return [term for term in allowlist_terms if _term_matches_text(term, text)]
+
+
+def _strip_fcc_id_from_blob(text_blob, fcc_id):
+    """Remove the target FCC ID prefix from each row in the text_blob.
+
+    The text_blob rows have the format:
+    ``2ASCB-DF11DUAL | Original Equipment | 03/05/2024 | 2402.0 | 2480.0``
+
+    Stripping the leading FCC ID prevents false substring matches where
+    a grantee code like '2ASCB' accidentally matches the 'CB' allowlist
+    term.  The FCC ID is a label, not product description text.
+    """
+    if not text_blob or not fcc_id:
+        return text_blob or ''
+    fcc_id_upper = fcc_id.strip().upper()
+    cleaned_rows = []
+    for row in text_blob.split(' || '):
+        stripped = row.strip()
+        if stripped.upper().startswith(fcc_id_upper):
+            # Remove "FCCID | " prefix from the row
+            stripped = stripped[len(fcc_id_upper):].lstrip().lstrip('|').strip()
+        cleaned_rows.append(stripped)
+    return ' || '.join(cleaned_rows)
 
 
 def _denylist_match_terms(primary_record, secondary_metadata, denylist_terms):
@@ -3625,14 +4662,16 @@ def _denylist_match_terms(primary_record, secondary_metadata, denylist_terms):
     if not denylist_terms:
         return []
     sources = [
-        (primary_record.get('FCCId', '') or ''),
         (primary_record.get('grantee', '') or ''),
         (primary_record.get('applicationPurpose', '') or ''),
         (primary_record.get('grantDate', '') or ''),
-        (secondary_metadata.get('text_blob', '') or ''),
+        _strip_fcc_id_from_blob(
+            secondary_metadata.get('text_blob', ''),
+            primary_record.get('FCCId', ''),
+        ),
     ]
     text = ' | '.join(str(v) for v in sources if v).upper()
-    return [term for term in denylist_terms if term in text]
+    return [term for term in denylist_terms if _term_matches_text(term, text)]
 
 
 def _clean_query(value):
@@ -3845,22 +4884,19 @@ def _ensure_grantee_brand_and_manufacturer(grantee_code, grantee_name):
     manufacturer.brands.add(brand)
     return brand, manufacturer
 
-def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_reload=False, honor_skip_lists=True):
+def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_reload=False, honor_skip_lists=True, preserve_existing=False):
     """
     Fetches FCC ID data using curl_cffi and saves it to the database.
 
     Args:
         fcc_id_query:  FCC ID or grantee code to query.
-        start_date:    Optional date/datetime — only grants on or after this date are returned.
-                       Passed to the FCC API as ``startDate=MM/DD/YYYY``.
-        end_date:      Optional date/datetime — only grants on or before this date are returned.
-                       Passed to the FCC API as ``endDate=MM/DD/YYYY``.
-        force_reload:  When True, skip stale-lookup checks and re-download all documents
-                       even if they are already stored.  Intended for use when the FCC has
-                       issued an update to a previously synced ID.
-        honor_skip_lists: When False, ignore the SyncSkippedGrantee list (used for
-                       manual single-grantee syncs where the user explicitly chose
-                       to sync that grantee).
+        start_date:    Optional date/datetime — only grants on or after this date.
+        end_date:      Optional date/datetime — only grants on or before this date.
+        force_reload:  When True, skip stale-lookup checks and re-download all docs.
+        honor_skip_lists: When False, ignore SyncSkippedGrantee (manual syncs).
+        preserve_existing: When True, do not overwrite non-empty radio fields
+                       (freq_bands_tx, power_watts, grant_date, etc.) — only
+                       fill in fields that are currently blank.
 
     Returns (count_added, count_updated, messages)
     """
@@ -3959,6 +4995,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
     skipped_ignored = 0
     skipped_non_radio = 0
     skipped_denylist = 0
+    skipped_ignored_rule_part = 0
     skipped_stale = 0
     attached_reports = 0
     synced_oet_docs = 0
@@ -4009,10 +5046,10 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         if brand_cache_key in brand_cache:
             auth_brand, auth_mfr = brand_cache[brand_cache_key]
         else:
-            auth_brand, auth_mfr = _ensure_grantee_brand_and_manufacturer(
-                grantee_code,
-                raw_brand_name,
-            )
+            # Lookup only — don't create Brand/Manufacturer until we
+            # confirm at least one record matches the allowlist.
+            auth_brand = _find_existing_grantee_brand(grantee_code, raw_brand_name)
+            auth_mfr = None
             brand_cache[brand_cache_key] = (auth_brand, auth_mfr)
         auth_brand_name = _resolve_authoritative_radio_brand_name(
             auth_brand,
@@ -4147,6 +5184,27 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
 
         sec_metadata = _sync_metadata_cache.get(fcc_id)
         if sec_metadata is None:
+            # Quick pre-check: if the primary FCC API record has no radio
+            # keywords, skip the expensive secondary metadata fetch
+            # (curl_cffi + Playwright fallback = 15-30s per ID).
+            # Only applies to bulk grantee scans — specific FCC ID and
+            # Change-in-ID queries always proceed.
+            if (
+                allowlist_terms
+                and not is_specific_fcc_id
+                and not _primary_record_matches_allowlist(
+                    res, allowlist_terms,
+                )
+            ):
+                skipped_non_radio += 1
+                logger.info(
+                    "FCC ingest quick-skip no radio keywords in primary "
+                    "record query=%s fcc_id=%s primary_purpose=%s",
+                    fcc_id_query, fcc_id,
+                    res.get('applicationPurpose', ''),
+                )
+                continue
+
             sec_metadata = fetch_fcc_secondary_metadata(fcc_id)
             _sync_metadata_cache[fcc_id] = sec_metadata
 
@@ -4158,6 +5216,65 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         # re-label ID.  Follow the chain to get the actual certification data.
         if is_change_in_id:
             orig_fcc_id = _extract_original_fcc_id_from_cid(app_purpose)
+            # Fallback 1: the XML API often truncates application_purpose to
+            # just "Change in Identification".  The full text with the
+            # original FCC ID may be available in sec_metadata's text_blob
+            # (from the HTML GenericSearch results).
+            if not orig_fcc_id:
+                text_blob = sec_metadata.get('text_blob', '')
+                if text_blob:
+                    orig_fcc_id = _extract_original_fcc_id_from_cid(text_blob)
+                    if orig_fcc_id:
+                        logger.info(
+                            "FCC CID chain found original FCC ID in text_blob "
+                            "fcc_id=%s orig_fcc_id=%s",
+                            fcc_id, orig_fcc_id,
+                        )
+            # Fallback 2: the TCB Form 731 report is the authoritative source
+            # for CID filing details.  _fetch_rule_parts_from_tcb_report
+            # extracts the original FCC ID from the report HTML.
+            if not orig_fcc_id:
+                orig_fcc_id = sec_metadata.get('original_fcc_id_from_tcb', '')
+                if orig_fcc_id:
+                    logger.info(
+                        "FCC CID chain found original FCC ID in TCB report "
+                        "fcc_id=%s orig_fcc_id=%s",
+                        fcc_id, orig_fcc_id,
+                    )
+            # Fallback 3: scan the XML batch records for an Original
+            # Equipment filing with matching product code.  CID filings
+            # (e.g. 2AU74UV-S9) often share a product code prefix with
+            # the original device (e.g. 2AU74UV-S9PLUS) returned in the
+            # same FCC API response.
+            if not orig_fcc_id:
+                cid_product = (product_code or '').upper()
+                for batch_res in records:
+                    batch_fcc = batch_res.get('FCCId', '')
+                    if not batch_fcc or batch_fcc == fcc_id:
+                        continue
+                    batch_purpose = (
+                        batch_res.get('applicationPurpose', '') or ''
+                    ).lower()
+                    if 'original equipment' not in batch_purpose:
+                        continue
+                    _, batch_product = split_fcc_id(batch_fcc)
+                    batch_product = (batch_product or '').upper()
+                    # Match if one product code is a prefix of the other
+                    # (e.g. 'UV-S9' matches 'UV-S9PLUS')
+                    if (
+                        batch_product
+                        and (
+                            batch_product.startswith(cid_product)
+                            or cid_product.startswith(batch_product)
+                        )
+                    ):
+                        orig_fcc_id = batch_fcc.upper()
+                        logger.info(
+                            "FCC CID chain found original FCC ID in batch "
+                            "records fcc_id=%s orig_fcc_id=%s",
+                            fcc_id, orig_fcc_id,
+                        )
+                        break
             if orig_fcc_id:
                 orig_fcc_id = orig_fcc_id.upper()
                 if orig_fcc_id != (fcc_id or '').upper():
@@ -4186,8 +5303,20 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                             current_oe.extend(orig_oe_rows)
                             sec_metadata['original_equipment_rows'] = current_oe
 
-        matched_terms = _allowlist_match_terms(res, sec_metadata, allowlist_terms)
-        if allowlist_terms and not matched_terms and not is_specific_fcc_id and not is_change_in_id:
+        # ── Device classification using FCC technical fields ──
+        # The classifier checks rule parts, frequency ranges, and emission
+        # designators — the authoritative FCC certification fields that
+        # tell us what the device actually IS.  This replaces the old
+        # keyword-matching allowlist which was matching marketing terms
+        # against technical field names (company names like "Kenwood"
+        # never contain "TRANSCEIVER").
+        is_radio_device, classifier_tags = _classify_fcc_device(res, sec_metadata)
+
+        # Supplementary: still run the keyword allowlist against grant notes
+        # and text_blob for tagging purposes (stored on the radio model).
+        kw_matched = _allowlist_match_terms(res, sec_metadata, allowlist_terms)
+
+        if not is_radio_device and not is_specific_fcc_id and not is_change_in_id:
             # Even for non-radio classifications, ingest OET exhibits for existing FCC-linked radios.
             for radio in radios_with_fcc:
                 should_skip, _ = stale_radios.get(radio.id, (False, None))
@@ -4200,15 +5329,22 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 _stamp_lookup_timestamp(radio, lookup_started_at)
             skipped_non_radio += 1
             logger.info(
-                "FCC ingest skipped record source=fcc_api query=%s fcc_id=%s reason=no_radio_allowlist_match allow_terms=%s primary_purpose=%s metadata_record_count=%s metadata_keys=%s",
+                "FCC ingest skipped record source=fcc_api query=%s "
+                "fcc_id=%s reason=not_a_radio_device "
+                "rule_parts=%s primary_purpose=%s "
+                "metadata_record_count=%s",
                 fcc_id_query,
                 fcc_id,
-                ','.join(allowlist_terms),
+                sec_metadata.get('rule_parts', []),
                 res.get('applicationPurpose', ''),
                 sec_metadata.get('record_count', 0),
-                ','.join(sec_metadata.get('matched_keys', [])),
             )
             continue
+
+        # Combine classifier tags with keyword matches for storage.
+        # Classifier tags are authoritative (GMRS, FRS, CB, VHF, UHF, etc.).
+        # Keyword matches are descriptive (TRANSCEIVER, PORTABLE RADIO, etc.).
+        stored_terms = sorted(set(classifier_tags + kw_matched))
 
         # After the allowlist passes, check the denylist.  A device that
         # matched "RECEIVER" (allowlist) but also matches "SPEAKER
@@ -4239,10 +5375,41 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     fcc_id_query,
                     fcc_id,
                     ','.join(denied_terms),
-                    ','.join(matched_terms),
+                    ','.join(kw_matched),
                     res.get('applicationPurpose', ''),
                 )
                 continue
+
+        # Check for ignored rule parts (e.g. 15.231 — low-power periodic
+        # transmitters like garage door openers and car key fobs).
+        rule_parts_for_check = sec_metadata.get('rule_parts', []) or []
+        if _rule_parts_match_ignored(rule_parts_for_check):
+            for radio in radios_with_fcc:
+                should_skip, _ = stale_radios.get(radio.id, (False, None))
+                if should_skip:
+                    continue
+                _stamp_lookup_timestamp(radio, lookup_started_at)
+            skipped_ignored_rule_part += 1
+            logger.info(
+                "FCC ingest skipped record source=fcc_api query=%s "
+                "fcc_id=%s reason=ignored_rule_part "
+                "rule_parts=%s",
+                fcc_id_query,
+                fcc_id,
+                rule_parts_for_check,
+            )
+            continue
+
+        # Allowlist passed for this record — now ensure brand and
+        # manufacturer exist in the database.  Deferred until here
+        # to avoid creating orphaned Brand/Manufacturer rows for
+        # grantees whose FCC records never match the allowlist.
+        if auth_mfr is None:
+            auth_brand, auth_mfr = _ensure_grantee_brand_and_manufacturer(
+                grantee_code,
+                raw_brand_name,
+            )
+            brand_cache[brand_cache_key] = (auth_brand, auth_mfr)
 
         oe_summary = _extract_original_equipment_summary(res, sec_metadata)
 
@@ -4296,18 +5463,21 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
 
                 derived_grant_date = oe_summary.get('grant_date')
                 if derived_grant_date and radio.grant_date != derived_grant_date:
-                    radio.grant_date = derived_grant_date
-                    has_changes = True
+                    if not preserve_existing or not radio.grant_date:
+                        radio.grant_date = derived_grant_date
+                        has_changes = True
 
                 derived_intro_year = oe_summary.get('intro_year')
                 if derived_intro_year and not radio.grant_date:
-                    radio.grant_date = date(derived_intro_year, 1, 1)
-                    has_changes = True
+                    if not preserve_existing or not radio.grant_date:
+                        radio.grant_date = date(derived_intro_year, 1, 1)
+                        has_changes = True
 
                 derived_freq_bands_tx = oe_summary.get('freq_bands_tx', '')
                 if derived_freq_bands_tx and radio.freq_bands_tx != derived_freq_bands_tx:
-                    radio.freq_bands_tx = derived_freq_bands_tx
-                    has_changes = True
+                    if not preserve_existing or not radio.freq_bands_tx:
+                        radio.freq_bands_tx = derived_freq_bands_tx
+                        has_changes = True
 
                 if _noaa_wx and not radio.noaa_wx:
                     radio.noaa_wx = True
@@ -4317,34 +5487,49 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     has_changes = True
 
                 if brand_val and radio.brand != brand_val:
-                    radio_brand_key = _normalize_brand_identity(radio.brand)
-                    raw_brand_key = _normalize_brand_identity(raw_brand_name)
-                    if not radio_brand_key or radio_brand_key == raw_brand_key:
-                        radio.brand = brand_val
-                        has_changes = True
+                    if not preserve_existing:
+                        radio_brand_key = _normalize_brand_identity(radio.brand)
+                        raw_brand_key = _normalize_brand_identity(raw_brand_name)
+                        if not radio_brand_key or radio_brand_key == raw_brand_key:
+                            radio.brand = brand_val
+                            has_changes = True
 
                 if auth_mfr and radio.manufacturer_id != auth_mfr.id:
-                    radio.manufacturer = auth_mfr
-                    has_changes = True
+                    if not preserve_existing or not radio.manufacturer_id:
+                        radio.manufacturer = auth_mfr
+                        has_changes = True
 
                 if has_changes:
                     radio.last_fccid_lookup_at = lookup_started_at
+                    radio.allowlist_terms = sorted(set(
+                        (radio.allowlist_terms or []) + stored_terms,
+                    ))
                     radio.save()
                     count_updated += 1
                     logger.info(
                         (
                             'FCC ingest update source=fcc_api query=%s action=update_by_fcc_id'
                             ' radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s'
-                            ' grant_date=%s freq_bands_tx=%s is_whitelabel=%s',
+                            ' grant_date=%s freq_bands_tx=%s is_whitelabel=%s'
+                            ' allowlist_terms=%s',
                             fcc_id_query, radio.id, radio.brand, radio.model,
                             fcc_id, validation.get('status', ''),
                             radio.grant_date, radio.freq_bands_tx, radio.is_a_whitelabel,
+                            radio.allowlist_terms,
                         )
                     )
                 else:
                     _stamp_lookup_timestamp(radio, lookup_started_at)
+                    if stored_terms:
+                        Radio.objects.filter(pk=radio.pk).update(
+                            allowlist_terms=sorted(set(
+                                (radio.allowlist_terms or []) + stored_terms,
+                            )),
+                        )
                 attached_reports += _attach_test_reports_to_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
                 synced_oet_docs += _sync_oet_documents_for_radio(radio, fcc_id, sec_metadata, force_reload=force_reload)
+                # Sync RadioCertification records with per-grant detail
+                _sync_radio_certifications(radio, fcc_id, sec_metadata)
                 # Auto-assign service types from FCC API rule_parts
                 api_rule_parts = sec_metadata.get('rule_parts', [])
                 if api_rule_parts:
@@ -4389,15 +5574,18 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
 
                 derived_grant_date = oe_summary.get('grant_date')
                 if derived_grant_date and existing_radio.grant_date != derived_grant_date:
-                    existing_radio.grant_date = derived_grant_date
+                    if not preserve_existing or not existing_radio.grant_date:
+                        existing_radio.grant_date = derived_grant_date
 
                 derived_intro_year = oe_summary.get('intro_year')
                 if derived_intro_year and not existing_radio.grant_date:
-                    existing_radio.grant_date = date(derived_intro_year, 1, 1)
+                    if not preserve_existing or not existing_radio.grant_date:
+                        existing_radio.grant_date = date(derived_intro_year, 1, 1)
 
                 derived_freq_bands_tx = oe_summary.get('freq_bands_tx', '')
                 if derived_freq_bands_tx and existing_radio.freq_bands_tx != derived_freq_bands_tx:
-                    existing_radio.freq_bands_tx = derived_freq_bands_tx
+                    if not preserve_existing or not existing_radio.freq_bands_tx:
+                        existing_radio.freq_bands_tx = derived_freq_bands_tx
 
                 if _noaa_wx and not existing_radio.noaa_wx:
                     existing_radio.noaa_wx = True
@@ -4405,15 +5593,20 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     existing_radio.bluetooth = True
 
                 if brand_val and existing_radio.brand != brand_val:
-                    radio_brand_key = _normalize_brand_identity(existing_radio.brand)
-                    raw_brand_key = _normalize_brand_identity(raw_brand_name)
-                    if not radio_brand_key or radio_brand_key == raw_brand_key:
-                        existing_radio.brand = brand_val
+                    if not preserve_existing:
+                        radio_brand_key = _normalize_brand_identity(existing_radio.brand)
+                        raw_brand_key = _normalize_brand_identity(raw_brand_name)
+                        if not radio_brand_key or radio_brand_key == raw_brand_key:
+                            existing_radio.brand = brand_val
 
                 if auth_mfr and existing_radio.manufacturer_id != auth_mfr.id:
-                    existing_radio.manufacturer = auth_mfr
+                    if not preserve_existing or not existing_radio.manufacturer_id:
+                        existing_radio.manufacturer = auth_mfr
 
                 existing_radio.last_fccid_lookup_at = lookup_started_at
+                existing_radio.allowlist_terms = sorted(set(
+                    (existing_radio.allowlist_terms or []) + stored_terms,
+                ))
                 existing_radio.save()
                 count_updated += 1
                 logger.info(
@@ -4426,6 +5619,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 )
                 attached_reports += _attach_test_reports_to_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
                 synced_oet_docs += _sync_oet_documents_for_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
+                _sync_radio_certifications(existing_radio, fcc_id, sec_metadata)
                 _assign_service_types_from_rule_parts(
                     existing_radio, sec_metadata.get('rule_parts', []),
                 )
@@ -4443,6 +5637,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     noaa_wx=_noaa_wx,
                     bluetooth=_bt,
                     last_fccid_lookup_at=lookup_started_at,
+                    allowlist_terms=stored_terms,
                 )
                 if is_change_in_id:
                     logger.info(
@@ -4463,6 +5658,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 )
                 attached_reports += _attach_test_reports_to_radio(created_radio, fcc_id, sec_metadata, force_reload=force_reload)
                 synced_oet_docs += _sync_oet_documents_for_radio(created_radio, fcc_id, sec_metadata, force_reload=force_reload)
+                _sync_radio_certifications(created_radio, fcc_id, sec_metadata)
                 _assign_service_types_from_rule_parts(
                     created_radio, sec_metadata.get('rule_parts', []),
                 )
@@ -4495,7 +5691,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         messages.append(f"Synced {synced_oet_docs} OET exhibit documents.")
     messages.append(f"Successfully processed {len(records)} records for {fcc_id_query}.")
     logger.info(
-        "FCC sync completed query=%s added=%s updated=%s exact_grantee=%s skipped_non_exact=%s skipped_non_radio=%s skipped_denylist=%s skipped_stale_lookup=%s attached_test_reports=%s synced_oet_documents=%s",
+        "FCC sync completed query=%s added=%s updated=%s exact_grantee=%s skipped_non_exact=%s skipped_non_radio=%s skipped_denylist=%s skipped_ignored_rule_part=%s skipped_stale_lookup=%s attached_test_reports=%s synced_oet_documents=%s",
         fcc_id_query,
         count_added,
         count_updated,
@@ -4503,6 +5699,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         skipped_non_exact,
         skipped_non_radio,
         skipped_denylist,
+        skipped_ignored_rule_part,
         skipped_stale,
         attached_reports,
         synced_oet_docs,

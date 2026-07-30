@@ -162,6 +162,28 @@
                             </div>
                         </div>
                         {% endif %}
+                        {% if radio.allowlist_terms %}
+                        <div class="sm:col-span-2">
+                            <p class="block text-sm font-medium text-gray-700 mb-2">FCC Classifier Tags</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                {% for term in radio.allowlist_terms %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                                    {% if term|lower in '90,95,95a,95b,95d,95e,95j,80,87,97,22,24,74,part 90,part 95,part 95a,part 95b,part 95d,part 95e,part 95j,part 80,part 87,part 97,part 22,part 24,part 74' %}
+                                        bg-purple-100 text-purple-800
+                                    {% elif term|lower in 'gmrs,frs,cb,murs,marine,airband,amateur,ham,vhf,uhf,gmrs/frs,lora/ism,lte/poc,lte' %}
+                                        bg-green-100 text-green-800
+                                    {% elif term == 'RADIO_EMISSION' %}
+                                        bg-blue-100 text-blue-800
+                                    {% elif term == 'TRANSCEIVER' %}
+                                        bg-amber-100 text-amber-800
+                                    {% else %}
+                                        bg-gray-100 text-gray-700
+                                    {% endif %}
+                                ">{{ term }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -193,6 +215,16 @@
                             <p class="block text-sm font-medium text-gray-700">Frequency Bands (TX)</p>
                             <p class="mt-1 text-sm text-gray-900">{{ radio.freq_bands_tx|default:"Not specified" }}</p>
                         </div>
+                        {% if cert_freq_ranges %}
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700">FCC Certified Frequency Range</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {% for lower, upper in cert_freq_ranges %}
+                                    {{ lower|floatformat:3 }} – {{ upper|floatformat:3 }} MHz{% if not forloop.last %}<br>{% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
+                        {% endif %}
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Power (W)</p>
                             <p class="mt-1 text-sm text-gray-900">{{ radio.power_watts|default:"Not specified" }}</p>
@@ -201,12 +233,18 @@
                             <p class="block text-sm font-medium text-gray-700">Harmonic Suppression</p>
                             <p class="mt-1 text-sm text-gray-900">{{ radio.harmonic_suppression|default:"Not specified" }}</p>
                         </div>
-                        {% if radio.rule_parts_summary %}
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Rule Parts</p>
-                            <p class="mt-1 text-sm text-gray-900">{{ radio.rule_parts_summary }}</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {% if cert_rule_parts %}
+                                    {{ cert_rule_parts|join:", " }}
+                                {% elif radio.rule_parts_summary %}
+                                    {{ radio.rule_parts_summary }}
+                                {% else %}
+                                    Not specified
+                                {% endif %}
+                            </p>
                         </div>
-                        {% endif %}
                         {% if radio.emission_designators_summary %}
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Emission Designators</p>

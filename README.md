@@ -47,7 +47,9 @@ It can also enrich radios from FCC sources:
 - Radio service type classification (GMRS, FRS, Amateur, CB, MURS, Commercial,
   Marine, Aviation, PoC) with many-to-many tagging
 - Hardware feature flags (USB-C charging, removable antenna, unlockable,
-  firmware updates)
+  firmware updates, Bluetooth, NOAA Weather Radio)
+- Automated FCC grantee discovery — scans the FCC GenericSearch for new
+  grantee codes not yet in the local database
 
 ## FCC ID Parsing
 
@@ -263,10 +265,10 @@ Validation runs in two stages:
 2. **FCC API query.**  Remaining FCC IDs are checked against the live FCC API.
    Both the original (hyphenated) and compact (no-hyphen) forms are tried.
 
-### Management command
+### Management commands
 
-For offline batch processing, the `find_fcc_id_hyphens` management command
-reads a CSV of not-found FCC IDs and reports which ones can be matched locally:
+**`find_fcc_id_hyphens`** — reads a CSV of not-found FCC IDs and reports
+which can be matched locally by hyphen-stripped comparison:
 
 ```bash
 # Preview matches without deleting
@@ -275,6 +277,30 @@ python manage.py find_fcc_id_hyphens artifacts/imports/nofinds.csv --dry-run
 # Delete matched duplicates
 python manage.py find_fcc_id_hyphens artifacts/imports/nofinds.csv
 ```
+
+**`discover_grantees`** — scans existing radio FCC IDs for unknown
+grantee prefixes, optionally queries the FCC GenericSearch by date
+range, or imports from a saved XML export:
+
+```bash
+# Discover from local radio FCC IDs + FCC GenericSearch (may be blocked)
+python manage.py discover_grantees --days 30 --dry-run
+python manage.py discover_grantees --days 30
+
+# Discover from local radio FCC IDs only (instant)
+python manage.py discover_grantees --dry-run
+python manage.py discover_grantees
+
+# Discover from a saved FCC XML export file (reliable)
+python manage.py discover_grantees --xml-file artifacts/new_fcc_grantees_authorization_search_results.xml --dry-run
+python manage.py discover_grantees --xml-file artifacts/new_fcc_grantees_authorization_search_results.xml
+```
+
+Note: The FCC server frequently blocks automated GenericSearch date-range
+queries with a ``RequestTimeout``.  The ``--xml-file`` option (importing
+from a manually saved FCC XML export) is the most reliable method for
+discovering brand-new grantees.  The HTTP-based date-range query may work
+intermittently depending on FCC server load.
 
 ## Cron / scheduled usage
 

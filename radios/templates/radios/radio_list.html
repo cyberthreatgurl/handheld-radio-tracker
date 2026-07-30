@@ -105,6 +105,9 @@
                         Rebadges/Clones
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Service Type
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <a href="?sort=updated_at&order={% if current_sort == 'updated_at' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
                             Updated
                             {% if current_sort == 'updated_at' %}
@@ -164,6 +167,29 @@
                     <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">
                         {{ radio.rebadges_clones|default:"-" }}
                     </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        {% if radio.allowlist_terms %}
+                        <div class="flex flex-wrap gap-1">
+                            {% for term in radio.allowlist_terms %}
+                            {% if term in '90,95,95A,95B,95D,95E,95J,80,87,97,GMRS,FRS,CB,MURS,Marine,Airband,Amateur,HAM,VHF,UHF,GMRS/FRS,LoRa/ISM,LTE/PoC,LTE,RADIO_EMISSION,TRANSCEIVER' %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
+                                {% if term == 'GMRS' or term == '95E' or term == '95A' %}bg-green-100 text-green-800
+                                {% elif term == 'FRS' or term == '95B' %}bg-teal-100 text-teal-800
+                                {% elif term == 'CB' or term == '95D' %}bg-yellow-100 text-yellow-800
+                                {% elif term == 'MURS' or term == '95J' %}bg-orange-100 text-orange-800
+                                {% elif term == 'Amateur' or term == 'HAM' or term == '97' %}bg-red-100 text-red-800
+                                {% elif term == 'Marine' or term == '80' %}bg-blue-100 text-blue-800
+                                {% elif term == 'Airband' or term == '87' %}bg-sky-100 text-sky-800
+                                {% elif term == '90' %}bg-purple-100 text-purple-800
+                                {% else %}bg-gray-100 text-gray-700{% endif %}
+                            ">{{ term }}</span>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-gray-400">-</span>
+                        {% endif %}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {{ radio.updated_at|date:"M d, Y" }}
                     </td>
@@ -175,7 +201,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="10" class="px-6 py-12 text-center text-gray-500">
+                    <td colspan="11" class="px-6 py-12 text-center text-gray-500">
                         No radios found. <a href="{% url 'radio_add' %}" class="text-indigo-600 hover:text-indigo-900">Add your first radio</a>
                     </td>
                 </tr>

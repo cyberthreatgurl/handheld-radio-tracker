@@ -101,7 +101,7 @@ class RadioForm(forms.ModelForm):
             'usb_c_charging', 'removable_antenna', 'unlockable', 'firmware_updates',
             'bluetooth', 'noaa_wx',
             'cost_approx', 'rebadges_clones', 'white_label_vendors', 'website', 'review_url',
-            'youtube_video_urla', 'notes'
+            'youtube_video_urla', 'notes', 'allowlist_terms',
         ]
         widgets = {
             'is_a_whitelabel': forms.CheckboxInput(attrs={

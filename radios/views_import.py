@@ -4,6 +4,7 @@ import logging
 from .forms import ImportGranteeXMLForm
 from .models import Radio, Brand, IgnoredGrantee
 from .fcc_validation import validate_fcc_brand_assignment
+from .fcc_utils import _classify_fcc_device
 import xml.etree.ElementTree as ET
 import os
 import re
@@ -12,6 +13,129 @@ import base64
 
 RESULTS_XML = os.path.join('data', 'results.xml')
 logger = logging.getLogger(__name__)
+
+# Known two-way radio frequency bands (MHz).  Used as a fallback when
+# the XML export lacks rule_parts and emission_designator fields.
+_RADIO_FREQ_BANDS = [
+    (26.0, 28.0),       # HF CB
+    (118.0, 137.0),     # Aviation VHF
+    (136.0, 174.0),     # VHF LMR / Marine / MURS
+    (400.0, 520.0),     # UHF LMR / GMRS / FRS
+    (700.0, 800.0),     # LTE / PoC radios
+    (806.0, 941.0),     # 800/900 MHz LMR
+    (902.0, 928.0),     # 900 MHz ISM / LoRa
+]
+
+# Keywords that indicate a non-radio device operating in radio-frequency
+# bands — wireless microphones (Part 74H), in-ear monitors (Part 74H),
+# audio transmitters, etc.  Matched case-insensitively against applicant
+# name, brand name, and application purpose text from the XML row.
+_NON_RADIO_DEVICE_KEYWORDS = [
+    'WIRELESS MICROPHONE', 'WIRELESS MIC',
+    'HANDHELD MICROPHONE', 'HANDHELD MIC',
+    'BODY-PACK', 'BODYPACK', 'BODY PACK',
+    'IN-EAR MONITOR', 'IN EAR MONITOR', 'IEM',
+    'AUDIO TRANSMITTER', 'AUDIO RECEIVER',
+    'INTERCOM BELTPACK', 'INTERCOM HEADSET',
+    'WIRELESS AUDIO', 'WIRELESS GUITAR',
+    'STUDIO MONITOR', 'MONITORING SYSTEM',
+    'PROFESSIONAL MICROPHONE', 'PROFESSIONAL AUDIO',
+    'WIRELESS TOUR GUIDE', 'TOUR GUIDE SYSTEM',
+    'ASSISTIVE LISTENING', 'HEARING ASSISTANCE',
+    'SIMULTANEOUS INTERPRETATION',
+    'CONFERENCE MICROPHONE', 'CONFERENCE SYSTEM',
+    'UHF MICROPHONE', 'VHF MICROPHONE',
+    'WIRELESS EARPHONE', 'WIRELESS HEADPHONE',
+    'STAGE MONITOR', 'WIRELESS STAGE',
+    'LECTERN MICROPHONE', 'GOOSENECK MICROPHONE',
+    'LAVALIER MICROPHONE', 'LAVALIER MIC',
+    'LPAS DEVICE',               # Licensed Low Power Auxiliary Station (Part 74H)
+    'DIGITAL HYBRID WIRELESS',   # Lectrosonics-style descriptions
+]
+
+# Known wireless microphone / professional audio manufacturers whose
+# names don't contain obvious audio keywords.  Matched case-insensitively
+# against applicant_name and brand fields from the XML.
+_NON_RADIO_MANUFACTURERS = [
+    'LECTROSONICS',
+    'SENNHEISER',
+    'SHURE',
+    'AUDIO-TECHNICA', 'AUDIO TECHNICA',
+    'AKG ACOUSTICS', 'AKG',
+    'BEYERDYNAMIC',
+    'COUNTRYMAN',
+    'DPA MICROPHONES',
+    'ELECTRO-VOICE', 'ELECTRO VOICE',
+    'LINE 6',
+    'MI PRO', 'MIPRO',
+    'NEUMANN',
+    'RANE',
+    'SABINE',
+    'SAMSON TECHNOLOGIES', 'SAMSON',
+    'SONY PROFESSIONAL',
+    'TELEX',
+    'WISYCOM',
+    'ZAXCOM',
+    'CLEAR-COM', 'CLEAR COM',
+    'RIEDEL',
+    'ALTEC LANSING',
+    'BEHRINGER',
+    'BOSE',
+    'DBX',
+    'KLARK TEKNIK',
+    'MACKIE',
+    'MIDAS',
+    'PRESONUS',
+    'QSC',
+    'ROLAND',
+    'SOUNDCRAFT',
+    'STUDER',
+    'TASCAM',
+    'YAMAHA PRO AUDIO',
+    'MC2 AUDIO',
+]
+
+
+def _is_likely_non_radio_device(data):
+    """Return True if the XML row describes a non-radio audio device.
+
+    Wireless microphones (Part 74H), IEMs, and similar audio gear
+    operate in UHF bands that overlap with two-way radio spectrum.
+    Without rule_parts data in the XML, we identify these by
+    manufacturer names, brand names, and application purpose text
+    that contain audio/microphone keywords.
+    """
+    text_parts = [
+        (data.get('applicant_name', '') or '').upper(),
+        (data.get('brand', '') or '').upper(),
+        (data.get('application_purpose', '') or '').upper(),
+    ]
+    combined = ' | '.join(text_parts)
+    for keyword in _NON_RADIO_DEVICE_KEYWORDS:
+        if keyword in combined:
+            return True
+    # Check known microphone/audio manufacturer names
+    for mfr in _NON_RADIO_MANUFACTURERS:
+        if mfr in combined:
+            return True
+    return False
+
+
+def _is_radio_frequency_range(lower_str, upper_str):
+    """Return True if the frequency range overlaps known radio bands."""
+    try:
+        lower = float(lower_str or 0)
+        upper = float(upper_str or 0)
+    except (ValueError, TypeError):
+        return False
+    if lower <= 0 or upper <= 0:
+        return False
+    if lower > upper:
+        lower, upper = upper, lower
+    for band_low, band_high in _RADIO_FREQ_BANDS:
+        if lower <= band_high and upper >= band_low:
+            return True
+    return False
 
 
 def _actor_label(request):
@@ -173,6 +297,63 @@ def import_grantee_radios(request):
 
                 resolved_brand = validation.get('resolved_brand_name') or brand
 
+                # ── Classifier check: skip non-radio devices ──
+                # Build secondary metadata from the XML row's frequency data
+                # so the FCC-field-based classifier can check rule parts,
+                # frequency ranges, and emission designators.
+                lower = data.get('lower_freq_mhz', '').strip()
+                upper = data.get('upper_freq_mhz', '').strip()
+                oe_rows = []
+                if lower and upper:
+                    oe_rows.append({
+                        'grant_date': data.get('grant_date', ''),
+                        'lower_freq_mhz': lower,
+                        'upper_freq_mhz': upper,
+                        'power_output': data.get('power_output', ''),
+                        'emission_designator': data.get('emission_designator', ''),
+                    })
+                sec_meta = {
+                    'text_blob': '',
+                    'rule_parts': [],
+                    'original_equipment_rows': oe_rows,
+                }
+                primary = {
+                    'FCCId': fcc_id,
+                    'grantee': brand,
+                    'applicationPurpose': data.get('application_purpose', ''),
+                }
+                is_radio, _classifier_tags = _classify_fcc_device(primary, sec_meta)
+
+                # Fallback: the XML export format omits rule_parts and
+                # emission_designator, so the FCC-field-based classifier
+                # may reject valid radios.  Check frequency ranges against
+                # known two-way radio bands as a secondary signal.
+                if not is_radio and lower and upper:
+                    is_radio = _is_radio_frequency_range(lower, upper)
+
+                # Denylist: wireless microphones, IEMs, and other
+                # non-radio audio devices share UHF spectrum with two-way
+                # radios (Part 74H).  Without rule_parts in the XML,
+                # frequency alone cannot distinguish them.  Check
+                # applicant name and purpose for audio keywords.
+                if is_radio and _is_likely_non_radio_device(data):
+                    skipped_count += 1
+                    logger.info(
+                        "XML import denylist rejected non-radio audio "
+                        "device fcc_id=%s brand=%s model=%s",
+                        fcc_id, brand, model,
+                    )
+                    continue
+
+                if not is_radio:
+                    skipped_count += 1
+                    logger.info(
+                        "XML import classifier rejected non-radio "
+                        "fcc_id=%s brand=%s model=%s",
+                        fcc_id, brand, model,
+                    )
+                    continue
+
                 if overwrite:
                     radio_obj, created = Radio.objects.update_or_create(
                         brand=resolved_brand, model=model,
@@ -302,6 +483,26 @@ def import_grantee_radios(request):
                         'grantee_code': grantee_code,
                         'model': model,
                         'country': grantee_country,
+                        # XML row fields for classifier and denylist
+                        'applicant_name': row.findtext(
+                            'applicant_name', '',
+                        ).strip(),
+                        'application_purpose': row.findtext(
+                            'application_purpose', '',
+                        ).strip(),
+                        'grant_date': row.findtext('grant_date', '').strip(),
+                        'lower_freq_mhz': row.findtext(
+                            'lower_freq_mhz', '',
+                        ).strip(),
+                        'upper_freq_mhz': row.findtext(
+                            'upper_freq_mhz', '',
+                        ).strip(),
+                        'power_output': row.findtext(
+                            'power_output', '',
+                        ).strip(),
+                        'emission_designator': row.findtext(
+                            'emission_designator', '',
+                        ).strip(),
                     }
             
             # Show preview with radio data stored as base64-encoded JSON for confirmation

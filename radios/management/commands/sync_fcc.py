@@ -1,5 +1,13 @@
+import os
 import time
+
+# Playwright's sync API internally creates an asyncio event loop, which
+# causes Django to raise SynchronousOnlyOperation when ORM calls happen
+# inside the Playwright context (e.g. after browser-based FCC fallback).
+os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
+
 from django.core.management.base import BaseCommand
+from django.db import models
 from django.utils import timezone
 from radios.models import Radio, Brand, FCCSyncState, IgnoredGrantee
 from radios.fcc_utils import fetch_and_sync_fcc_id
@@ -70,15 +78,49 @@ class Command(BaseCommand):
 
         elif all_existing:
             self.stdout.write("Fetching updates for all existing FCC IDs in Database...")
-            fcc_ids = Radio.objects.exclude(fcc_id__isnull=True).exclude(fcc_id__exact='').values_list('fcc_id', flat=True).distinct()
-            self.stdout.write(f"Found {fcc_ids.count()} distinct FCC IDs to process.")
+            fcc_ids = Radio.objects.exclude(fcc_id__isnull=True).exclude(
+                fcc_id__exact='',
+            ).values_list('fcc_id', flat=True).distinct()
+            self.stdout.write(
+                f"Found {fcc_ids.count()} distinct FCC IDs to process.",
+            )
 
+            skipped = 0
+            processed = 0
             for index, fid in enumerate(fcc_ids, 1):
-                self.stdout.write(f"[{index}/{fcc_ids.count()}] Processing {fid}...")
+                # Skip if all radios with this FCC ID already have a grant
+                # date and were synced before — no new data to fetch.
+                has_unsynced = Radio.objects.filter(
+                    fcc_id__iexact=fid,
+                ).filter(
+                    models.Q(grant_date__isnull=True)
+                    | models.Q(last_fccid_lookup_at__isnull=True),
+                ).exists()
+                if not has_unsynced:
+                    skipped += 1
+                    self.stdout.write(
+                        f"[{index}/{fcc_ids.count()}] SKIP {fid} "
+                        f"(already synced, grant date present)",
+                    )
+                    continue
+
+                processed += 1
+                self.stdout.write(
+                    f"[{index}/{fcc_ids.count()}] Processing {fid}...",
+                )
                 added, updated, messages = fetch_and_sync_fcc_id(fid)
                 if not added and not updated and len(messages) <= 1:
-                    self.stdout.write(self.style.WARNING(f"No records returned for {fid}"))
+                    self.stdout.write(
+                        self.style.WARNING(f"No records returned for {fid}"),
+                    )
                 time.sleep(0.5)
+
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Finished --all-existing: {processed} processed, "
+                    f"{skipped} skipped (already synced)"
+                ),
+            )
 
         elif all_grantees:
             sync_state = FCCSyncState.get_instance()

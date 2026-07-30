@@ -337,6 +337,11 @@ class Radio(models.Model):
         max_length=50, blank=True,
         help_text="FCC ID (e.g., 2AJGM-UV5R)",
     )
+    allowlist_terms = models.JSONField(
+        default=list, blank=True, null=True,
+        help_text="Allowlist terms that matched this radio's FCC record "
+                  "during ingestion (searchable for radio type filtering)",
+    )
     last_fccid_lookup_at = models.DateTimeField(
         null=True,
         blank=True,

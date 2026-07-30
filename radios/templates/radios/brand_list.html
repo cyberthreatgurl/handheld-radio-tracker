@@ -102,6 +102,14 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 White Label Vendors
                             </th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <a href="?sort=radio_count&order={% if current_sort == 'radio_count' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}" class="flex items-center justify-center hover:text-gray-700">
+                                    Radios
+                                    {% if current_sort == 'radio_count' %}
+                                        <span class="ml-1">{% if current_order == 'asc' %}↑{% else %}↓{% endif %}</span>
+                                    {% endif %}
+                                </a>
+                            </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 <a href="?sort=last_modified_date&order={% if current_sort == 'last_modified_date' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}" class="flex items-center hover:text-gray-700">
                                     Last Modified
@@ -144,6 +152,15 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ brand.white_label_vendors|default:"-" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                {% if brand.radio_count %}
+                                <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    {{ brand.radio_count }}
+                                </span>
+                                {% else %}
+                                <span class="text-gray-400">0</span>
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ brand.last_modified_date|date:"M d, Y"|default:"-" }}

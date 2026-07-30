@@ -210,7 +210,12 @@ def sync_fcc_view(request):
 
 
 def sync_radio_fcc_view(request, pk):
-    """View to handle fetching and syncing FCC data for a specific radio."""
+    """Fetch and sync FCC data for a specific radio.
+
+    Always performs a full refresh of OET documents and test reports
+    but preserves existing radio field values (freq_bands_tx, power,
+    grant_date, etc.) — only fills in fields that are currently blank.
+    """
     import os
     radio = get_object_or_404(Radio, pk=pk)
 
@@ -228,8 +233,10 @@ def sync_radio_fcc_view(request, pk):
         )
         try:
             added, updated, _processing_msgs = fetch_and_sync_fcc_id(
-                radio.fcc_id, force_reload=force_reload,
+                radio.fcc_id,
+                force_reload=force_reload,
                 honor_skip_lists=False,
+                preserve_existing=True,
             )
             logger.info(
                 "User action sync_radio_fcc result actor=%s radio_pk=%s "
@@ -414,6 +421,35 @@ def _run_sync_all_grantees(start_date, end_date, grantee_codes):
                 "Grantee discovery complete discovered=%s total_unknown=%s",
                 discovered, total_unknown,
             )
+
+        # Phase 3: HTTP-based FCC GenericSearch for brand-new grantees.
+        # Uses curl_cffi (Chrome impersonation) to POST date range to the
+        # FCC GenericSearch form and fetch the XML export.  Falls back to
+        # HTML table parsing if XML is not available.
+        from .fcc_utils import discover_new_grantees_from_fcc  # pylint: disable=import-outside-toplevel
+        new_grantees = discover_new_grantees_from_fcc(start_date, end_date)
+        if new_grantees:
+            logger.info(
+                "Grantee FCC discovery found=%d codes=%s",
+                len(new_grantees), sorted(new_grantees)[:20],
+            )
+            for code in sorted(new_grantees):
+                try:
+                    added, updated, _msgs = fetch_and_sync_fcc_id(
+                        code,
+                        start_date=start_date,
+                        end_date=end_date,
+                    )
+                    if added or updated:
+                        logger.info(
+                            "Grantee FCC discovery synced grantee=%s "
+                            "added=%s updated=%s",
+                            code, added, updated,
+                        )
+                except Exception:
+                    logger.exception(
+                        "Grantee FCC discovery sync failed grantee=%s", code,
+                    )
 
         sync_state = FCCSyncState.get_instance()
         sync_state.last_grantee_sync_at = end_date
@@ -704,6 +740,21 @@ class RadioDetailView(DetailView):
         context['certifications'] = radio.certifications.all()
         context['service_types'] = radio.service_types.all()
 
+        # Aggregate frequency ranges and rule parts from certifications
+        freq_ranges = set()
+        rule_parts_set = set()
+        for cert in radio.certifications.all():
+            lower = cert.freq_range_lower_mhz
+            upper = cert.freq_range_upper_mhz
+            if lower is not None and upper is not None:
+                freq_ranges.add((float(lower), float(upper)))
+            for part in (cert.rule_parts or '').replace(';', ',').split(','):
+                part = part.strip()
+                if part:
+                    rule_parts_set.add(part)
+        context['cert_freq_ranges'] = sorted(freq_ranges)
+        context['cert_rule_parts'] = sorted(rule_parts_set)
+
         return context
 
 
@@ -922,10 +973,32 @@ class BrandListView(ListView):
         'country': 'country',
         'parent_brand': 'parent_brand__name',
         'last_modified_date': 'last_modified_date',
+        'radio_count': 'radio_count',
     }
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('parent_brand')
+
+        # ── Annotate with radio count ──
+        # Radio.brand is a CharField, not a FK, so we use a correlated
+        # subquery via RawSQL.  A Subquery with .values('brand') would
+        # group by distinct brand values and return multiple rows when
+        # the OR filter matches via name, alias, and full_name.
+        from django.db.models.expressions import RawSQL
+        queryset = queryset.annotate(
+            radio_count=RawSQL(
+                """
+                (SELECT COUNT(*) FROM radios_radio
+                 WHERE UPPER(radios_radio.brand) IN (
+                     UPPER(radios_brand.name),
+                     UPPER(radios_brand.alias),
+                     UPPER(radios_brand.full_name)
+                 ))
+                """,
+                (),
+            ),
+        )
+
         query = self.request.GET.get('query')
         if query:
             queryset = queryset.filter(
@@ -1482,6 +1555,37 @@ def dashboard_view(request):
             entry['latest_update'] = row_latest
             entry['brand'] = brand_name
 
+    # ── Exclude brands that have been deleted from the Brand table ──
+    # Build a set of normalized keys for every active Brand record so we
+    # can filter out dashboard entries whose Brand was deleted (radios
+    # may still reference the old brand name via the CharField).
+    active_brand_keys: set[str] = set()
+    for b in Brand.objects.only('name', 'alias', 'full_name'):
+        for val in (b.name, b.alias, b.full_name):
+            key = _normalize_brand_key(val)
+            if key:
+                active_brand_keys.add(key)
+
+    filtered_brands: dict[str, dict] = {}
+    excluded_count = 0
+    for key, entry in merged_brands.items():
+        if key in active_brand_keys:
+            filtered_brands[key] = entry
+        else:
+            excluded_count += 1
+            logger.info(
+                "Dashboard brand filter excluded deleted brand key=%s "
+                "display=%s radio_count=%s",
+                key, entry.get('brand', ''), entry.get('count', 0),
+            )
+
+    if excluded_count:
+        logger.info(
+            "Dashboard brand filter excluded %d deleted brands",
+            excluded_count,
+        )
+    merged_brands = filtered_brands
+
     top_brands = sorted(
         merged_brands.values(),
         key=lambda item: (
@@ -1571,13 +1675,19 @@ def dashboard_view(request):
             .filter(created_at__gte=cutoff_datetime)
             .order_by('-created_at')[:50]
         )
+    # ── Exclude radios whose brand has been deleted ──
+    recent_radios = [
+        r for r in recent_radios
+        if _normalize_brand_key(r.brand) in active_brand_keys
+    ]
     for radio in recent_radios:
         radio.display_brand = _preferred_brand_display_name(radio, alias_map)
 
     # Deduplicate by PDF filename in the database: keep the most-recent manual per unique PDF.
+    # Exclude orphaned manuals (SET_NULL on Radio FK leaves zombie records after deletion).
     latest_manual_ids = (
         RadioManual.objects
-        .filter(doc_type=RadioManual.DocType.MANUAL)
+        .filter(doc_type=RadioManual.DocType.MANUAL, radio__isnull=False)
         .exclude(manual_pdf='')
         .values('manual_pdf')
         .annotate(latest_id=Max('id'))
