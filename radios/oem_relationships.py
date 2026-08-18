@@ -1,3 +1,5 @@
+# pylint: disable=no-member
+# no-member: Django ORM metaclass-based managers are undetectable by pylint
 import logging
 import re
 
@@ -39,7 +41,13 @@ def apply_oem_mapping_for_brand(child_brand):
     oem_brand = child_brand.parent_brand
     code = (child_brand.grantee_code or '').strip().upper()
 
-    query = Q(manufacturer=child_brand)
+    # Resolve the Manufacturer record for the parent OEM brand via its M2M,
+    # falling back to the child brand's linked manufacturer.
+    oem_manufacturer = oem_brand.manufacturers.first()
+    if oem_manufacturer is None:
+        oem_manufacturer = child_brand.manufacturers.first()
+
+    query = Q(manufacturer__brands=child_brand)
     if code:
         query |= Q(fcc_id__istartswith=code)
 
@@ -50,8 +58,11 @@ def apply_oem_mapping_for_brand(child_brand):
     for radio in radios.iterator():
         changed_fields = []
 
-        if radio.manufacturer_id != oem_brand.id:
-            radio.manufacturer = oem_brand
+        if (
+            oem_manufacturer is not None
+            and radio.manufacturer_id != oem_manufacturer.id
+        ):
+            radio.manufacturer = oem_manufacturer
             changed_fields.append('manufacturer')
 
         if _is_white_label_for_oem(radio.brand, oem_brand) and not radio.is_a_whitelabel:

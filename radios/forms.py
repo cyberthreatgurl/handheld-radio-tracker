@@ -94,7 +94,7 @@ class RadioForm(forms.ModelForm):
         fields = [
             'brand', 'model', 'is_a_whitelabel', 'manufacturer', 'radio_type',
             'service_types', 'fcc_id',
-            'freq_bands_tx', 'power_watts',
+            'power_watts',
             'satellite_tracking', 'harmonic_suppression',
             'gps', 'aprs', 'air_band', 'dmr',
             'display', 'battery_mah',
@@ -153,10 +153,6 @@ class RadioForm(forms.ModelForm):
             'fcc_id': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., 2AJGM-UV5R'
-            }),
-            'freq_bands_tx': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'e.g., VHF, UHF, 220'
             }),
             'power_watts': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',

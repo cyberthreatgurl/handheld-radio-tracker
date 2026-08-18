@@ -171,7 +171,7 @@
                         {% if radio.allowlist_terms %}
                         <div class="flex flex-wrap gap-1">
                             {% for term in radio.allowlist_terms %}
-                            {% if term in '90,95,95A,95B,95D,95E,95J,80,87,97,GMRS,FRS,CB,MURS,Marine,Airband,Amateur,HAM,VHF,UHF,GMRS/FRS,LoRa/ISM,LTE/PoC,LTE,RADIO_EMISSION,TRANSCEIVER' %}
+                            {% if term in '9,90,95,95A,95B,95D,95E,95J,80,87,97,GMRS,FRS,CB,MURS,Marine,Airband,Amateur,HAM,VHF,UHF,GMRS/FRS,LoRa/ISM,LTE/PoC,LTE,RADIO_EMISSION,TRANSCEIVER' %}
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
                                 {% if term == 'GMRS' or term == '95E' or term == '95A' %}bg-green-100 text-green-800
                                 {% elif term == 'FRS' or term == '95B' %}bg-teal-100 text-teal-800

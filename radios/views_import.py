@@ -49,50 +49,6 @@ _NON_RADIO_DEVICE_KEYWORDS = [
     'STAGE MONITOR', 'WIRELESS STAGE',
     'LECTERN MICROPHONE', 'GOOSENECK MICROPHONE',
     'LAVALIER MICROPHONE', 'LAVALIER MIC',
-    'LPAS DEVICE',               # Licensed Low Power Auxiliary Station (Part 74H)
-    'DIGITAL HYBRID WIRELESS',   # Lectrosonics-style descriptions
-]
-
-# Known wireless microphone / professional audio manufacturers whose
-# names don't contain obvious audio keywords.  Matched case-insensitively
-# against applicant_name and brand fields from the XML.
-_NON_RADIO_MANUFACTURERS = [
-    'LECTROSONICS',
-    'SENNHEISER',
-    'SHURE',
-    'AUDIO-TECHNICA', 'AUDIO TECHNICA',
-    'AKG ACOUSTICS', 'AKG',
-    'BEYERDYNAMIC',
-    'COUNTRYMAN',
-    'DPA MICROPHONES',
-    'ELECTRO-VOICE', 'ELECTRO VOICE',
-    'LINE 6',
-    'MI PRO', 'MIPRO',
-    'NEUMANN',
-    'RANE',
-    'SABINE',
-    'SAMSON TECHNOLOGIES', 'SAMSON',
-    'SONY PROFESSIONAL',
-    'TELEX',
-    'WISYCOM',
-    'ZAXCOM',
-    'CLEAR-COM', 'CLEAR COM',
-    'RIEDEL',
-    'ALTEC LANSING',
-    'BEHRINGER',
-    'BOSE',
-    'DBX',
-    'KLARK TEKNIK',
-    'MACKIE',
-    'MIDAS',
-    'PRESONUS',
-    'QSC',
-    'ROLAND',
-    'SOUNDCRAFT',
-    'STUDER',
-    'TASCAM',
-    'YAMAHA PRO AUDIO',
-    'MC2 AUDIO',
 ]
 
 
@@ -113,10 +69,6 @@ def _is_likely_non_radio_device(data):
     combined = ' | '.join(text_parts)
     for keyword in _NON_RADIO_DEVICE_KEYWORDS:
         if keyword in combined:
-            return True
-    # Check known microphone/audio manufacturer names
-    for mfr in _NON_RADIO_MANUFACTURERS:
-        if mfr in combined:
             return True
     return False
 
@@ -331,20 +283,6 @@ def import_grantee_radios(request):
                 if not is_radio and lower and upper:
                     is_radio = _is_radio_frequency_range(lower, upper)
 
-                # Denylist: wireless microphones, IEMs, and other
-                # non-radio audio devices share UHF spectrum with two-way
-                # radios (Part 74H).  Without rule_parts in the XML,
-                # frequency alone cannot distinguish them.  Check
-                # applicant name and purpose for audio keywords.
-                if is_radio and _is_likely_non_radio_device(data):
-                    skipped_count += 1
-                    logger.info(
-                        "XML import denylist rejected non-radio audio "
-                        "device fcc_id=%s brand=%s model=%s",
-                        fcc_id, brand, model,
-                    )
-                    continue
-
                 if not is_radio:
                     skipped_count += 1
                     logger.info(
@@ -483,10 +421,7 @@ def import_grantee_radios(request):
                         'grantee_code': grantee_code,
                         'model': model,
                         'country': grantee_country,
-                        # XML row fields for classifier and denylist
-                        'applicant_name': row.findtext(
-                            'applicant_name', '',
-                        ).strip(),
+                        # FCC technical fields for classifier
                         'application_purpose': row.findtext(
                             'application_purpose', '',
                         ).strip(),

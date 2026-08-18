@@ -31,6 +31,7 @@ from radios.fcc_validation import validate_fcc_brand_assignment
 # Mapping from normalized FCC rule part strings to RadioServiceType names.
 # Keys are the canonical rule_part values stored in RadioServiceType.
 FCC_PART_TO_SERVICE_TYPE = {
+    'Part 9': 'EMS',
     'Part 15B': 'Part 15 Subpart B',
     'Part 15C': 'Part 15 Subpart C',
     'Part 15': 'Part 15 Subpart B',
@@ -126,6 +127,13 @@ _fcc_connection_down = False
 # are skipped immediately — no browser is launched, no 30s waits burned.
 # Resets to False at the start of each new sync.
 _fcc_playwright_down = False
+
+# Cache for Playwright-collected exhibit/TCB links from the last browser
+# page scrape.  Keyed by FCC ID.  Populated by
+# _submit_generic_search_form_via_playwright and consumed by
+# _fetch_secondary_metadata_from_html_fallback so TCB application IDs
+# (from GetTcb731Report.do links) are not lost.
+_pw_exhibit_links_cache: dict[str, list[str]] = {}
 
 # Module-level cache for FCC secondary metadata, avoiding redundant
 # GenericSearchResult.cfm fetches for the same FCC ID within a sync run.
@@ -229,6 +237,7 @@ def _term_matches_text(term, text):
 # Set FCC_RADIO_DENYLIST_TERMS in the environment to override these.
 # Set it to an empty string to disable denylist filtering entirely.
 DEFAULT_RADIO_DENYLIST_TERMS = (
+    # ── Accessories (microphones, chargers, cables, etc.) ──
     "SPEAKER MICROPHONE,REMOTE SPEAKER MIC,REMOTE MICROPHONE,"
     "HAND MICROPHONE,DESK MICROPHONE,PTT MICROPHONE,"
     "BLUETOOTH HEADSET,WIRELESS HEADSET,EARPIECE,"
@@ -238,7 +247,17 @@ DEFAULT_RADIO_DENYLIST_TERMS = (
     "MOUNTING BRACKET,MOUNTING KIT,CARRYING CASE,"
     "POWER SUPPLY,AC ADAPTER,DC ADAPTER,"
     "ANTENNA REPLACEMENT,WHIP ANTENNA,STUBBY ANTENNA,"
-    "WATERPROOF BAG,SOFT CASE,HARD CASE"
+    "WATERPROOF BAG,SOFT CASE,HARD CASE,"
+    # ── Consumer electronics (TVs, displays, monitors) ──
+    "TELEVISION,QLED TV,OLED TV,LCD TV,LED TV,PLASMA TV,"
+    "SMART TV,DIGITAL TV,FLAT PANEL TV,"
+    "LED MONITOR,LCD MONITOR,COMPUTER MONITOR,DISPLAY MONITOR,"
+    "DIGITAL SIGNAGE,VIDEO DISPLAY,FLAT PANEL DISPLAY,"
+    "UHD TV,4K TV,8K TV,HDR TV,"
+    "SET-TOP BOX,STREAMING DEVICE,STREAMING BOX,"
+    "SOUNDBAR,HOME THEATER,AUDIO SYSTEM,"
+    "WASHING MACHINE,REFRIGERATOR,DISHWASHER,MICROWAVE OVEN,"
+    "VACUUM CLEANER,AIR CONDITIONER,AIR PURIFIER"
 )
 RADIO_DENYLIST_ENV_NAME = "FCC_RADIO_DENYLIST_TERMS"
 
@@ -256,6 +275,7 @@ _IGNORED_RULE_PARTS_ENV = 'FCC_IGNORED_RULE_PARTS'
 # Override via FCC_RADIO_RULE_PARTS env var (comma-separated).
 # Set to 'none' to disable this classifier check.
 _DEFAULT_RADIO_RULE_PARTS: frozenset[str] = frozenset({
+    '9', 'Part 9',         # Part 9 — Unlicensed / some DMR radios
     '90', 'Part 90',       # LMR / Commercial
     '95', 'Part 95',       # Personal Radio Services (GMRS/FRS/CB/MURS)
     '95A', 'Part 95A',     # GMRS (legacy)
@@ -1464,9 +1484,12 @@ def _submit_generic_search_form_via_playwright(fcc_id):
         try:
             raw_hrefs = page.evaluate(
                 """() => Array.from(document.querySelectorAll(
-                    'a[href*="ViewExhibitReport.cfm"]'
-                )).filter(a => a.href.includes('application_id='))
-                  .map(a => a.href).slice(0, 20)"""
+                    'a[href*="ViewExhibitReport.cfm"],'
+                    + 'a[href*="GetTcb731Report.do"]'
+                )).filter(a =>
+                    a.href.includes('application_id=')
+                    || a.href.includes('applicationId=')
+                ).map(a => a.href).slice(0, 50)"""
             )
             for href in (raw_hrefs or []):
                 if href:
@@ -1559,9 +1582,12 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                     current_url = hp_url_4a
                     raw_hrefs = page.evaluate(
                         """() => Array.from(document.querySelectorAll(
-                            'a[href*="ViewETRANxhibitReport.cfm"]'
-                        )).filter(a => a.href.includes('application_id='))
-                          .map(a => a.href).slice(0, 20)"""
+                            'a[href*="ViewExhibitReport.cfm"],'
+                            + 'a[href*="GetTcb731Report.do"]'
+                        )).filter(a =>
+                            a.href.includes('application_id=')
+                            || a.href.includes('applicationId=')
+                        ).map(a => a.href).slice(0, 20)"""
                     )
                     for href in (raw_hrefs or []):
                         if href:
@@ -1606,9 +1632,12 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                 try:
                     raw_hrefs = page.evaluate(
                         """() => Array.from(document.querySelectorAll(
-                            'a[href*="ViewExhibitReport.cfm"]'
-                        )).filter(a => a.href.includes('application_id='))
-                          .map(a => a.href).slice(0, 50)"""
+                            'a[href*="ViewExhibitReport.cfm"],'
+                            + 'a[href*="GetTcb731Report.do"]'
+                        )).filter(a =>
+                            a.href.includes('application_id=')
+                            || a.href.includes('applicationId=')
+                        ).map(a => a.href).slice(0, 50)"""
                     )
                     for href in (raw_hrefs or []):
                         if href:
@@ -1657,9 +1686,12 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                     try:
                         raw_hrefs = page.evaluate(
                             """() => Array.from(document.querySelectorAll(
-                                'a[href*="ViewExhibitReport.cfm"]'
-                            )).filter(a => a.href.includes('application_id='))
-                              .map(a => a.href).slice(0, 20)"""
+                                'a[href*="ViewExhibitReport.cfm"],'
+                                + 'a[href*="GetTcb731Report.do"]'
+                            )).filter(a =>
+                                a.href.includes('application_id=')
+                                || a.href.includes('applicationId=')
+                            ).map(a => a.href).slice(0, 20)"""
                         )
                         for href in (raw_hrefs or []):
                             if href:
@@ -1676,6 +1708,10 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                 logger.exception('FCC browser hyphen-product retry failed fcc_id=%s', fcc_id)
 
         page.close()
+        # Stash the Playwright-collected links so the TCB app ID extraction
+        # code can also use them (they include GetTcb731Report.do links with
+        # applicationId= that exhibit URLs alone don't capture).
+        _pw_exhibit_links_cache[fcc_id] = list(exhibit_links)
         logger.info(
             'FCC browser fallback search success fcc_id=%s url=%s has_detail=%s exhibit_links=%s',
             fcc_id, current_url, 'ViewExhibitReport.cfm' in html_text, len(exhibit_links),
@@ -2420,36 +2456,57 @@ def _fetch_secondary_metadata_from_html_fallback(fcc_id, _params):
     # Collect application IDs from two sources:
     # 1. TCB Form 731 links (cells[1]) — most direct, uses applicationId=
     # 2. ViewExhibitReport.cfm links (cells[2]) — uses application_id=
+    # 3. Playwright-collected links (cached from DOM scrape) — includes both
     tcb_app_ids = list(parsed.get('tcb_application_ids', []))
     url_app_ids = _extract_application_id_from_urls(candidate_urls)
     for app_id in url_app_ids:
         if app_id not in tcb_app_ids:
             tcb_app_ids.append(app_id)
+    # Also pull in application IDs from Playwright-collected links (TCB
+    # 731 + exhibit links scraped directly from the DOM).
+    pw_links = _pw_exhibit_links_cache.pop(fcc_id, [])
+    if pw_links:
+        pw_app_ids = _extract_application_id_from_urls(pw_links)
+        for app_id in pw_app_ids:
+            if app_id not in tcb_app_ids:
+                tcb_app_ids.append(app_id)
+        logger.info(
+            "FCC TCB pw link cache consumed fcc_id=%s pw_link_count=%s "
+            "pw_app_ids=%s merged_total=%s",
+            fcc_id, len(pw_links),
+            [aid[:20] for aid in pw_app_ids],
+            len(tcb_app_ids),
+        )
 
+    logger.info(
+        "FCC TCB collecting app IDs (html fallback) fcc_id=%s "
+        "direct_tcb=%s url_extracted=%s total=%s ids=%s",
+        fcc_id,
+        len(parsed.get('tcb_application_ids', [])),
+        len(url_app_ids),
+        len(tcb_app_ids),
+        [aid[:20] for aid in tcb_app_ids],
+    )
     orig_fcc_id_from_tcb = ''
     tcb_oe_rows = []
     for tcb_app_id in tcb_app_ids:
         tcb_result = _fetch_rule_parts_from_tcb_report(fcc_id, tcb_app_id)
-        if isinstance(tcb_result, dict):
-            tcb_rule_parts = tcb_result.get('rule_parts', [])
-            tcb_orig_fcc_id = tcb_result.get('original_fcc_id', '')
-            tcb_freq_rows = tcb_result.get('oe_rows', [])
-        elif isinstance(tcb_result, tuple):
-            # Legacy tuple format (backward compat)
-            tcb_rule_parts, tcb_orig_fcc_id = tcb_result
-            tcb_freq_rows = []
-        else:
-            tcb_rule_parts = tcb_result
-            tcb_orig_fcc_id = ''
-            tcb_freq_rows = []
+        tcb_rule_parts = tcb_result.get('rule_parts', [])
+        tcb_orig_fcc_id = tcb_result.get('original_fcc_id', '')
+        tcb_freq_rows = tcb_result.get('oe_rows', [])
         if tcb_rule_parts:
             for part in tcb_rule_parts:
                 if part not in rule_parts:
                     rule_parts.append(part)
             logger.info(
                 "FCC TCB rule parts found (html fallback) fcc_id=%s "
-                "app_id=%s rule_parts=%s",
-                fcc_id, tcb_app_id[:20], tcb_rule_parts,
+                "app_id=%s rule_parts=%s freq_rows=%s",
+                fcc_id, tcb_app_id[:20], tcb_rule_parts, len(tcb_freq_rows),
+            )
+        else:
+            logger.info(
+                "FCC TCB empty result (html fallback) fcc_id=%s app_id=%s",
+                fcc_id, tcb_app_id[:20],
             )
         if tcb_orig_fcc_id:
             orig_fcc_id_from_tcb = tcb_orig_fcc_id
@@ -3420,10 +3477,12 @@ def _fetch_rule_parts_from_tcb_report(fcc_id, application_id):
         application_id: The application ID from the FCC exhibit URL.
 
     Returns:
-        List of rule part strings (e.g. ['15B', '90']).
+        Dict with 'rule_parts', 'original_fcc_id', 'oe_rows'.
+        All lists are empty on failure.
     """
+    empty_result = {'rule_parts': [], 'original_fcc_id': '', 'oe_rows': []}
     if not application_id:
-        return []
+        return empty_result
 
     url = f"{TCB_REPORT_URL}?applicationId={application_id}&fcc_id={fcc_id}"
     try:
@@ -3435,14 +3494,14 @@ def _fetch_rule_parts_from_tcb_report(fcc_id, application_id):
             "FCC TCB report fetch failed fcc_id=%s application_id=%s",
             fcc_id, application_id,
         )
-        return []
+        return empty_result
 
     if response.status_code != 200:
         logger.info(
-            "FCC TCB report non-200 fcc_id=%s status=%s",
-            fcc_id, response.status_code,
+            "FCC TCB report non-200 fcc_id=%s application_id=%s status=%s",
+            fcc_id, application_id, response.status_code,
         )
-        return []
+        return empty_result
 
     html = response.text or ''
     tcb_data = _extract_data_from_tcb_html(html)
@@ -3715,25 +3774,29 @@ def fetch_fcc_secondary_metadata(fcc_id):
     # transmitter certification under Part 95E), so we fetch the TCB report
     # for *every* application_id and merge — not replace — the rule parts.
     tcb_app_ids = _extract_application_id_from_urls(exhibit_urls)
+    logger.info(
+        "FCC TCB collecting app IDs fcc_id=%s exhibit_url_count=%s "
+        "tcb_app_id_count=%s ids=%s",
+        fcc_id, len(exhibit_urls), len(tcb_app_ids),
+        [aid[:20] for aid in tcb_app_ids],
+    )
     tcb_oe_rows = []
     for tcb_app_id in tcb_app_ids:
         tcb_result = _fetch_rule_parts_from_tcb_report(fcc_id, tcb_app_id)
-        if isinstance(tcb_result, dict):
-            tcb_rule_parts = tcb_result.get('rule_parts', [])
-            tcb_orig_fcc_id = tcb_result.get('original_fcc_id', '')
-            tcb_freq_rows = tcb_result.get('oe_rows', [])
-        elif isinstance(tcb_result, tuple):
-            tcb_rule_parts, tcb_orig_fcc_id = tcb_result
-            tcb_freq_rows = []
-        else:
-            tcb_rule_parts = tcb_result
-            tcb_orig_fcc_id = ''
-            tcb_freq_rows = []
+        tcb_rule_parts = tcb_result.get('rule_parts', [])
+        tcb_orig_fcc_id = tcb_result.get('original_fcc_id', '')
+        tcb_freq_rows = tcb_result.get('oe_rows', [])
         if tcb_rule_parts:
             rule_parts_set.update(tcb_rule_parts)
             logger.info(
-                "FCC TCB rule parts found fcc_id=%s app_id=%s rule_parts=%s",
-                fcc_id, tcb_app_id[:20], tcb_rule_parts,
+                "FCC TCB rule parts found fcc_id=%s app_id=%s rule_parts=%s "
+                "freq_rows=%s",
+                fcc_id, tcb_app_id[:20], tcb_rule_parts, len(tcb_freq_rows),
+            )
+        else:
+            logger.info(
+                "FCC TCB empty result fcc_id=%s app_id=%s",
+                fcc_id, tcb_app_id[:20],
             )
         if tcb_orig_fcc_id:
             orig_fcc_id_from_tcb = tcb_orig_fcc_id
@@ -3832,7 +3895,9 @@ def _extract_application_id_from_urls(urls):
     app_ids = []
     seen = set()
     for url in urls:
-        match = _OET_APP_ID_RE.search(url)
+        # Try both patterns: application_id= (exhibit links) and
+        # applicationId= (TCB 731 links collected by Playwright)
+        match = _OET_APP_ID_RE.search(url) or _TCB_APP_ID_RE.search(url)
         if match:
             app_id = match.group(1)
             if app_id not in seen:
@@ -4267,18 +4332,6 @@ def _apply_website_specs_to_radio(radio, extracted):
     return changes
 
 
-def _detect_and_scrape_amateur_radio(radio, sec_metadata):
-    """Check if a radio is likely an amateur device and scrape its website.
-
-    Called during FCC sync after service types are assigned.  If the FCC
-    metadata indicates the device is probably an amateur radio (Part 15B/15C
-    with blank TX fields and amateur-band frequencies), this function
-    scrapes the radio's website for transmitter specs.
-    """
-    if not sec_metadata:
-        return
-
-
 def _sync_radio_certifications(radio, fcc_id, sec_metadata):
     """Create or update RadioCertification records from FCC metadata.
 
@@ -4424,12 +4477,14 @@ def _upsert_certification(radio, fcc_id, lower_mhz, upper_mhz, rule_parts_str,
 
 def _detect_and_scrape_amateur_radio(radio, sec_metadata):
 
+    from radios.models import RadioCertification
+
     rule_parts = sec_metadata.get('rule_parts', [])
     oe_rows = sec_metadata.get('original_equipment_rows', [])
     application_purpose = sec_metadata.get('text_blob', '')
 
-    # Skip if the radio already has TX specs populated
-    if radio.freq_bands_tx or radio.power_watts:
+    # Skip if the radio already has TX specs or certifications
+    if radio.power_watts or RadioCertification.objects.filter(radio=radio).exists():
         return
 
     if not _detect_amateur_radio(rule_parts, oe_rows, application_purpose):
@@ -5473,12 +5528,6 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                         radio.grant_date = date(derived_intro_year, 1, 1)
                         has_changes = True
 
-                derived_freq_bands_tx = oe_summary.get('freq_bands_tx', '')
-                if derived_freq_bands_tx and radio.freq_bands_tx != derived_freq_bands_tx:
-                    if not preserve_existing or not radio.freq_bands_tx:
-                        radio.freq_bands_tx = derived_freq_bands_tx
-                        has_changes = True
-
                 if _noaa_wx and not radio.noaa_wx:
                     radio.noaa_wx = True
                     has_changes = True
@@ -5510,11 +5559,11 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                         (
                             'FCC ingest update source=fcc_api query=%s action=update_by_fcc_id'
                             ' radio_id=%s brand=%s model=%s fcc_id=%s validation_status=%s'
-                            ' grant_date=%s freq_bands_tx=%s is_whitelabel=%s'
+                            ' grant_date=%s is_whitelabel=%s'
                             ' allowlist_terms=%s',
                             fcc_id_query, radio.id, radio.brand, radio.model,
                             fcc_id, validation.get('status', ''),
-                            radio.grant_date, radio.freq_bands_tx, radio.is_a_whitelabel,
+                            radio.grant_date, radio.is_a_whitelabel,
                             radio.allowlist_terms,
                         )
                     )
@@ -5559,8 +5608,14 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                     continue
 
                 # Update the existing radio instead of creating a duplicate
-                if not existing_radio.fcc_id:
+                if fcc_id and existing_radio.fcc_id != fcc_id:
+                    old_fcc = existing_radio.fcc_id
                     existing_radio.fcc_id = fcc_id
+                    logger.info(
+                        "FCC ingest normalized fcc_id source=fcc_api "
+                        "radio_id=%s old=%s new=%s",
+                        existing_radio.id, old_fcc, fcc_id,
+                    )
                 if new_notes not in existing_radio.notes:
                     existing_radio.notes = f"{new_notes}\n{existing_radio.notes}".strip()
 
@@ -5581,11 +5636,6 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 if derived_intro_year and not existing_radio.grant_date:
                     if not preserve_existing or not existing_radio.grant_date:
                         existing_radio.grant_date = date(derived_intro_year, 1, 1)
-
-                derived_freq_bands_tx = oe_summary.get('freq_bands_tx', '')
-                if derived_freq_bands_tx and existing_radio.freq_bands_tx != derived_freq_bands_tx:
-                    if not preserve_existing or not existing_radio.freq_bands_tx:
-                        existing_radio.freq_bands_tx = derived_freq_bands_tx
 
                 if _noaa_wx and not existing_radio.noaa_wx:
                     existing_radio.noaa_wx = True
@@ -5612,10 +5662,10 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 logger.info(
                     "FCC ingest update source=fcc_api query=%s action=update_by_brand_model"
                     " radio_id=%s brand=%s model=%s fcc_id=%s validation=%s"
-                    " grant_date=%s freq_bands_tx=%s",
+                    " grant_date=%s",
                     fcc_id_query, existing_radio.id, brand_val, product_code,
                     fcc_id, validation.get('status', ''),
-                    existing_radio.grant_date, existing_radio.freq_bands_tx,
+                    existing_radio.grant_date,
                 )
                 attached_reports += _attach_test_reports_to_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)
                 synced_oet_docs += _sync_oet_documents_for_radio(existing_radio, fcc_id, sec_metadata, force_reload=force_reload)

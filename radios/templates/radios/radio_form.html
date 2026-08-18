@@ -243,11 +243,6 @@
                             {% if form.intro_year.errors %}<p class="mt-2 text-sm text-red-600">{{ form.intro_year.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
-                            <label for="{{ form.freq_bands_tx.id_for_label }}" class="block text-sm font-medium text-gray-700">Frequency Bands (TX)</label>
-                            {{ form.freq_bands_tx }}
-                            {% if form.freq_bands_tx.errors %}<p class="mt-2 text-sm text-red-600">{{ form.freq_bands_tx.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div>
                             <label for="{{ form.power_watts.id_for_label }}" class="block text-sm font-medium text-gray-700">Power (W)</label>
                             {{ form.power_watts }}
                             {% if form.power_watts.errors %}<p class="mt-2 text-sm text-red-600">{{ form.power_watts.errors.0 }}</p>{% endif %}

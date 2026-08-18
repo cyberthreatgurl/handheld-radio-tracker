@@ -34,6 +34,7 @@ class RadioServiceTypeModelTests(TestCase):
     def test_seed_migration_created_all_types(self):
         """All 9 canonical service types were seeded by the data migration."""
         expected = [
+            ('EMS', 'Part 9'),
             ('GMRS', 'Part 95E'),
             ('FRS', 'Part 95B'),
             ('CB', 'Part 95D'),
