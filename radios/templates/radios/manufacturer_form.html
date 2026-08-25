@@ -174,7 +174,7 @@
                 <ul class="overflow-y-auto max-h-[70vh] divide-y divide-gray-100 -mx-1">
                     {% for brand in linked_brands %}
                     <li>
-                        <a href="{% url 'brand_edit' brand.pk %}"
+                        <a href="{% url 'brand_detail' brand.pk %}"
                            class="block px-2 py-2 text-sm text-indigo-700 hover:bg-indigo-50 rounded">
                             <span class="font-medium">{{ brand.name }}</span>
                             {% if brand.alias %}

@@ -1,0 +1,40 @@
+# Version control
+.git
+.gitignore
+
+# Python build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+
+# Secrets & local configuration (never bake into the image)
+.env
+.env.*
+
+# Data, uploads & logs (mounted as volumes at runtime)
+artifacts/
+logs/
+data/
+debug/
+media/
+db.sqlite3
+test_db.sqlite3
+
+# Node / Tailwind dev artifacts
+node_modules/
+theme/static_src/node_modules/
+
+# Static output (regenerated inside the image via collectstatic)
+staticfiles/
+
+# IDE / OS noise
+.idea/
+.vscode/
+.DS_Store

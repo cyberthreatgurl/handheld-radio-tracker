@@ -6,7 +6,7 @@
 <div class="max-w-2xl mx-auto space-y-6">
 
     <div>
-        <a href="{% url 'brand_edit' source.pk %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
+        <a href="{% url 'brand_detail' source.pk %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
             ← Back to {{ source.name }}
         </a>
         <h1 class="text-2xl font-bold text-gray-900 mt-1">Merge Brand</h1>
@@ -67,7 +67,7 @@
             </div>
 
             <div class="flex justify-end space-x-3 pt-2 border-t">
-                <a href="{% url 'brand_edit' source.pk %}"
+                <a href="{% url 'brand_detail' source.pk %}"
                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Cancel
                 </a>

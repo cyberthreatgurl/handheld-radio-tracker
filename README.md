@@ -372,6 +372,34 @@ python manage.py audit_oet_sync --missing-only --limit 50
 
 - Import OET rows from saved FCC exhibit HTML or CSV when the live FCC site is unavailable.
 
+`python manage.py purge_cross_fcc_oet_docs --fcc-id <CONTAMINATED_ID> --source-fcc-id <OWNER_ID>`
+
+- Remove OET documents (and their derived manual-library records) that were
+  mis-attributed to one FCC ID when they actually belong to another.
+- The FCC "Exhibits" page for a re-label/Change-in-ID filing can also list the
+  original equipment's attachments (photos, test report, user manual, etc.).
+  When that happens, those attachments get stored under the wrong FCC ID.
+
+Example (cross-contamination between two products under grantee `2AZVI`):
+
+```bash
+# Preview what would be removed:
+python manage.py purge_cross_fcc_oet_docs \
+  --fcc-id 2AZVI-T67 \
+  --source-fcc-id 2AZVIJC-8629 \
+  --dry-run
+
+# Apply the removal:
+python manage.py purge_cross_fcc_oet_docs \
+  --fcc-id 2AZVI-T67 \
+  --source-fcc-id 2AZVIJC-8629
+```
+
+To find other affected FCC IDs, look for OET document URLs stored under more
+than one FCC ID. This is a reliable cross-contamination signal because FCC
+attachment URLs (`GetApplicationAttachment.html?id=...`) are unique per
+application.
+
 ### Import and cleanup commands
 
 `python manage.py import_radios <csv_file> [--clear]`

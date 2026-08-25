@@ -71,7 +71,7 @@
                             <label for="{{ form.parent_brand.id_for_label }}" class="block text-sm font-medium text-gray-700">Parent Brand <span class="text-gray-400 font-normal">(subsidiaries &amp; shell companies only)</span></label>
                             {{ form.parent_brand }}
                             <a id="parent-brand-link" href="#" target="_blank"
-                               data-url-template="{% url 'brand_edit' pk=0 %}"
+                               data-url-template="{% url 'brand_detail' pk=0 %}"
                                class="mt-1 text-xs text-indigo-600 hover:text-indigo-900"
                                style="display:none;">View brand record →</a>
                             <p class="mt-1 text-xs text-gray-500">Only use this if the brand is a subsidiary or shell company of another brand (e.g. EVOTE → Wouxun). Not for OEM relationships.</p>
@@ -119,10 +119,16 @@
                 <!-- Submit Buttons -->
                 <div class="pt-5 border-t border-gray-200 flex justify-between items-center">
                     {% if form.instance.pk %}
-                    <a href="{% url 'brand_merge' form.instance.pk %}"
-                       class="inline-flex items-center py-2 px-4 border border-amber-300 rounded-md shadow-sm text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100">
-                        Merge into another brand…
-                    </a>
+                    <div class="flex space-x-3">
+                        <a href="{% url 'brand_merge' form.instance.pk %}"
+                           class="inline-flex items-center py-2 px-4 border border-amber-300 rounded-md shadow-sm text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100">
+                            Merge into another brand…
+                        </a>
+                        <a href="{% url 'brand_delete' form.instance.pk %}"
+                           class="inline-flex items-center py-2 px-4 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100">
+                            Delete Brand…
+                        </a>
+                    </div>
                     {% else %}
                     <span></span>
                     {% endif %}

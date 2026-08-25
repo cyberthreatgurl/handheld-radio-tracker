@@ -61,12 +61,28 @@
     {% endif %}
 
     <!-- Rest of layout for brand list -->
-    <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+    <form method="post" action="{% url 'brand_bulk_delete' %}" id="bulk-delete-form">
+        {% csrf_token %}
+        <div class="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                    Delete All Selected
+                </button>
+                <label class="inline-flex items-center text-sm text-gray-700">
+                    <input type="checkbox" name="confirm_delete" value="yes" required class="mr-2 h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                    I understand this deletes the selected brands and all their radio models.
+                </label>
+            </div>
+        </div>
+        <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
             <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th scope="col" class="px-6 py-3 w-10 text-center">
+                                <input type="checkbox" id="select-all-brands" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" aria-label="Select all brands">
+                            </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 <a href="?sort=name&order={% if current_sort == 'name' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}" class="flex items-center hover:text-gray-700">
                                     Name
@@ -126,6 +142,9 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% for brand in brands %}
                         <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <input type="checkbox" name="brand_ids" value="{{ brand.pk }}" class="brand-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" aria-label="Select {{ brand.name }}">
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium">
                                     <a href="{% url 'brand_detail' brand.pk %}"
@@ -166,13 +185,13 @@
                                 {{ brand.last_modified_date|date:"M d, Y"|default:"-" }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <a href="{% url 'brand_edit' brand.pk %}" class="text-green-600 hover:text-green-900">Edit</a>
+                                <a href="{% url 'brand_detail' brand.pk %}?edit=1" class="text-green-600 hover:text-green-900">Edit</a>
                                 <a href="{% url 'brand_delete' brand.pk %}" class="text-red-600 hover:text-red-900">Delete</a>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            <td colspan="9" class="px-6 py-12 text-center text-gray-500">
                                 No brands found. <a href="{% url 'brand_add' %}" class="text-indigo-600 hover:text-indigo-900">Add a new brand</a>
                             </td>
                         </tr>
@@ -182,6 +201,7 @@
             </div>
         </div>
     </div>
+    </form>
 
     {% if is_paginated %}
     <div class="mt-4 flex items-center justify-between">
@@ -208,4 +228,27 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+(function () {
+    var selectAll = document.getElementById('select-all-brands');
+    var boxes = document.querySelectorAll('.brand-checkbox');
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            boxes.forEach(function (box) { box.checked = selectAll.checked; });
+        });
+    }
+
+    boxes.forEach(function (box) {
+        box.addEventListener('change', function () {
+            if (selectAll && !box.checked) {
+                selectAll.checked = false;
+            } else if (selectAll && document.querySelectorAll('.brand-checkbox:checked').length === boxes.length) {
+                selectAll.checked = true;
+            }
+        });
+    });
+})();
+</script>
 {% endblock %}

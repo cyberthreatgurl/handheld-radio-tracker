@@ -34,7 +34,6 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
@@ -894,37 +893,88 @@ class RadioUpdateView(UpdateView):
 
 
 def scrape_radio_website_view(request, pk):
-    """POST-only: trigger website + YouTube scraping for a radio."""
+    """POST-only: scrape a radio's website using the site-import pipeline."""
     radio = get_object_or_404(Radio, pk=pk)
     if request.method == 'POST':
         logger.info(
             "User action scrape_website actor=%s radio_pk=%s",
             _actor_label(request), pk,
         )
-        from radios.fcc_utils import _scrape_website_for_tx_specs, _apply_website_specs_to_radio
+        website = (radio.website or '').strip()
+        if not website:
+            messages.warning(request, "This radio has no website URL to scrape.")
+            return redirect('radio_edit', pk=pk)
 
-        extracted = _scrape_website_for_tx_specs(radio)
-        if extracted:
-            changes = _apply_website_specs_to_radio(radio, extracted)
-            if changes:
-                messages.success(
-                    request,
-                    f"Scraped {len(changes)} field(s) from website: "
-                    f"{', '.join(changes)}",
-                )
-            else:
-                messages.info(
-                    request,
-                    "Website scraped successfully, but no new data to apply "
-                    "(all target fields already populated).",
-                )
-        else:
+        try:
+            from .site_import import apply_website_to_radio
+            report = apply_website_to_radio(radio, website, apply=True)
+        except Exception:
+            logger.exception(
+                "User action scrape_website error radio_pk=%s", pk,
+            )
+            messages.error(request, "Error scraping the website.")
+            return redirect('radio_edit', pk=pk)
+
+        if report.get('errors'):
             messages.warning(
                 request,
-                "Could not extract any specs from the radio's website "
-                "or YouTube videos.",
+                "Could not extract specs from the radio's website.",
+            )
+        elif report['updated_fields']:
+            messages.success(
+                request,
+                f"Scraped {len(report['updated_fields'])} field(s): "
+                f"{', '.join(report['updated_fields'])}",
+            )
+        else:
+            messages.info(
+                request,
+                "Website scraped, but no new data to apply "
+                "(all target fields already populated).",
             )
     return redirect('radio_edit', pk=pk)
+
+
+def import_radio_from_url_view(request):
+    """POST: import (check-and-create/update) a radio from a pasted URL."""
+    if request.method == 'POST':
+        url = (request.POST.get('url') or '').strip()
+        logger.info(
+            "User action import_from_url submit actor=%s url=%s",
+            _actor_label(request), url,
+        )
+        if not url:
+            messages.error(request, "Please enter a product page URL.")
+            return redirect('radio_list')
+
+        try:
+            from .site_import import upsert_radio_from_url
+            report = upsert_radio_from_url(url, apply=True)
+        except Exception:
+            logger.exception("User action import_from_url error url=%s", url)
+            messages.error(request, "Error importing the URL.")
+            return redirect('radio_list')
+
+        if report.get('errors'):
+            messages.warning(
+                request,
+                "Could not extract a brand and model from that URL.",
+            )
+        else:
+            action = "Created" if report['radio_created'] else "Updated"
+            message = f"{action} {report['brand']} {report['model']}."
+            if report['updated_fields']:
+                message += (
+                    f" Updated: {', '.join(report['updated_fields'])}."
+                )
+            if report['manuals']:
+                message += f" Manuals: {len(report['manuals'])}."
+            messages.success(request, message)
+
+            radio_id = report.get('radio_id')
+            if radio_id:
+                return redirect('radio_edit', pk=radio_id)
+    return redirect('radio_list')
 
 
 def radio_image_delete(request, radio_pk, pk):
@@ -1041,7 +1091,7 @@ class BrandCreateView(CreateView):
     template_name = 'radios/brand_form.html'
 
     def get_success_url(self):
-        return reverse_lazy('brand_edit', kwargs={'pk': self.object.pk})
+        return reverse_lazy('brand_detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1060,56 +1110,6 @@ class BrandCreateView(CreateView):
             f'Brand {form.instance} has been created successfully!',
         )
         return super().form_valid(form)
-
-
-class BrandUpdateView(UpdateView):
-    """View for updating an existing brand entry"""
-    model = Brand
-    form_class = BrandForm
-    template_name = 'radios/brand_form.html'
-
-    def get_success_url(self):
-        return reverse_lazy('brand_edit', kwargs={'pk': self.object.pk})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        brands_qs = Brand.objects.only('id', 'name').order_by('name')
-        context['all_brands'] = brands_qs
-        context['brand_name_to_pk'] = {b.name: b.pk for b in brands_qs}
-        brand = self.object
-        context['brand_radios'] = (
-            Radio.objects.filter(brand__iexact=brand.name)
-            .only('id', 'brand', 'model')
-            .order_by('model')
-        )
-        return context
-
-    def form_valid(self, form):
-        old_name = Brand.objects.values_list('name', flat=True).get(pk=form.instance.pk)
-        new_name = form.cleaned_data['name']
-        logger.info(
-            "User action brand_update submit actor=%s brand_id=%s "
-            "brand=%s",
-            _actor_label(self.request), form.instance.pk, new_name,
-        )
-        response = super().form_valid(form)
-        if old_name != new_name:
-            updated = Radio.objects.filter(brand__iexact=old_name).update(brand=new_name)
-            logger.info(
-                "Brand rename cascade old=%s new=%s radios_updated=%s",
-                old_name, new_name, updated,
-            )
-            if updated:
-                messages.info(
-                    self.request,
-                    f"Updated {updated} radio record(s) from brand "
-                    f'"{old_name}" to "{new_name}".',
-                )
-        messages.success(
-            self.request,
-            f'Brand {form.instance} has been saved successfully!',
-        )
-        return response
 
 
 class BrandDeleteView(DeleteView):
@@ -1203,7 +1203,77 @@ class BrandDeleteView(DeleteView):
             f'{delete_summary["firmware_deleted"]} firmware entries, '
             f'{delete_summary["manufacturers_deleted"]} manufacturers).',
         )
+        if delete_summary.get('grantee_code'):
+            if delete_summary.get('grantee_ignored'):
+                messages.info(
+                    request,
+                    f'Added FCC grantee ID {delete_summary["grantee_code"]} '
+                    'to the ignored grantees list.',
+                )
+            else:
+                messages.info(
+                    request,
+                    f'FCC grantee ID {delete_summary["grantee_code"]} was '
+                    'already in the ignored grantees list.',
+                )
         return redirect(self.success_url)
+
+
+def brand_bulk_delete_view(request):
+    """POST-only: delete multiple brands, their radios, and ignore grantee IDs."""
+    if request.method != 'POST':
+        return redirect('brand_list')
+
+    raw_ids = request.POST.getlist('brand_ids')
+    brand_ids = []
+    for raw in raw_ids:
+        try:
+            brand_ids.append(int(raw))
+        except (TypeError, ValueError):
+            continue
+
+    if not brand_ids:
+        messages.error(request, 'No brands were selected for deletion.')
+        return redirect('brand_list')
+
+    if request.POST.get('confirm_delete') != 'yes':
+        messages.error(
+            request,
+            'Please confirm that you understand this deletion is permanent.',
+        )
+        return redirect('brand_list')
+
+    brands = list(Brand.objects.filter(pk__in=brand_ids))
+    deleted_brands = 0
+    deleted_radios = 0
+    ignored_grantees = []
+    for brand in brands:
+        brand_pk = brand.pk
+        brand_name = brand.name
+        summary = delete_brand_and_related(brand)
+        deleted_brands += 1
+        deleted_radios += summary.get('radios_deleted', 0)
+        grantee_code = summary.get('grantee_code')
+        if grantee_code:
+            ignored_grantees.append(grantee_code)
+        logger.warning(
+            "User action brand_bulk_delete submit actor=%s brand_id=%s "
+            "brand=%s radios_deleted=%s",
+            _actor_label(request), brand_pk, brand_name,
+            summary.get('radios_deleted', 0),
+        )
+
+    messages.success(
+        request,
+        f'Deleted {deleted_brands} brand(s) and {deleted_radios} radio model(s).',
+    )
+    if ignored_grantees:
+        messages.info(
+            request,
+            'Added FCC grantee ID(s) to the ignored grantees list: '
+            f'{', '.join(ignored_grantees)}.',
+        )
+    return redirect('brand_list')
 
 
 def brand_merge_view(request, pk):
@@ -1261,7 +1331,7 @@ def brand_merge_view(request, pk):
             f'Merged "{source_name}" into "{target.name}": '
             f'{r1} radio brand(s), {r2} child brand(s) updated.',
         )
-        return redirect('brand_edit', pk=target.pk)
+        return redirect('brand_detail', pk=target.pk)
 
     # GET — show merge form
     radio_count = Radio.objects.filter(brand__iexact=source.name).count()
@@ -1503,7 +1573,6 @@ def _annotate_brand_grant_dates(top_brands):
     )
 
 
-@cache_page(60 * 5)  # Cache for 5 minutes
 def dashboard_view(request):
     """Dashboard view with statistics"""
     logger.info("User action dashboard_view actor=%s", _actor_label(request))
@@ -1700,6 +1769,12 @@ def dashboard_view(request):
         .filter(id__in=Subquery(latest_manual_ids))
         .order_by('-created_at')[:25]
     )
+    # Exclude manuals whose radio references a brand that no longer exists.
+    recent_manual_uploads = [
+        manual for manual in recent_manual_uploads
+        if manual.radio is not None
+        and _normalize_brand_key(manual.radio.brand) in active_brand_keys
+    ]
     for manual in recent_manual_uploads:
         if manual.radio:
             manual.radio.display_brand = _preferred_brand_display_name(manual.radio, alias_map)
@@ -2134,6 +2209,19 @@ def _band_filter(band_keywords):
     return q
 
 
+def _freq_range_filter(lower_mhz, upper_mhz, text_keywords):
+    """Return a Q filter for radios that transmit in the given frequency
+    range, using numeric certification ranges when available and falling
+    back to text matching on ``freq_bands_tx``."""
+    overlap = Q(
+        certifications__freq_range_lower_mhz__isnull=False,
+        certifications__freq_range_upper_mhz__isnull=False,
+        certifications__freq_range_lower_mhz__lte=upper_mhz,
+        certifications__freq_range_upper_mhz__gte=lower_mhz,
+    )
+    return overlap | _band_filter(text_keywords)
+
+
 # Feature definitions used on the brand detail page.
 FEATURE_DEFS = {
     'aprs': {
@@ -2155,55 +2243,130 @@ FEATURE_DEFS = {
     'vhf': {
         'label': 'VHF',
         'description': '144–148 MHz (2 meter)',
-        'filter': _band_filter(['vhf', '144', '2m', '2 meter']),
+        'filter': _freq_range_filter(144.0, 148.0, ['vhf', '144', '2m', '2 meter']),
     },
     'uhf': {
         'label': 'UHF',
         'description': '420–450 MHz (70 cm)',
-        'filter': _band_filter(['uhf', '430', '440', '70cm', '70 cm']),
+        'filter': _freq_range_filter(420.0, 450.0, ['uhf', '430', '440', '70cm', '70 cm']),
     },
     '5m': {
-        'label': '5 meters',
+        'label': '6 meters',
         'description': '50–54 MHz (6 meter)',
-        'filter': _band_filter(
-            ['5m', '5 meter', '50-54', '50 mhz', '6m', '6 meter']
-        ),
+        'filter': _freq_range_filter(50.0, 54.0, ['6m', '6 meter', '50-54', '50 mhz']),
     },
     '10m': {
         'label': '10 meters',
         'description': '28–29.7 MHz',
-        'filter': _band_filter(
-            ['10m', '10 meter', '28-30', '28 mhz', '29 mhz']
-        ),
+        'filter': _freq_range_filter(28.0, 29.7, ['10m', '10 meter', '28-30', '28 mhz', '29 mhz']),
     },
     '11m': {
         'label': '11 meters (CB)',
         'description': '26–27 MHz Citizens Band',
-        'filter': _band_filter(
-            ['11m', '11 meter', 'cb band', 'citizens band',
-             '26-28', '27 mhz']
+        'filter': _freq_range_filter(
+            26.0, 27.5,
+            ['11m', '11 meter', 'cb band', 'citizens band', '26-28', '27 mhz'],
         ),
     },
     'frs': {
         'label': 'FRS',
         'description': 'Family Radio Service (462–467 MHz)',
-        'filter': _band_filter(['frs']),
+        'filter': Q(service_types__name__iexact='FRS')
+                  | _band_filter(['frs']),
     },
     'gmrs': {
         'label': 'GMRS',
         'description': 'General Mobile Radio Service (462–467 MHz)',
-        'filter': _band_filter(['gmrs']),
+        'filter': Q(service_types__name__iexact='GMRS')
+                  | _band_filter(['gmrs']),
+    },
+    'cb': {
+        'label': 'CB',
+        'description': 'Citizens Band Radio Service (Part 95D)',
+        'filter': Q(service_types__name__iexact='CB'),
+    },
+    'murs': {
+        'label': 'MURS',
+        'description': 'Multi-Use Radio Service (Part 95J)',
+        'filter': Q(service_types__name__iexact='MURS'),
+    },
+    'amateur': {
+        'label': 'Amateur',
+        'description': 'Amateur Radio Service (Part 97)',
+        'filter': Q(service_types__name__iexact='Amateur'),
+    },
+    'commercial': {
+        'label': 'Commercial',
+        'description': 'Land Mobile Radio Service (Part 90)',
+        'filter': Q(service_types__name__iexact='Commercial'),
+    },
+    'marine': {
+        'label': 'Marine',
+        'description': 'Maritime Mobile Service (Part 80)',
+        'filter': Q(service_types__name__iexact='Marine'),
+    },
+    'aviation': {
+        'label': 'Aviation',
+        'description': 'Aviation Services (Part 87)',
+        'filter': Q(service_types__name__iexact='Aviation'),
+    },
+    'poc': {
+        'label': 'PoC',
+        'description': 'Push-to-Talk over Cellular (Parts 22/24/27)',
+        'filter': Q(service_types__name__iexact='PoC'),
+    },
+    'part15b': {
+        'label': 'Part 15B',
+        'description': 'Part 15 Subpart B (unintentional radiators)',
+        'filter': Q(service_types__name__iexact='Part 15 Subpart B'),
+    },
+    'part15c': {
+        'label': 'Part 15C',
+        'description': 'Part 15 Subpart C (intentional radiators)',
+        'filter': Q(service_types__name__iexact='Part 15 Subpart C'),
     },
 }
 
 
-def brand_detail_view(request, pk):
+def brand_detail_view(request, pk, edit=False):
     """Detail page for a single brand with stats, chart, and feature
     filtering. Shows total model count, newest model, subsidiary/white-label
     info, a year-over-year bar chart of new models, and clickable feature
     count tiles that filter the model list below.
+
+    The same page hosts inline editing: POSTs are validated and saved here,
+    and the ``/edit/`` URL (or ``?edit=1``) opens the edit form by default.
     """
     brand = get_object_or_404(Brand, pk=pk)
+
+    edit_mode = edit or request.GET.get('edit') == '1'
+    form = BrandForm(instance=brand)
+
+    if request.method == 'POST':
+        form = BrandForm(request.POST, instance=brand)
+        if form.is_valid():
+            old_name = Brand.objects.values_list('name', flat=True).get(pk=brand.pk)
+            new_name = form.cleaned_data['name']
+            form.save()
+            logger.info(
+                "User action brand_update submit actor=%s brand_id=%s brand=%s",
+                _actor_label(request), brand.pk, new_name,
+            )
+            if old_name != new_name:
+                updated = Radio.objects.filter(brand__iexact=old_name).update(brand=new_name)
+                logger.info(
+                    "Brand rename cascade old=%s new=%s radios_updated=%s",
+                    old_name, new_name, updated,
+                )
+                if updated:
+                    messages.info(
+                        request,
+                        f'Updated {updated} radio record(s) from brand '
+                        f'"{old_name}" to "{new_name}".',
+                    )
+            messages.success(request, f'Brand {new_name} has been saved successfully!')
+            return redirect('brand_detail', pk=brand.pk)
+        edit_mode = True
 
     # Build a broad query for radios associated with this brand.
     # Include: direct brand name match + grantee code match (own or parent).
@@ -2258,7 +2421,7 @@ def brand_detail_view(request, pk):
     # Feature counts
     feature_counts = {}
     for key, defn in FEATURE_DEFS.items():
-        feature_counts[key] = radios_qs.filter(defn['filter']).count()
+        feature_counts[key] = radios_qs.filter(defn['filter']).distinct().count()
 
     # Interactive feature filter
     active_feature = request.GET.get('feature', '')
@@ -2266,6 +2429,7 @@ def brand_detail_view(request, pk):
     if active_feature in FEATURE_DEFS:
         filtered_radios = list(
             radios_qs.filter(FEATURE_DEFS[active_feature]['filter'])
+            .distinct()
             .order_by('model')
         )
 
@@ -2291,6 +2455,8 @@ def brand_detail_view(request, pk):
     context = {
         'brand': brand,
         'manufacturer': manufacturer,
+        'form': form,
+        'edit_mode': edit_mode,
         'total_models': total_models,
         'newest_radio': newest_radio,
         'subsidiary_brands': subsidiary_brands,

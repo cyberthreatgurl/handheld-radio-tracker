@@ -312,9 +312,17 @@ class Radio(models.Model):
         max_length=200,
         help_text="Radio model name/number",
     )
+    part_number = models.CharField(
+        max_length=200, blank=True,
+        help_text="Manufacturer part number / SKU / product code",
+    )
     is_a_whitelabel = models.BooleanField(
         default=False,
         help_text="Is this radio a white label model?",
+    )
+    is_toy = models.BooleanField(
+        default=False,
+        help_text="Is this a toy radio (not a functional two-way transceiver)?",
     )
     manufacturer = models.ForeignKey(
         'Manufacturer', on_delete=models.SET_NULL,
@@ -398,6 +406,14 @@ class Radio(models.Model):
         max_length=200, blank=True,
         help_text="Display type (e.g., LCD, Color TFT, Dot-matrix)",
     )
+    display_color = models.CharField(
+        max_length=100, blank=True,
+        help_text="Display color (e.g., Color, Monochrome, Color TFT)",
+    )
+    channels = models.IntegerField(
+        null=True, blank=True,
+        help_text="Number of memory channels",
+    )
     battery_mah = models.IntegerField(
         null=True, blank=True,
         help_text="Battery capacity in mAh",
@@ -407,6 +423,14 @@ class Radio(models.Model):
     usb_c_charging = models.BooleanField(
         default=False,
         help_text="Has USB-C charging port",
+    )
+    usb_chargeable = models.BooleanField(
+        default=False,
+        help_text="Charges via USB (any connector type)",
+    )
+    usb_programmable = models.BooleanField(
+        default=False,
+        help_text="Programmable via USB cable/software",
     )
     bluetooth = models.BooleanField(
         default=False,
@@ -476,6 +500,20 @@ class Radio(models.Model):
     notes = models.TextField(
         blank=True,
         help_text="Additional notes or specifications",
+    )
+
+    # Website spec import provenance
+    spec_source_url = models.URLField(
+        max_length=1000, blank=True,
+        help_text="Source product page URL for scraped specifications",
+    )
+    spec_extracted_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of the last successful spec extraction",
+    )
+    spec_confidence = models.FloatField(
+        null=True, blank=True,
+        help_text="Aggregate extraction confidence (0.0-1.0)",
     )
 
     # Metadata
@@ -993,14 +1031,24 @@ def delete_brand_and_related(brand, *args, **kwargs):
         .values_list('id', flat=True)
     )
 
+    grantee_code = normalize_grantee_code(brand.grantee_code)
+    grantee_ignored = False
+
     with transaction.atomic():
         delete_summary = delete_radios_and_related(radio_queryset)
         models.Model.delete(brand, *args, **kwargs)
         manufacturer_count = Manufacturer.objects.filter(id__in=manufacturers_to_delete).delete()[0]
+        if grantee_code:
+            _, grantee_ignored = IgnoredGrantee.objects.get_or_create(
+                grantee_code=grantee_code,
+                defaults={'reason': 'Brand deleted from database'},
+            )
 
     return {
         **delete_summary,
         'manufacturers_deleted': manufacturer_count,
+        'grantee_code': grantee_code,
+        'grantee_ignored': grantee_ignored,
     }
 
 

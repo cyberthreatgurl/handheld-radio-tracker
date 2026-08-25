@@ -125,7 +125,7 @@
                             </label>
                             {{ form.brand }}
                             <a id="brand-record-link" href="#" target="_blank"
-                               data-url-template="{% url 'brand_edit' pk=0 %}"
+                               data-url-template="{% url 'brand_detail' pk=0 %}"
                                class="mt-1 text-xs text-indigo-600 hover:text-indigo-900"
                                style="display:none;">View brand record →</a>
                             {% if form.brand.errors %}
@@ -141,10 +141,23 @@
                             <p class="mt-2 text-sm text-red-600">{{ form.model.errors.0 }}</p>
                             {% endif %}
                         </div>
+                        <div>
+                            <label for="{{ form.part_number.id_for_label }}" class="block text-sm font-medium text-gray-700">Part Number / SKU</label>
+                            {{ form.part_number }}
+                            {% if form.part_number.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.part_number.errors.0 }}</p>
+                            {% endif %}
+                        </div>
                         <div class="flex items-center mt-6">
                             {{ form.is_a_whitelabel }}
                             <label for="{{ form.is_a_whitelabel.id_for_label }}" class="ml-2 block text-sm text-gray-900">
                                 This radio is a white label model
+                            </label>
+                        </div>
+                        <div class="flex items-center mt-6">
+                            {{ form.is_toy }}
+                            <label for="{{ form.is_toy.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                This is a toy radio
                             </label>
                         </div>
                         <div>
@@ -271,7 +284,7 @@
                     </div>
                     <div class="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {% for field in form %}
-                        {% if field.name in 'bluetooth,noaa_wx,usb_c_charging,removable_antenna,unlockable,firmware_updates' %}
+                        {% if field.name in 'bluetooth,noaa_wx,usb_c_charging,usb_chargeable,usb_programmable,removable_antenna,unlockable,firmware_updates' %}
                         <label class="relative inline-flex items-center gap-3 rounded-lg border {% if field.value %}border-indigo-300 bg-indigo-50{% else %}border-gray-200 bg-white hover:border-gray-300{% endif %} px-3.5 py-3 cursor-pointer transition-colors select-none">
                             {{ field }}
                             {# Toggle track #}
@@ -294,6 +307,16 @@
                             <label for="{{ form.display.id_for_label }}" class="block text-sm font-medium text-gray-700">Display</label>
                             {{ form.display }}
                             {% if form.display.errors %}<p class="mt-2 text-sm text-red-600">{{ form.display.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.display_color.id_for_label }}" class="block text-sm font-medium text-gray-700">Display Color</label>
+                            {{ form.display_color }}
+                            {% if form.display_color.errors %}<p class="mt-2 text-sm text-red-600">{{ form.display_color.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.channels.id_for_label }}" class="block text-sm font-medium text-gray-700">Channels</label>
+                            {{ form.channels }}
+                            {% if form.channels.errors %}<p class="mt-2 text-sm text-red-600">{{ form.channels.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.battery_mah.id_for_label }}" class="block text-sm font-medium text-gray-700">Battery (mAh)</label>

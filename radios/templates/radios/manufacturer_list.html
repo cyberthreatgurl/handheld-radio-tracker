@@ -87,7 +87,7 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700">
                             {% for brand in mfr.brands.all %}
-                                <a href="{% url 'brand_edit' brand.pk %}"
+                                <a href="{% url 'brand_detail' brand.pk %}"
                                    class="inline-block mr-1 mb-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-xs hover:bg-indigo-100">
                                     {{ brand.name }}
                                 </a>

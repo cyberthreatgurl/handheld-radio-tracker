@@ -73,6 +73,36 @@ Current app behavior:
 
 If search results still fail from `fcc.gov`, verify the FCC ID value itself and retry later in case of FCC service degradation.
 
+## OET Documents Attached to the Wrong Radio / FCC ID
+
+If a radio shows OET documents that clearly belong to a different FCC ID
+(e.g. `2AZVI-T67` showing documents from `2AZVIJC-8629`), this is OET
+cross-contamination. The FCC "Exhibits" page for a re-label / Change-in-ID
+filing can also list the original equipment's attachments (photos, test
+report, user manual, etc.), and the ingestion pipeline may store those under
+the wrong FCC ID.
+
+Fix it with the `purge_cross_fcc_oet_docs` management command:
+
+```bash
+# Preview first:
+python manage.py purge_cross_fcc_oet_docs \
+  --fcc-id 2AZVI-T67 \
+  --source-fcc-id 2AZVIJC-8629 \
+  --dry-run
+
+# Then apply:
+python manage.py purge_cross_fcc_oet_docs \
+  --fcc-id 2AZVI-T67 \
+  --source-fcc-id 2AZVIJC-8629
+```
+
+This removes the mis-attributed OET documents and the manual-library records
+derived from them, leaving only the radio's own attachments. To find other
+affected FCC IDs, look for OET document URLs that are stored under more than
+one FCC ID — a reliable cross-contamination signal, since FCC attachment URLs
+(`GetApplicationAttachment.html?id=...`) are unique per application.
+
 ## SynchronousOnlyOperation in Background FCC Sync Threads
 
 If you see this error during an FCC sync:

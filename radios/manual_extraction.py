@@ -213,6 +213,35 @@ def extract_specs_from_text(text, source_name=''):
     cost_approx = f'${cost}' if cost else ''
     freq_bands_tx = _detect_bands(text)
 
+    # New capability fields (website spec import)
+    channels = _extract_first(
+        r'(\d{1,5})\s*(?:memory\s+)?ch(?:annels?)?\b', text,
+    )
+    part_number = _extract_first(
+        r'(?:sku|product\s*code|part\s*(?:number|no\.?))\s*[:#]?\s*'
+        r'([A-Za-z0-9][A-Za-z0-9\-\s/.]{2,60})',
+        text,
+    )
+    noaa = 'noaa' in lowered
+    bluetooth = 'bluetooth' in lowered
+    usb_chargeable = ('usb' in lowered and 'charg' in lowered)
+    usb_programmable = (
+        ('usb' in lowered and 'program' in lowered)
+        or 'programming cable' in lowered
+        or 'usb cable' in lowered
+    )
+    is_toy = bool(re.search(r'\btoy\b', lowered))
+
+    if re.search(
+        r'color\s*(?:tft\s*)?(?:display|screen)|full-?color|color\s*screen',
+        lowered,
+    ):
+        display_color = 'Color'
+    elif 'monochrome' in lowered or 'black and white' in lowered:
+        display_color = 'Monochrome'
+    else:
+        display_color = ''
+
     # Extract FCC rule parts from STANDARD(S) lines (for test reports)
     fcc_rule_parts = _extract_fcc_part_from_standards(text)
 
@@ -234,6 +263,14 @@ def extract_specs_from_text(text, source_name=''):
         'battery_mah': int(battery) if battery else None,
         'cost_approx': _clean_text(cost_approx),
         'fcc_rule_parts': sorted(fcc_rule_parts) if fcc_rule_parts else [],
+        'channels': int(channels) if channels else None,
+        'display_color': _clean_text(display_color),
+        'part_number': _clean_text(part_number),
+        'noaa': noaa,
+        'bluetooth': bluetooth,
+        'usb_chargeable': usb_chargeable,
+        'usb_programmable': usb_programmable,
+        'is_toy': is_toy,
     }
     logger.info("Spec parse result source=%s model=%s fcc_id=%s bands=%s", source_name, extracted.get('model', ''), extracted.get('fcc_id', ''), extracted.get('freq_bands_tx', ''))
     return extracted

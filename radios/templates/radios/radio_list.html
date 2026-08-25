@@ -14,6 +14,20 @@
         </a>
     </div>
 
+    <!-- Import from URL -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <form method="post" action="{% url 'import_radio_from_url' %}" class="flex flex-col sm:flex-row gap-3 sm:items-center">
+            {% csrf_token %}
+            <label for="import-url" class="text-sm font-medium text-gray-700">Import from product page URL</label>
+            <input type="url" name="url" id="import-url" required
+                   placeholder="https://example.com/products/radio-model"
+                   class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            <button type="submit" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700">
+                Check / Import
+            </button>
+        </form>
+    </div>
+
     <!-- Search and Filter -->
     <div class="bg-white shadow rounded-lg p-6">
         <form method="get" class="space-y-4">

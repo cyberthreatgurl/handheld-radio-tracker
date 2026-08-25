@@ -1,0 +1,35 @@
+# Production / server compose file.
+#
+# Image-only: pulls a prebuilt image (no `build`), so the server does not need
+# the source code or a build toolchain.
+#
+# Usage (on the Docker server):
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Override the image tag if needed:
+#   RADIO_TRACKER_IMAGE=127.0.0.1:5000/radio-tracker:latest docker compose -f docker-compose.prod.yml up -d
+services:
+  app:
+    image: ${RADIO_TRACKER_IMAGE:-127.0.0.1:5000/radio-tracker:latest}
+    container_name: radio-tracker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Headed Chrome under Xvfb is required for the FCC OET browser fallback
+      # (FCC stalls headless browsers). Overrides any FCC_PLAYWRIGHT_HEADLESS
+      # value in .env.
+      FCC_PLAYWRIGHT_HEADLESS: "0"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind-mount the host path where the SMB share is mapped. On Windows set
+      # ARTIFACTS_HOST_PATH=Z:/ (after `net use Z: \\host\artifacts`); defaults
+      # to ./artifacts otherwise.
+      - "${ARTIFACTS_HOST_PATH:-./artifacts}:/app/artifacts"
+      - ./logs:/app/logs
+    # Resolve the `docker-server` hostname (used by DB_HOST in .env) to the
+    # PostgreSQL host. Uses DOCKER_SERVER_IP from .env, falling back to the
+    # Docker host's gateway. If DB_HOST is set to an IP or host.docker.internal,
+    # this entry is simply unused.
+    extra_hosts:
+      - "docker-server:${DOCKER_SERVER_IP:-host-gateway}"

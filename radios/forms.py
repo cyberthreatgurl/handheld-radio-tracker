@@ -92,19 +92,25 @@ class RadioForm(forms.ModelForm):
     class Meta:
         model = Radio
         fields = [
-            'brand', 'model', 'is_a_whitelabel', 'manufacturer', 'radio_type',
+            'brand', 'model', 'part_number', 'is_a_whitelabel', 'is_toy',
+            'manufacturer', 'radio_type',
             'service_types', 'fcc_id',
             'power_watts',
             'satellite_tracking', 'harmonic_suppression',
             'gps', 'aprs', 'air_band', 'dmr',
-            'display', 'battery_mah',
-            'usb_c_charging', 'removable_antenna', 'unlockable', 'firmware_updates',
+            'display', 'display_color', 'channels', 'battery_mah',
+            'usb_c_charging', 'usb_chargeable', 'usb_programmable',
+            'removable_antenna', 'unlockable', 'firmware_updates',
             'bluetooth', 'noaa_wx',
-            'cost_approx', 'rebadges_clones', 'white_label_vendors', 'website', 'review_url',
+            'cost_approx', 'rebadges_clones', 'white_label_vendors',
+            'website', 'review_url',
             'youtube_video_urla', 'notes', 'allowlist_terms',
         ]
         widgets = {
             'is_a_whitelabel': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'is_toy': forms.CheckboxInput(attrs={
                 'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'bluetooth': forms.CheckboxInput(attrs={
@@ -120,6 +126,18 @@ class RadioForm(forms.ModelForm):
                 )
             }),
             'usb_c_charging': forms.CheckboxInput(attrs={
+                'class': (
+                    'appearance-none absolute inset-0 w-full h-full '
+                    'opacity-0 cursor-pointer z-10'
+                )
+            }),
+            'usb_chargeable': forms.CheckboxInput(attrs={
+                'class': (
+                    'appearance-none absolute inset-0 w-full h-full '
+                    'opacity-0 cursor-pointer z-10'
+                )
+            }),
+            'usb_programmable': forms.CheckboxInput(attrs={
                 'class': (
                     'appearance-none absolute inset-0 w-full h-full '
                     'opacity-0 cursor-pointer z-10'
@@ -146,6 +164,10 @@ class RadioForm(forms.ModelForm):
             'model': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., UV-5R, IC-7300'
+            }),
+            'part_number': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'placeholder': 'e.g., SKU, product code'
             }),
             'radio_type': forms.Select(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
@@ -185,6 +207,14 @@ class RadioForm(forms.ModelForm):
             'display': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., LCD, Color TFT, Dot-matrix'
+            }),
+            'display_color': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'placeholder': 'e.g., Color, Monochrome'
+            }),
+            'channels': forms.NumberInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'placeholder': 'e.g., 128'
             }),
             'battery_mah': forms.NumberInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',

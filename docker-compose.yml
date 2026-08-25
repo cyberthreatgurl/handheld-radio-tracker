@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+    image: radio-tracker:latest
+    container_name: radio-tracker
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # File-based content (manuals, test reports, images) and logs persist
+      # outside the container so they survive image rebuilds.
+      - ./artifacts:/app/artifacts
+      - ./logs:/app/logs
+    extra_hosts:
+      # Resolve the external PostgreSQL hostname to the Docker server's IP
+      # from inside the container. Uses DOCKER_SERVER_IP defined in .env.
+      - "docker-server:${DOCKER_SERVER_IP:?Set DOCKER_SERVER_IP in .env}"

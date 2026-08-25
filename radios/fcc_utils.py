@@ -1465,7 +1465,10 @@ def _submit_generic_search_form_via_playwright(fcc_id):
         if exact_match.is_checked():
             exact_match.uncheck()
         page.locator('input[type="submit"][value="Start Search"]').click()
-        page.wait_for_load_state('networkidle', timeout=30000)
+        # FCC's CFML results page keeps connections open, so a strict
+        # `networkidle` wait reliably times out. Wait for DOM readiness
+        # instead; the results-table wait below handles slow renders.
+        page.wait_for_load_state('domcontentloaded', timeout=30000)
 
         # Wait for results table to render
         try:
@@ -1565,7 +1568,7 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                 if hp_exact_4a.is_checked():
                     hp_exact_4a.uncheck()
                 page.locator('input[type="submit"][value="Start Search"]').click()
-                page.wait_for_load_state('networkidle', timeout=30000)
+                page.wait_for_load_state('domcontentloaded', timeout=30000)
                 try:
                     page.wait_for_selector('tbody#offTblBdy', timeout=15000)
                 except Exception:
@@ -1618,7 +1621,7 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                 if grantee_exact.is_checked():
                     grantee_exact.uncheck()
                 page.locator('input[type="submit"][value="Start Search"]').click()
-                page.wait_for_load_state('networkidle', timeout=30000)
+                page.wait_for_load_state('domcontentloaded', timeout=30000)
                 try:
                     page.wait_for_selector('tbody#offTblBdy', timeout=15000)
                 except Exception:
@@ -1666,7 +1669,7 @@ def _submit_generic_search_form_via_playwright(fcc_id):
                 if hyphen_exact.is_checked():
                     hyphen_exact.uncheck()
                 page.locator('input[type="submit"][value="Start Search"]').click()
-                page.wait_for_load_state('networkidle', timeout=30000)
+                page.wait_for_load_state('domcontentloaded', timeout=30000)
                 try:
                     page.wait_for_selector('tbody#offTblBdy', timeout=15000)
                 except Exception:
@@ -3076,6 +3079,24 @@ def _backfill_radio_specs_from_test_report(radio, report):
     return changes
 
 
+def _document_url_conflicts(document_url, fcc_id):
+    """Return True when a document URL already belongs to a different FCC ID.
+
+    FCC attachment URLs (GetApplicationAttachment.html?id=...) are unique to a
+    single application/FCC ID.  If the same URL is already stored under another
+    FCC ID, attaching it to *fcc_id* would be cross-contamination (e.g. a
+    Change-in-ID exhibit page that also lists the original equipment's files).
+    """
+    if not document_url:
+        return False
+    return (
+        RadioOETDocument.objects
+        .filter(document_url__iexact=document_url)
+        .exclude(fcc_id__iexact=fcc_id)
+        .exists()
+    )
+
+
 def _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata, force_reload=False):
     # De-duplicate: if this FCC ID was already fully synced in the current run,
     # just copy documents from sibling radios instead of re-processing.
@@ -3098,6 +3119,8 @@ def _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata, force_reloa
         copied_names = []
         existing_docs = RadioOETDocument.objects.filter(fcc_id__iexact=fcc_id).exclude(radio=radio)
         for existing in existing_docs:
+            if _document_url_conflicts(existing.document_url, fcc_id):
+                continue
             copied_doc, created = RadioOETDocument.objects.update_or_create(
                 radio=radio,
                 fcc_id=fcc_id,
@@ -3193,6 +3216,18 @@ def _sync_oet_documents_for_radio(radio, fcc_id, secondary_metadata, force_reloa
         view_attachment = (document.get('view_attachment') or '').strip()
         document_url = (document.get('document_url') or '').strip()
         if not view_attachment and not document_url:
+            continue
+
+        if _document_url_conflicts(document_url, fcc_id):
+            logger.warning(
+                'FCC OET sync skipped cross-fcc document radio_id=%s '
+                'fcc_id=%s document_url=%s view_attachment=%s — URL already '
+                'belongs to a different FCC ID',
+                getattr(radio, 'id', None),
+                fcc_id,
+                document_url,
+                view_attachment,
+            )
             continue
 
         defaults = {
@@ -3322,6 +3357,8 @@ def _copy_oet_docs_between_radios(target_radio, fcc_id):
     ).exclude(radio=target_radio)
 
     for existing in existing_docs:
+        if _document_url_conflicts(existing.document_url, fcc_id):
+            continue
         _, created = RadioOETDocument.objects.update_or_create(
             radio=target_radio,
             fcc_id=fcc_id,

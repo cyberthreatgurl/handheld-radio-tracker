@@ -34,12 +34,12 @@
                     {% endif %}
                 </div>
                 <div class="mt-4 sm:mt-0 flex space-x-3">
-                    <a href="{% url 'brand_edit' brand.pk %}"
-                       class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white text-sm font-medium rounded-md transition">
+                    <a href="{% url 'brand_detail' brand.pk %}?edit=1"
+                       class="inline-flex items-center px-4 py-2 bg-white text-indigo-700 text-sm font-medium rounded-md shadow hover:bg-indigo-50 transition">
                         Edit Brand
                     </a>
                     <a href="{% url 'radio_list' %}?brand={{ brand.name|urlencode }}"
-                       class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white text-sm font-medium rounded-md transition">
+                       class="inline-flex items-center px-4 py-2 bg-white text-indigo-700 text-sm font-medium rounded-md shadow hover:bg-indigo-50 transition">
                         View All Models
                     </a>
                 </div>
@@ -67,6 +67,99 @@
             </div>
         </div>
     </div>
+
+    <!-- Inline Edit Form -->
+    {% if edit_mode %}
+    <div class="bg-white shadow rounded-lg border border-indigo-200">
+        <form method="post" action="{% url 'brand_detail' brand.pk %}" class="space-y-6 p-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="rounded-md bg-red-50 p-4">
+                <p class="text-sm text-red-800">Please correct the following errors:</p>
+                <div class="mt-2 text-sm text-red-700">{{ form.non_field_errors }}</div>
+            </div>
+            {% endif %}
+
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">Edit Brand</h3>
+                <a href="{% url 'brand_detail' brand.pk %}" class="text-sm text-indigo-600 hover:text-indigo-900">Cancel</a>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">Name <span class="text-red-500">*</span></label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<p class="mt-2 text-sm text-red-600">{{ form.name.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.alias.id_for_label }}" class="block text-sm font-medium text-gray-700">Alias</label>
+                    {{ form.alias }}
+                    {% if form.alias.errors %}<p class="mt-2 text-sm text-red-600">{{ form.alias.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.grantee_code.id_for_label }}" class="block text-sm font-medium text-gray-700">Grantee Code</label>
+                    {{ form.grantee_code }}
+                    {% if form.grantee_code.errors %}<p class="mt-2 text-sm text-red-600">{{ form.grantee_code.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700">Country</label>
+                    {{ form.country }}
+                    {% if form.country.errors %}<p class="mt-2 text-sm text-red-600">{{ form.country.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700">Website</label>
+                    {{ form.website }}
+                    {% if form.website.errors %}<p class="mt-2 text-sm text-red-600">{{ form.website.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.parent_brand.id_for_label }}" class="block text-sm font-medium text-gray-700">Parent Brand</label>
+                    {{ form.parent_brand }}
+                    {% if form.parent_brand.errors %}<p class="mt-2 text-sm text-red-600">{{ form.parent_brand.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.manufacturer_oem.id_for_label }}" class="block text-sm font-medium text-gray-700">Manufacturer (OEM)</label>
+                    {{ form.manufacturer_oem }}
+                    {% if form.manufacturer_oem.errors %}<p class="mt-2 text-sm text-red-600">{{ form.manufacturer_oem.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.white_label_vendors.id_for_label }}" class="block text-sm font-medium text-gray-700">White Label Vendors</label>
+                    {{ form.white_label_vendors }}
+                    {% if form.white_label_vendors.errors %}<p class="mt-2 text-sm text-red-600">{{ form.white_label_vendors.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">Notes</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}<p class="mt-2 text-sm text-red-600">{{ form.notes.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="pt-5 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex space-x-3">
+                    <a href="{% url 'brand_merge' brand.pk %}"
+                       class="inline-flex items-center py-2 px-4 border border-amber-300 rounded-md shadow-sm text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100">
+                        Merge into another brand…
+                    </a>
+                    <a href="{% url 'brand_delete' brand.pk %}"
+                       class="inline-flex items-center py-2 px-4 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100">
+                        Delete Brand…
+                    </a>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'brand_detail' brand.pk %}"
+                       class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        Save Brand
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

@@ -27,12 +27,19 @@ APP_VERSION = __version__
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-replace-this-in-production-with-environment-variable'
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-replace-this-in-production-with-environment-variable',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').strip().lower() in {'1', 'true', 'yes', 'on'}
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if host.strip()
+]
 
 
 # Application definition
@@ -51,6 +58,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -140,6 +148,16 @@ RADIO_IMAGES_DIR = os.environ.get('RADIO_IMAGES_DIR', 'artifacts/images').strip(
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR
 
+# Artifact storage location. The ``artifacts/`` folder is bind-mounted into
+# the container; the Docker host is expected to mount the SMB share at that
+# folder (the ARTIFACTS_STORE_* variables in .env describe the share). Locally
+# it is simply the ``artifacts/`` folder on disk.
+ARTIFACTS_STORE_TYPE = os.environ.get('ARTIFACTS_STORE_TYPE', 'local')
+ARTIFACTS_STORE_HOST = os.environ.get('ARTIFACTS_STORE_HOST', '')
+ARTIFACTS_STORE_FOLDER = os.environ.get('ARTIFACTS_STORE_FOLDER', 'artifacts')
+ARTIFACTS_USER = os.environ.get('ARTIFACTS_USER', '')
+ARTIFACTS_PASSWORD = os.environ.get('ARTIFACTS_PASSWORD', '')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -153,7 +171,7 @@ INTERNAL_IPS = [
 ]
 
 # NPM binary path (for django-tailwind)
-NPM_BIN_PATH = "/usr/local/bin/npm"
+NPM_BIN_PATH = os.environ.get('NPM_BIN_PATH', '/usr/local/bin/npm')
 
 # Application logging
 LOGGING_ENABLED = os.environ.get('LOGGING', 'true').strip().lower() in {'1', 'true', 'yes', 'on'}
