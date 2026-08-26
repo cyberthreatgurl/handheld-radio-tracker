@@ -3,6 +3,17 @@ from . import views
 from .views_import import import_grantee_radios
 from .views_merge import merge_radios
 from .views_manual import manual_upload_view
+from .views_accounts import (
+    login_view,
+    logout_view,
+    profile_view,
+    radio_comment_add,
+    radio_comment_delete,
+    radio_comment_edit,
+    signup_view,
+    user_admin_detail_view,
+    user_admin_view,
+)
 
 urlpatterns = [
     path('', views.dashboard_view, name='dashboard'),
@@ -67,4 +78,23 @@ urlpatterns = [
     path('import-grantee-radios/', import_grantee_radios, name='import_grantee_radios'),
     path('manual-upload/', manual_upload_view, name='manual_upload'),
     path('merge-radios/', merge_radios, name='merge_radios'),
+
+    # Accounts: signup, login, profile, radio comments, user admin
+    path('accounts/signup/', signup_view, name='signup'),
+    path('accounts/login/', login_view, name='login'),
+    path('accounts/logout/', logout_view, name='logout'),
+    path('accounts/profile/', profile_view, name='profile'),
+    path('accounts/users/', user_admin_view, name='user_admin'),
+    path('accounts/users/<int:pk>/', user_admin_detail_view, name='user_admin_detail'),
+    path('radios/<int:pk>/comments/add/', radio_comment_add, name='radio_comment_add'),
+    path(
+        'radios/<int:pk>/comments/<int:comment_pk>/edit/',
+        radio_comment_edit,
+        name='radio_comment_edit',
+    ),
+    path(
+        'radios/<int:pk>/comments/<int:comment_pk>/delete/',
+        radio_comment_delete,
+        name='radio_comment_delete',
+    ),
 ]

@@ -1,7 +1,0 @@
-Brand,Model,APRS,Air Band,Battery (mAh),Cost (Approx),DMR,Display,Freq. Bands (TX),GPS,Harmonic Suppression Status,Intro Year,Known Rebadges / Clones,Power (W),Satellite Tracking,Website,FCC_ID,Grantee_Code,FCC_ID_Exists
-Baofeng,UV-5R,No,No,1800,$25,No,LCD,"VHF, UHF",No,Mixed,2012.0,baofengradio.com,5W,No,,2AJGM-UV-5R,2AJGM,No
-Baofeng,UV-5R (Standard),No,Some,1800,$25,No,Tri-color,"VHF, UHF",No,Notorious,2012,"Retevis RT-5R, Pofung UV-5R",5W,No,baofengradio.com,2AJGM-UV-5R,2AJGM,No
-Baofeng,UV-5RA,No,No,1800,$25,No,Tri-color,"VHF, UHF",No,Notorious,2013,N/A,5W,No,baofengradio.com,2AJGM-UV-5RA,2AJGM,No
-Baofeng,UV-5RE,No,No,1800,$30,No,LCD,"VHF, UHF",No,Mixed,2013.0,Baofeng UV-5R (Variant),5W,No,baofengradio.com,2AJGM-UV-5RE,2AJGM,No
-Baofeng,UV-5RQ,No,No,1800,$25,No,Tri-color,"VHF, UHF",No,Notorious,2013,N/A,5W,No,baofengradio.com,2AJGM-UV-5RQ,2AJGM,No
-Retevis,RT-5R,No,No,1400,$25,No,Tri-color,"VHF, UHF",No,Notorious,2013,Baofeng UV-5R (Rebadge),5W,No,retevis.com,2AHVB-RT-5R,2AHVB,No

@@ -5,6 +5,7 @@ from .forms import ImportGranteeXMLForm
 from .models import Radio, Brand, IgnoredGrantee
 from .fcc_validation import validate_fcc_brand_assignment
 from .fcc_utils import _classify_fcc_device
+from .accounts_decorators import staff_required
 import xml.etree.ElementTree as ET
 import os
 import re
@@ -153,6 +154,7 @@ def freq_range_to_band(lower, upper):
     return bands
 
 
+@staff_required
 def import_grantee_radios(request):
     if request.method == 'POST':
         logger.info("User action xml_import submit actor=%s", _actor_label(request))

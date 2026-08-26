@@ -24,12 +24,14 @@
                         <a href="{% url 'brand_list' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                             Brands
                         </a>
+                        {% if user.is_staff %}
                         <a href="{% url 'radio_add' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                             Add Radio
                         </a>
                         <a href="{% url 'maintenance' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                             Maintenance
                         </a>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
@@ -51,10 +53,29 @@
                             </div>
                         </div>
                     </div>
-                    <a href="/admin/" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                        @{{ user.username }}
+                    </a>
+                    <form method="post" action="{% url 'logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Sign out
+                        </button>
+                    </form>
+                    {% if user.is_staff %}
                     <a href="/admin/" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
                         Admin
                     </a>
+                    {% endif %}
+                    {% else %}
+                    <a href="{% url 'login' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                        Sign in
+                    </a>
+                    <a href="{% url 'signup' %}" class="text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                        Sign up
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -150,9 +171,12 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <p class="text-center text-gray-500 text-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+            <p class="text-gray-500 text-sm">
                 Ham Radio Database &copy; 2025
+            </p>
+            <p class="text-gray-400 text-xs">
+                v{{ app_version }}
             </p>
         </div>
     </footer>

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Edit Comment - Ham Radio Database{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-8">
+            <h2 class="text-xl font-bold text-gray-900">Edit comment</h2>
+            <p class="text-sm text-gray-500 mt-1">
+                On <a href="{{ radio.get_absolute_url }}" class="text-indigo-600 hover:text-indigo-900">{{ radio.brand }} {{ radio.model }}</a>
+            </p>
+            <form method="post" class="mt-6 space-y-4">
+                {% csrf_token %}
+                {{ form.body }}
+                {% for error in form.body.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+                <div class="flex justify-end space-x-3">
+                    <a href="{{ radio.get_absolute_url }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Cancel</a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

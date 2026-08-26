@@ -1,0 +1,37 @@
+<div class="bg-white shadow rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Community Comments</h3>
+
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'radio_comment_add' radio.pk %}" class="mb-6">
+        {% csrf_token %}
+        {{ comment_form.body }}
+        {% for error in comment_form.body.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+        <button type="submit" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Post Comment</button>
+    </form>
+    {% else %}
+    <p class="text-sm text-gray-500 mb-6">
+        <a href="{% url 'login' %}?next={{ request.path }}" class="text-indigo-600 hover:text-indigo-900">Sign in</a> to leave a comment.
+    </p>
+    {% endif %}
+
+    {% for comment in radio.comments.all %}
+    <div class="border-b border-gray-200 py-3 {% if forloop.last %}border-b-0{% endif %}">
+        <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-900">@{{ comment.author_handle }}</span>
+            <span class="text-xs text-gray-500">{{ comment.created_at|date:"M d, Y H:i" }}</span>
+        </div>
+        <p class="mt-1 text-sm text-gray-700">{{ comment.body|linebreaksbr }}</p>
+        {% if comment.user_id == user.id %}
+        <div class="mt-2 flex space-x-3 text-xs">
+            <a href="{% url 'radio_comment_edit' radio.pk comment.pk %}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+            <form method="post" action="{% url 'radio_comment_delete' radio.pk comment.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Delete this comment?')">Delete</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p class="text-sm text-gray-500">No comments yet.</p>
+    {% endfor %}
+</div>

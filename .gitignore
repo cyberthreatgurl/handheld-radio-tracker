@@ -3,6 +3,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.gz
+*.csv
 .Python
 *.so
 *.egg

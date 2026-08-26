@@ -3,6 +3,7 @@ from .models import (
     Radio, RadioCertification, RadioServiceType, Brand,
     RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware,
     Manufacturer, IgnoredGrantee, SyncSkippedGrantee, FCCSyncState,
+    MembershipPlan, RadioComment, UserProfile,
     delete_brand_and_related,
 )
 
@@ -241,3 +242,32 @@ class RadioServiceTypeAdmin(admin.ModelAdmin):
     list_display = ['name', 'rule_part', 'sort_order', 'description']
     search_fields = ['name', 'rule_part', 'description']
     ordering = ['sort_order', 'name']
+
+
+@admin.register(MembershipPlan)
+class MembershipPlanAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'price_cents', 'interval', 'is_active']
+    ordering = ['price_cents']
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = [
+        'handle', 'callsign', 'membership_active', 'membership_plan',
+        'admin_reviewed', 'created_at',
+    ]
+    list_filter = ['membership_active', 'admin_reviewed']
+    search_fields = ['user__username', 'user__email', 'callsign']
+    ordering = ['-created_at']
+
+    def handle(self, obj):
+        """The user's public handle (username)."""
+        return obj.user.username
+    handle.short_description = 'Handle'
+
+
+@admin.register(RadioComment)
+class RadioCommentAdmin(admin.ModelAdmin):
+    list_display = ['radio', 'author_handle', 'created_at']
+    search_fields = ['radio__brand', 'radio__model', 'author_handle', 'body']
+    ordering = ['-created_at']

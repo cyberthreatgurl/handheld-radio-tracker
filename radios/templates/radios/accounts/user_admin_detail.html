@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}User Detail - Ham Radio Database{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-8">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-900">@{{ account.username }}</h2>
+                <a href="{% url 'user_admin' %}" class="text-sm text-indigo-600 hover:text-indigo-900">&larr; All users</a>
+            </div>
+            <dl class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div><dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Handle</dt><dd class="mt-1 text-sm text-gray-900">@{{ account.username }}</dd></div>
+                <div><dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</dt><dd class="mt-1 text-sm text-gray-900">{{ account.email|default:"&mdash;" }}</dd></div>
+                <div><dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">First name</dt><dd class="mt-1 text-sm text-gray-900">{{ account.first_name|default:"&mdash;" }}</dd></div>
+                <div><dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Last name</dt><dd class="mt-1 text-sm text-gray-900">{{ account.last_name|default:"&mdash;" }}</dd></div>
+                <div><dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Call sign</dt><dd class="mt-1 text-sm text-gray-900">{{ account.profile.callsign|default:"&mdash;" }}</dd></div>
+                <div><dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Membership</dt><dd class="mt-1 text-sm text-gray-900">{% if account.profile.membership_active %}Active{% else %}None{% endif %}</dd></div>
+                <div><dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</dt><dd class="mt-1 text-sm text-gray-900">{{ account.date_joined|date:"M d, Y H:i" }}</dd></div>
+                <div><dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Last login</dt><dd class="mt-1 text-sm text-gray-900">{% if account.last_login %}{{ account.last_login|date:"M d, Y H:i" }}{% else %}Never{% endif %}</dd></div>
+                <div><dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</dt><dd class="mt-1 text-sm text-gray-900">{{ account.radio_comments.count }}</dd></div>
+            </dl>
+            <p class="mt-6 text-xs text-gray-400">Password hashes are never displayed.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

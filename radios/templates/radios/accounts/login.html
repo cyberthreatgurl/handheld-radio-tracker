@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Sign In - Ham Radio Database{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-8">
+            <h2 class="text-2xl font-bold text-gray-900 text-center">Sign in</h2>
+            <form method="post" class="mt-6 space-y-4" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+                {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+                </div>
+                {% endfor %}
+                {% for error in form.non_field_errors %}<p class="text-xs text-red-600">{{ error }}</p>{% endfor %}
+                <button type="submit" class="w-full inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Sign In</button>
+            </form>
+            <p class="text-sm text-gray-500 text-center mt-4">
+                No account yet? <a href="{% url 'signup' %}" class="text-indigo-600 hover:text-indigo-900">Sign up</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

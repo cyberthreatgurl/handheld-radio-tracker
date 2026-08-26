@@ -42,6 +42,8 @@ from .forms import (
     RadioForm, RadioSearchForm, BrandForm, ManufacturerForm, RadioImageFormSet,
     RadioCertificationFormSet,
 )
+from .forms_accounts import RadioCommentForm
+from .accounts_decorators import StaffRequiredMixin, is_admin_user, staff_required
 from .image_utils import ingest_radio_image
 from .models import (
     Radio, Brand, RadioManual, RadioFirmware, Manufacturer, FCCSyncState,
@@ -181,6 +183,7 @@ def _run_sync_fcc(fcc_id):
         close_old_connections()
 
 
+@staff_required
 def sync_fcc_view(request):
     """Start a background sync for an FCC ID and return immediately."""
     redirect_to = request.POST.get('redirect_to', 'dashboard')
@@ -208,6 +211,7 @@ def sync_fcc_view(request):
     return redirect(redirect_to)
 
 
+@staff_required
 def sync_radio_fcc_view(request, pk):
     """Fetch and sync FCC data for a specific radio.
 
@@ -493,6 +497,7 @@ def _run_sync_all_grantees(start_date, end_date, grantee_codes):
         close_old_connections()
 
 
+@staff_required
 def sync_all_grantees_view(request):
     """Start a background sync of all grantees and return immediately."""
     if request.method == 'POST':
@@ -753,11 +758,12 @@ class RadioDetailView(DetailView):
                     rule_parts_set.add(part)
         context['cert_freq_ranges'] = sorted(freq_ranges)
         context['cert_rule_parts'] = sorted(rule_parts_set)
+        context['comment_form'] = RadioCommentForm()
 
         return context
 
 
-class RadioCreateView(CreateView):
+class RadioCreateView(StaffRequiredMixin, CreateView):
     """View for creating a new radio entry"""
     model = Radio
     form_class = RadioForm
@@ -791,7 +797,7 @@ class RadioCreateView(CreateView):
         return super().form_valid(form)
 
 
-class RadioUpdateView(UpdateView):
+class RadioUpdateView(StaffRequiredMixin, UpdateView):
     """View for updating an existing radio entry"""
     model = Radio
     form_class = RadioForm
@@ -892,6 +898,7 @@ class RadioUpdateView(UpdateView):
         return redirect(self.request.path)
 
 
+@staff_required
 def scrape_radio_website_view(request, pk):
     """POST-only: scrape a radio's website using the site-import pipeline."""
     radio = get_object_or_404(Radio, pk=pk)
@@ -935,6 +942,7 @@ def scrape_radio_website_view(request, pk):
     return redirect('radio_edit', pk=pk)
 
 
+@staff_required
 def import_radio_from_url_view(request):
     """POST: import (check-and-create/update) a radio from a pasted URL."""
     if request.method == 'POST':
@@ -977,6 +985,7 @@ def import_radio_from_url_view(request):
     return redirect('radio_list')
 
 
+@staff_required
 def radio_image_delete(request, radio_pk, pk):
     """POST-only view: delete a single RadioImage and its stored file."""
     image = get_object_or_404(RadioImage, pk=pk, radio_id=radio_pk)
@@ -991,7 +1000,7 @@ def radio_image_delete(request, radio_pk, pk):
     return redirect('radio_edit', pk=radio_pk)
 
 
-class RadioDeleteView(DeleteView):
+class RadioDeleteView(StaffRequiredMixin, DeleteView):
     """Confirm and delete a radio record."""
     model = Radio
     success_url = reverse_lazy('radio_list')
@@ -1084,7 +1093,7 @@ class BrandListView(ListView):
         )
         return context
 
-class BrandCreateView(CreateView):
+class BrandCreateView(StaffRequiredMixin, CreateView):
     """View for creating a new brand entry"""
     model = Brand
     form_class = BrandForm
@@ -1112,7 +1121,7 @@ class BrandCreateView(CreateView):
         return super().form_valid(form)
 
 
-class BrandDeleteView(DeleteView):
+class BrandDeleteView(StaffRequiredMixin, DeleteView):
     """View for deleting a brand and associated records."""
     model = Brand
     template_name = 'radios/brand_confirm_delete.html'
@@ -1219,6 +1228,7 @@ class BrandDeleteView(DeleteView):
         return redirect(self.success_url)
 
 
+@staff_required
 def brand_bulk_delete_view(request):
     """POST-only: delete multiple brands, their radios, and ignore grantee IDs."""
     if request.method != 'POST':
@@ -1276,6 +1286,7 @@ def brand_bulk_delete_view(request):
     return redirect('brand_list')
 
 
+@staff_required
 def brand_merge_view(request, pk):
     """Merge a source brand into a chosen target brand.
 
@@ -1383,7 +1394,7 @@ class ManufacturerListView(ListView):
         return context
 
 
-class ManufacturerCreateView(CreateView):
+class ManufacturerCreateView(StaffRequiredMixin, CreateView):
     """Create a new manufacturer record."""
     model = Manufacturer
     form_class = ManufacturerForm
@@ -1404,7 +1415,7 @@ class ManufacturerCreateView(CreateView):
         return super().form_valid(form)
 
 
-class ManufacturerUpdateView(UpdateView):
+class ManufacturerUpdateView(StaffRequiredMixin, UpdateView):
     """Edit an existing manufacturer record."""
     model = Manufacturer
     form_class = ManufacturerForm
@@ -1431,7 +1442,7 @@ class ManufacturerUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class ManufacturerDeleteView(DeleteView):
+class ManufacturerDeleteView(StaffRequiredMixin, DeleteView):
     """Delete a manufacturer record (does not delete linked brands)."""
     model = Manufacturer
     template_name = 'radios/manufacturer_confirm_delete.html'
@@ -1853,6 +1864,7 @@ def fcc_lookup_view(request):
     return JsonResponse(summary)
 
 
+@staff_required
 def fcc_validate_fccids_view(request):
     """Validate unique FCC IDs against the live FCC API and local database.
 
@@ -2023,6 +2035,7 @@ def _build_local_fcc_id_map():
     return mapping
 
 
+@staff_required
 def maintenance_view(request):
     """Maintenance page — DB stats, country counts, grant year chart."""
     logger.info("User action maintenance_view actor=%s", _actor_label(request))
@@ -2075,6 +2088,7 @@ def maintenance_view(request):
     return render(request, 'radios/maintenance.html', context)
 
 
+@staff_required
 def processing_logs_view(request):
     """Show recent processing events and a scrollable application log."""
     logger.info("User action processing_logs_view actor=%s", _actor_label(request))
@@ -2338,6 +2352,13 @@ def brand_detail_view(request, pk, edit=False):
     and the ``/edit/`` URL (or ``?edit=1``) opens the edit form by default.
     """
     brand = get_object_or_404(Brand, pk=pk)
+
+    # Editing (via /edit/, ?edit=1, or a POST) is staff-only; the read-only
+    # detail page stays public.
+    if (
+        edit or request.GET.get('edit') == '1' or request.method == 'POST'
+    ) and not is_admin_user(request.user):
+        return redirect('login')
 
     edit_mode = edit or request.GET.get('edit') == '1'
     form = BrandForm(instance=brand)

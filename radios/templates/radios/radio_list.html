@@ -9,11 +9,14 @@
             <h1 class="text-3xl font-bold text-gray-900">All Radios</h1>
             <p class="mt-2 text-sm text-gray-600">{{ total_count }} radios in database</p>
         </div>
+        {% if user.is_staff %}
         <a href="{% url 'radio_add' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
             + Add New Radio
         </a>
+        {% endif %}
     </div>
 
+    {% if user.is_staff %}
     <!-- Import from URL -->
     <div class="bg-white shadow rounded-lg p-4">
         <form method="post" action="{% url 'import_radio_from_url' %}" class="flex flex-col sm:flex-row gap-3 sm:items-center">
@@ -27,6 +30,7 @@
             </button>
         </form>
     </div>
+    {% endif %}
 
     <!-- Search and Filter -->
     <div class="bg-white shadow rounded-lg p-6">
@@ -209,8 +213,10 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                         <a href="{% url 'radio_detail' radio.pk %}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                        {% if user.is_staff %}
                         <a href="{% url 'radio_edit' radio.pk %}" class="text-green-600 hover:text-green-900">Edit</a>
                         <a href="{% url 'radio_delete' radio.pk %}" class="text-red-600 hover:text-red-900">Delete</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

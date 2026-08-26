@@ -3,9 +3,11 @@ from django.contrib import messages
 from django.db import IntegrityError, transaction
 from .models import Brand, Radio
 from .forms_merge_fields import MergeRadiosFieldsForm
+from .accounts_decorators import staff_required
 
 # Enhanced merge view: lets user pick which record's data to keep for each field
 
+@staff_required
 def merge_radios(request):
     if request.method == 'POST':
         radio_ids = request.POST.getlist('radio_ids')

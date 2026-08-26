@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from .forms import DocumentUploadForm
 from .models import Radio, RadioManual
+from .accounts_decorators import staff_required
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ def _actor_label(request):
     return 'anonymous'
 
 
+@staff_required
 def manual_upload_view(request):
     """Document library: upload files of any type and browse/download them."""
 

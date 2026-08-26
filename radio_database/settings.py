@@ -123,6 +123,24 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Accounts & authentication
+# Passwords are hashed with Django's default PBKDF2-SHA256 (industry standard;
+# never symmetric-encrypt passwords — hashes must be one-way).
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'dashboard'
+
+# Rate limits for the account endpoints (attempts / window).
+AUTH_RATE_LIMIT = '10/1h'
+SIGNUP_RATE_LIMIT = '5/1h'
+
+# Social logins (Google, Apple, ...) go here once wired in, e.g.:
+# AUTHENTICATION_BACKENDS = [
+#     'social_core.backends.google.GoogleOAuth2',
+#     'django.contrib.auth.backends.ModelBackend',
+# ]
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 

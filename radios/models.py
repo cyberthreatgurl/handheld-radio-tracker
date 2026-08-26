@@ -1081,3 +1081,130 @@ class FCCSyncState(models.Model):
         if self.last_grantee_sync_at:
             return f"Last grantee sync: {self.last_grantee_sync_at.strftime('%Y-%m-%d %H:%M UTC')}"
         return "Never synced"
+
+
+# ---------------------------------------------------------------------------
+# User accounts, membership, and community comments
+# ---------------------------------------------------------------------------
+
+
+class MembershipPlan(models.Model):
+    """A subscription tier that gates database search access.
+
+    Currently a stub: the only expected plan is a nominal "$1/month" tier.
+    Payment processing (Stripe/PayPal/etc.) is wired in later — see
+    ``radios.accounts_backends`` for the intended integration points.
+    """
+
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
+    price_cents = models.PositiveIntegerField(
+        default=100,
+        help_text="Price in cents (100 = $1.00).",
+    )
+    interval = models.CharField(
+        max_length=20, default='month',
+        help_text="Billing interval: month, year, ...",
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """Model options: ordering, verbose names."""
+        ordering = ['price_cents']
+        verbose_name = 'Membership Plan'
+        verbose_name_plural = 'Membership Plans'
+
+    def __str__(self):
+        return f"{self.name} (${self.price_cents / 100:.2f}/{self.interval})"
+
+
+class UserProfile(models.Model):
+    """One-to-one extension of the built-in ``User`` model.
+
+    Holds the non-auth profile fields (call sign) plus membership state.
+    ``User.username`` serves as the public "handle"; first name, last name,
+    email, and call sign are private and must never be shown to other users.
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='profile',
+    )
+    callsign = models.CharField(
+        max_length=20, blank=True,
+        help_text="FCC call sign (private).",
+    )
+    membership_plan = models.ForeignKey(
+        MembershipPlan,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='subscribers',
+    )
+    membership_active = models.BooleanField(
+        default=False,
+        help_text="Whether the user has an active paid membership.",
+    )
+    membership_started_at = models.DateTimeField(null=True, blank=True)
+    membership_expires_at = models.DateTimeField(null=True, blank=True)
+    # Admin notification bookkeeping: False means "new user not yet reviewed".
+    admin_reviewed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Model options: verbose names."""
+        verbose_name = 'User Profile'
+        verbose_name_plural = 'User Profiles'
+
+    def __str__(self):
+        return self.user.username
+
+    @property
+    def handle(self):
+        """Public handle — the only user identifier other users may see."""
+        return self.user.username
+
+    @property
+    def has_search_access(self):
+        """Whether this user may use the (future) paid search feature."""
+        return self.membership_active
+
+
+class RadioComment(models.Model):
+    """A user comment attached to a radio.
+
+    Users can create, edit, and delete only their own comments. The author's
+    handle is snapshotted at creation time so the comment stays attributable
+    even if the user later changes their handle.
+    """
+
+    radio = models.ForeignKey(
+        Radio, on_delete=models.CASCADE, related_name='comments',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='radio_comments',
+    )
+    author_handle = models.CharField(
+        max_length=150, blank=True,
+        help_text="Snapshot of the author's public handle at creation time.",
+    )
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Model options: ordering."""
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.author_handle or self.user.username} on {self.radio}"
+
+    def save(self, *args, **kwargs):
+        # Snapshot the handle on first save so comment history stays stable.
+        if not self.author_handle and self.user_id:
+            self.author_handle = self.user.username
+        super().save(*args, **kwargs)

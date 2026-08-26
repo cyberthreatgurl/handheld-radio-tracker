@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}My Profile - Ham Radio Database{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-8">
+            <h2 class="text-2xl font-bold text-gray-900">Modify your profile</h2>
+            <p class="text-sm text-gray-500 mt-1">
+                Your public handle is <span class="font-medium text-gray-900">@{{ profile.handle }}</span>.
+                All other details below are private.
+            </p>
+            <form method="post" class="mt-6 space-y-4" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>{% endif %}
+                    {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Save Changes</button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t">
+                <h3 class="text-lg font-medium text-gray-900">Membership</h3>
+                <p class="text-sm text-gray-600 mt-1">
+                    {% if profile.membership_active %}
+                        Active{% if profile.membership_expires_at %} — expires {{ profile.membership_expires_at|date:"M d, Y" }}{% endif %}.
+                    {% else %}
+                        No active membership. A $1/month plan unlocks database search.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
