@@ -15,6 +15,23 @@ read_env_value() {
     grep -E "^$1=" .env 2>/dev/null | head -n1 | cut -d= -f2- | tr -d "'\""
 }
 
+bump_version() {
+    # Increment the patch segment of __version__ in radio_database/__init__.py
+    # so each deploy carries a fresh version visible in the page footer.
+    local file="radio_database/__init__.py"
+    local current major minor patch next
+    current="$(grep -oE '__version__ = "[0-9]+\.[0-9]+\.[0-9]+"' "$file" \
+        | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)"
+    IFS='.' read -r major minor patch <<< "$current"
+    next="$major.$minor.$((patch + 1))"
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        sed -i '' "s/__version__ = \"$current\"/__version__ = \"$next\"/" "$file"
+    else
+        sed -i "s/__version__ = \"$current\"/__version__ = \"$next\"/" "$file"
+    fi
+    echo "$next"
+}
+
 SERVER_IP="${DOCKER_SERVER_IP:-$(read_env_value DOCKER_SERVER_IP)}"
 REGISTRY_PORT="${DOCKER_REGISTRY_PORT:-$(read_env_value DOCKER_REGISTRY_PORT)}"
 REGISTRY_PORT="${REGISTRY_PORT:-5000}"
@@ -31,13 +48,33 @@ IMAGE="${SERVER_IP}:${REGISTRY_PORT}/radio-tracker:latest"
 # QEMU, which Docker Desktop handles automatically.
 PLATFORMS="${DOCKER_BUILD_PLATFORMS:-linux/amd64}"
 
+# Bump the patch version so the footer shows a fresh build number.
+APP_VERSION="$(bump_version)"
+echo "Deploying version v${APP_VERSION}"
+
 echo "Building ${IMAGE} (platform: ${PLATFORMS}) ..."
 docker build --platform "${PLATFORMS}" -t "${IMAGE}" .
 
 # Push with the Docker daemon (not buildx) so the daemon's insecure-registries
 # setting for the HTTP registry is respected.
 echo "Pushing ${IMAGE} ..."
-docker push "${IMAGE}"
+PUSH_ATTEMPTS="${DOCKER_PUSH_RETRIES:-3}"
+PUSH_DELAY="${DOCKER_PUSH_RETRY_DELAY:-5}"
+push_ok=false
+for (( attempt = 1; attempt <= PUSH_ATTEMPTS; attempt++ )); do
+    if docker push "${IMAGE}"; then
+        push_ok=true
+        break
+    fi
+    if (( attempt < PUSH_ATTEMPTS )); then
+        echo "Push attempt ${attempt}/${PUSH_ATTEMPTS} failed — retrying in ${PUSH_DELAY}s ..." >&2
+        sleep "${PUSH_DELAY}"
+    fi
+done
+if [[ "${push_ok}" != true ]]; then
+    echo "ERROR: push failed after ${PUSH_ATTEMPTS} attempts." >&2
+    exit 1
+fi
 
 echo "Done. On the Docker server, pull and run with:"
 echo "  docker pull ${IMAGE}"

@@ -1,5 +1,6 @@
 """Regression tests for bulk brand deletion."""
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
@@ -14,6 +15,10 @@ class BrandBulkDeleteTest(TestCase):
         self.brand_b = Brand.objects.create(name='BrandB', grantee_code='2BBB')
         Radio.objects.create(brand='BrandA', model='A1', fcc_id='2AAA-A1')
         Radio.objects.create(brand='BrandB', model='B1', fcc_id='2BBB-B1')
+        staff = User.objects.create_user(
+            username='staff', password='testpass123', is_staff=True,
+        )
+        self.client.force_login(staff)
 
     def test_bulk_delete_removes_brands_radios_and_ignores_grantees(self):
         """Selected brands, their radios, and grantee codes are handled."""

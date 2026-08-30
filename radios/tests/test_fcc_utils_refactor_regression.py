@@ -121,7 +121,7 @@ class FCCUtilsBehaviorRegressionTest(TestCase):
 
     _allowlist_match_cases = [
         ({'FCCId': 'XYZ-GMRS1', 'grantee': '', 'applicationPurpose': '', 'grantDate': ''},
-         {'text_blob': ''}, ['GMRS'], ['GMRS']),
+         {'text_blob': ''}, ['GMRS'], []),
         ({'FCCId': 'XYZ-123', 'grantee': 'GMRS Transceiver Co', 'applicationPurpose': '', 'grantDate': ''},
          {'text_blob': ''}, ['TRANSCEIVER'], ['TRANSCEIVER']),
         ({'FCCId': 'XYZ-123', 'grantee': '', 'applicationPurpose': 'original equipment', 'grantDate': ''},

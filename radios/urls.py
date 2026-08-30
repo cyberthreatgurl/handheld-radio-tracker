@@ -76,6 +76,11 @@ urlpatterns = [
     ),
 
     path('import-grantee-radios/', import_grantee_radios, name='import_grantee_radios'),
+    path(
+        'radios/probe-embeddable/',
+        views.probe_embeddable_view,
+        name='probe_embeddable',
+    ),
     path('manual-upload/', manual_upload_view, name='manual_upload'),
     path('merge-radios/', merge_radios, name='merge_radios'),
 

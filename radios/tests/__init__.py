@@ -7,7 +7,6 @@ from django.test import TestCase
 from django.test import override_settings
 from django.urls import reverse
 from django.test.client import RequestFactory
-from urllib.parse import quote_plus
 
 from ..admin import BrandAdmin
 from ..models import Radio, Brand, IgnoredGrantee, Manufacturer
@@ -27,6 +26,7 @@ from ..fcc_utils import (
     _ensure_grantee_brand_and_manufacturer,
     _resolve_authoritative_radio_brand_name,
     fetch_and_sync_fcc_id,
+    reset_sync_metadata_cache,
     _sync_oet_documents_for_radio,
 )
 from ..manual_extraction import extract_specs_from_text, extract_text_from_pdf_with_metadata
@@ -125,7 +125,7 @@ class BrandDeletionCleanupTest(TestCase):
 
 
 class RadioDetailFCCLinkTest(TestCase):
-    def test_detail_fcc_link_keeps_existing_hyphenated_id(self):
+    def test_detail_renders_fcc_id_text_without_oet_url(self):
         radio = Radio.objects.create(
             brand='Xiamen Radtel Electronics Co., Ltd',
             model='RT-920',
@@ -134,26 +134,25 @@ class RadioDetailFCCLinkTest(TestCase):
 
         response = self.client.get(reverse('radio_detail', kwargs={'pk': radio.pk}))
 
-        expected_lookup = quote_plus('2AO8L-RT-920')
-        self.assertContains(
-            response,
-            f'https://www.fcc.gov/oet/ea/fccid?id={expected_lookup}',
-        )
+        # No OET page URL stored → the FCC ID renders as plain text.
+        self.assertContains(response, '2AO8L-RT-920')
+        self.assertNotContains(response, 'ViewExhibitReport.cfm')
 
-    def test_detail_fcc_link_normalizes_alpha_prefix_compact_id_to_3_char_grantee(self):
+    def test_detail_links_fcc_id_to_stored_oet_url(self):
         radio = Radio.objects.create(
             brand='AnyBrand',
             model='AlphaModel',
             fcc_id='LKD1',
+            oet_page_url=(
+                'https://apps.fcc.gov/oetcf/eas/reports/'
+                'ViewExhibitReport.cfm?application_id=abc123'
+            ),
         )
 
         response = self.client.get(reverse('radio_detail', kwargs={'pk': radio.pk}))
 
-        expected_lookup = quote_plus('LKD-1')
-        self.assertContains(
-            response,
-            f'https://www.fcc.gov/oet/ea/fccid?id={expected_lookup}',
-        )
+        self.assertContains(response, 'ViewExhibitReport.cfm')
+        self.assertContains(response, 'application_id=abc123')
 
 
 class FCCIDUtilsTest(TestCase):
@@ -176,7 +175,7 @@ class FCCIDUtilsTest(TestCase):
         lookup = normalize_fcc_id_for_lookup('2AJGM-BF-1904')
         self.assertEqual(lookup, '2AJGM-BF-1904')
 
-    def test_detail_fcc_link_normalizes_compact_id_using_brand_grantee(self):
+    def test_detail_renders_compact_fcc_id_with_brand_grantee(self):
         Brand.objects.create(name='Kydera', grantee_code='VO6')
         radio = Radio.objects.create(
             brand='Kydera',
@@ -186,11 +185,7 @@ class FCCIDUtilsTest(TestCase):
 
         response = self.client.get(reverse('radio_detail', kwargs={'pk': radio.pk}))
 
-        expected_lookup = quote_plus('VO6-200UV')
-        self.assertContains(
-            response,
-            f'https://www.fcc.gov/oet/ea/fccid?id={expected_lookup}',
-        )
+        self.assertContains(response, 'VO6200UV')
 
     def test_lookup_variants_include_normalized_form_for_hyphen_in_product_code(self):
         variants = _fcc_lookup_variants('2A4FBTDBL-1')
@@ -202,7 +197,7 @@ class FCCIDUtilsTest(TestCase):
         payload = _build_generic_search_payload('2A4FBTDBL-1')
         self.assertEqual(payload['grantee_code'], '2A4FB')
         self.assertEqual(payload['product_code'], 'TDBL-1')
-        self.assertEqual(payload['product_exact_match'], 'on')
+        self.assertEqual(payload['product_exact_match'], '')
         self.assertEqual(payload['application_status_description'], '')
         self.assertEqual(payload['eas_apps_only'], 'Y')
         self.assertNotIn('application_status', payload)
@@ -551,6 +546,12 @@ class FCCOETHtmlParsingTest(TestCase):
 
 
 class FCCOETSyncFallbackTest(TestCase):
+    def setUp(self):
+        # Clear module-level OET sync caches so a prior test in the same run
+        # (e.g. FCCOETDocumentLibrarySyncTest) cannot short-circuit this test
+        # via the _synced_oet_fcc_ids de-duplication set.
+        reset_sync_metadata_cache()
+
     def test_sync_uses_existing_fcc_docs_when_secondary_metadata_empty(self):
         source_radio = Radio.objects.create(brand='BrandA', model='M1', fcc_id='2AJGM-UV82')
         target_radio = Radio.objects.create(brand='BrandB', model='M2', fcc_id='2AJGM-UV82')

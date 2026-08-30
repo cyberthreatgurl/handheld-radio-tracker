@@ -14,7 +14,7 @@ Covers:
 """
 
 import os
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
@@ -27,7 +27,9 @@ from ..fcc_utils import (
     _normalize_brand_identity,
     _find_existing_grantee_brand,
     _fcc_request_with_retry,
+    fetch_and_sync_fcc_id,
 )
+from ..models import Radio
 
 # Import the module directly to test env-dependent functions
 from .. import fcc_utils
@@ -39,12 +41,12 @@ class AllowlistMatchTermsTest(TestCase):
     def setUp(self):
         self.allowlist = ['TRANSCEIVER', 'TRANSMITTER', 'RECEIVER', 'GMRS', 'MURS']
 
-    def test_matches_fcc_id_field(self):
-        """FCCId containing an allowlist term should match."""
+    def test_fcc_id_field_is_excluded(self):
+        """FCC ID is a technical identifier and must not match the allowlist."""
         record = {'FCCId': 'XYZ-GMRS1', 'grantee': '', 'applicationPurpose': '', 'grantDate': ''}
         meta = {'text_blob': ''}
         matched = _allowlist_match_terms(record, meta, self.allowlist)
-        self.assertIn('GMRS', matched)
+        self.assertEqual(matched, [])
 
     def test_matches_grantee_field(self):
         """Grantee name containing an allowlist term should match."""
@@ -78,7 +80,7 @@ class AllowlistMatchTermsTest(TestCase):
 
     def test_case_insensitive_matching(self):
         """Allowlist matching should be case-insensitive."""
-        record = {'FCCId': 'xyz-tRANscEIver', 'grantee': '', 'applicationPurpose': '', 'grantDate': ''}
+        record = {'FCCId': 'xyz-123', 'grantee': 'tRANscEIver Co', 'applicationPurpose': '', 'grantDate': ''}
         meta = {'text_blob': ''}
         matched = _allowlist_match_terms(record, meta, ['TRANSCEIVER'])
         self.assertIn('TRANSCEIVER', matched)
@@ -98,17 +100,20 @@ class AllowlistMatchTermsTest(TestCase):
         self.assertEqual(matched, [])
 
     def test_all_sources_combined(self):
-        """All sources should be concatenated with '|' separator."""
+        """All non-FCC-ID sources should be concatenated and matched."""
         record = {
-            'FCCId': 'ABC-RADIO',
-            'grantee': 'TX Corp',
+            'FCCId': 'ABC-XYZ',
+            'grantee': 'GMRS Corp',
             'applicationPurpose': 'Original Equipment',
             'grantDate': '2020-01-01',
         }
         meta = {'text_blob': 'VHF/UHF transceiver module'}
-        matched = _allowlist_match_terms(record, meta, ['TRANSCEIVER', 'RADIO'])
-        self.assertIn('RADIO', matched)
+        matched = _allowlist_match_terms(
+            record, meta, ['TRANSCEIVER', 'GMRS', 'ORIGINAL EQUIPMENT'],
+        )
+        self.assertIn('GMRS', matched)
         self.assertIn('TRANSCEIVER', matched)
+        self.assertIn('ORIGINAL EQUIPMENT', matched)
 
 
 class RadioAllowlistTermsTest(TestCase):
@@ -130,10 +135,10 @@ class RadioAllowlistTermsTest(TestCase):
         os.environ.pop('FCC_RADIO_ALLOWLIST_TERMS', None)
         terms = fcc_utils._radio_allowlist_terms()
         self.assertIn('TRANSCEIVER', terms)
-        self.assertIn('TRANSMITTER', terms)
-        self.assertIn('RECEIVER', terms)
+        self.assertIn('GMRS', terms)
         self.assertIn('MURS', terms)
-        self.assertIn('ORIGINAL EQUIPMENT', terms)
+        self.assertIn('HAM', terms)
+        self.assertIn('CB', terms)
 
     def test_custom_terms_merged_with_defaults(self):
         """Custom env terms should be merged with defaults."""
@@ -388,3 +393,219 @@ class FCC503FastFailTest(TestCase):
             result = fn('get', 'https://example.com/test', impersonate='chrome124', timeout=5)
 
         self.assertEqual(result.status_code, 200)
+
+
+class NormalizeRulePartTest(TestCase):
+    """Regression: rule part normalization for ignored/key-fob matching."""
+
+    def test_plain_unchanged(self):
+        self.assertEqual(fcc_utils._normalize_rule_part('15.231'), '15.231')
+
+    def test_paren_suffix_stripped(self):
+        self.assertEqual(fcc_utils._normalize_rule_part('15.231(e)'), '15.231')
+
+    def test_spaced_paren_suffix_stripped(self):
+        self.assertEqual(fcc_utils._normalize_rule_part('15.231 (e)'), '15.231')
+
+    def test_bare_letter_suffix_stripped(self):
+        self.assertEqual(fcc_utils._normalize_rule_part('15.231e'), '15.231')
+
+    def test_non_dotted_parts_untouched(self):
+        self.assertEqual(fcc_utils._normalize_rule_part('95E'), '95E')
+        self.assertEqual(fcc_utils._normalize_rule_part('15B'), '15B')
+
+    def test_empty_and_none(self):
+        self.assertEqual(fcc_utils._normalize_rule_part(''), '')
+        self.assertEqual(fcc_utils._normalize_rule_part(None), '')
+
+
+class RulePartsMatchIgnoredTest(TestCase):
+    """Regression: ignored rule parts match subsection variants."""
+
+    def test_exact_match(self):
+        self.assertTrue(fcc_utils._rule_parts_match_ignored(['15.231']))
+
+    def test_paren_variant_matches(self):
+        self.assertTrue(fcc_utils._rule_parts_match_ignored(['15.231(a)']))
+
+    def test_bare_letter_variant_matches(self):
+        self.assertTrue(fcc_utils._rule_parts_match_ignored(['15.231e']))
+
+    def test_non_ignored_parts_do_not_match(self):
+        self.assertFalse(fcc_utils._rule_parts_match_ignored(['90', '95E']))
+
+    def test_empty_returns_false(self):
+        self.assertFalse(fcc_utils._rule_parts_match_ignored([]))
+
+
+class DetectKeyFobTest(TestCase):
+    """Regression: key fob / RKE / TPMS detection."""
+
+    def test_rule_part_signal(self):
+        record = {'applicationPurpose': 'Change in Identification', 'grantee': 'Remote Tech LLC'}
+        meta = {'rule_parts': ['15.231'], 'text_blob': '', 'original_equipment_rows': []}
+        signals = fcc_utils._detect_key_fob(record, meta, 'TOY-V1')
+        self.assertIn('rule_part=15.231', signals)
+
+    def test_keyword_signal(self):
+        record = {'applicationPurpose': 'Original Equipment', 'grantee': 'Some Co'}
+        meta = {
+            'rule_parts': [],
+            'text_blob': 'Remote keyless entry transmitter',
+            'original_equipment_rows': [],
+        }
+        signals = fcc_utils._detect_key_fob(record, meta, 'FOB-1')
+        self.assertTrue(any(s.startswith('keyword=') for s in signals))
+
+    def test_frequency_signal(self):
+        record = {'applicationPurpose': 'Original Equipment', 'grantee': 'Some Co'}
+        meta = {
+            'rule_parts': [],
+            'text_blob': '',
+            'original_equipment_rows': [
+                {
+                    'lower_freq_mhz': '314.35',
+                    'upper_freq_mhz': '314.35',
+                    'emission_designator': '',
+                },
+            ],
+        }
+        signals = fcc_utils._detect_key_fob(record, meta, '')
+        self.assertIn('freq=keyfob_band', signals)
+
+    def test_radio_not_misclassified(self):
+        record = {'applicationPurpose': 'Original Equipment', 'grantee': 'Baofeng'}
+        meta = {
+            'rule_parts': ['95E'],
+            'text_blob': 'GMRS transceiver',
+            'original_equipment_rows': [
+                {
+                    'lower_freq_mhz': '462.0',
+                    'upper_freq_mhz': '467.0',
+                    'emission_designator': '11K0F3E',
+                },
+            ],
+        }
+        self.assertEqual(fcc_utils._detect_key_fob(record, meta, 'UV-5R'), [])
+
+    def test_wideband_receiver_not_misclassified_as_key_fob(self):
+        record = {'applicationPurpose': 'Original Equipment', 'grantee': 'Iradio'}
+        meta = {
+            'rule_parts': ['15B'],
+            'text_blob': 'Scanning receiver',
+            'original_equipment_rows': [
+                {'lower_freq_mhz': '108.0', 'upper_freq_mhz': '136.0',
+                 'emission_designator': ''},
+                {'lower_freq_mhz': '136.0', 'upper_freq_mhz': '174.0',
+                 'emission_designator': ''},
+                {'lower_freq_mhz': '350.0', 'upper_freq_mhz': '390.0',
+                 'emission_designator': ''},
+                {'lower_freq_mhz': '400.0', 'upper_freq_mhz': '520.0',
+                 'emission_designator': ''},
+            ],
+        }
+        self.assertEqual(
+            fcc_utils._detect_key_fob(record, meta, 'UV-98PLUS'),
+            [],
+        )
+
+
+class MetadataIsEmptyTest(TestCase):
+    """Regression: empty secondary metadata detection."""
+
+    def test_empty_dict(self):
+        self.assertTrue(fcc_utils._metadata_is_empty({}))
+
+    def test_none(self):
+        self.assertTrue(fcc_utils._metadata_is_empty(None))
+
+    def test_outage_result_is_empty(self):
+        meta = {
+            'record_count': 0,
+            'text_blob': '',
+            'matched_keys': [],
+            'test_report_candidates': [],
+            'original_equipment_rows': [],
+            'oet_documents': [],
+            'rule_parts': [],
+            'original_fcc_id_from_tcb': '',
+        }
+        self.assertTrue(fcc_utils._metadata_is_empty(meta))
+
+    def test_rule_parts_make_it_non_empty(self):
+        self.assertFalse(fcc_utils._metadata_is_empty({'rule_parts': ['95E']}))
+
+    def test_application_id_makes_it_non_empty(self):
+        self.assertFalse(fcc_utils._metadata_is_empty({'application_id': 'abc123'}))
+
+
+class KeyFobSyncSkipTest(TestCase):
+    """End-to-end: fetch_and_sync_fcc_id never imports key fobs."""
+
+    def setUp(self):
+        fcc_utils.reset_sync_metadata_cache()
+
+    @staticmethod
+    def _primary_response(fcc_id, purpose, grantee='Remote Tech LLC'):
+        xml = (
+            '<?xml version="1.0"?><fCCIDInfoes><fccidInfo>'
+            f'<FCCId>{fcc_id}</FCCId>'
+            f'<grantee>{grantee}</grantee>'
+            f'<applicationPurpose>{purpose}</applicationPurpose>'
+            f'<grantDate>04/22/2018</grantDate>'
+            '</fccidInfo></fCCIDInfoes>'
+        )
+        resp = Mock()
+        resp.status_code = 200
+        resp.text = xml
+        return resp
+
+    def test_key_fob_rule_part_skipped_even_for_change_in_id(self):
+        primary = self._primary_response('2AOKM-TOY-V1', 'Change in Identification')
+        meta = {
+            'record_count': 1,
+            'text_blob': (
+                '2AOKM-TOY-V1 | Change in Identification | '
+                '04/22/2018 | 314.35 | 314.35'
+            ),
+            'rule_parts': ['15.231'],
+            'application_id': 'abc123',
+            'original_equipment_rows': [
+                {
+                    'lower_freq_mhz': '314.35',
+                    'upper_freq_mhz': '314.35',
+                    'emission_designator': '',
+                },
+            ],
+            'oet_documents': [],
+            'original_fcc_id_from_tcb': '',
+        }
+        with patch('radios.fcc_utils._fcc_request_with_retry', return_value=primary), \
+             patch('radios.fcc_utils.fetch_fcc_secondary_metadata', return_value=meta):
+            added, updated, messages = fetch_and_sync_fcc_id('2AOKM-TOY-V1')
+
+        self.assertEqual(added, 0)
+        self.assertEqual(updated, 0)
+        self.assertFalse(Radio.objects.filter(fcc_id__iexact='2AOKM-TOY-V1').exists())
+        self.assertTrue(any('key fob' in message.lower() for message in messages))
+
+    def test_empty_metadata_defers_record_creation(self):
+        primary = self._primary_response('2AOKM-TOY-V1', 'Change in Identification')
+        meta = {
+            'record_count': 0,
+            'text_blob': '',
+            'matched_keys': [],
+            'test_report_candidates': [],
+            'original_equipment_rows': [],
+            'oet_documents': [],
+            'rule_parts': [],
+            'original_fcc_id_from_tcb': '',
+        }
+        with patch('radios.fcc_utils._fcc_request_with_retry', return_value=primary), \
+             patch('radios.fcc_utils.fetch_fcc_secondary_metadata', return_value=meta):
+            added, updated, messages = fetch_and_sync_fcc_id('2AOKM-TOY-V1')
+
+        self.assertEqual(added, 0)
+        self.assertEqual(updated, 0)
+        self.assertFalse(Radio.objects.filter(fcc_id__iexact='2AOKM-TOY-V1').exists())
+        self.assertTrue(any('no FCC metadata' in message for message in messages))

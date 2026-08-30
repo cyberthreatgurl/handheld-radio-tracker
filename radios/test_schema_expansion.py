@@ -18,6 +18,7 @@ Covers:
 
 from datetime import date
 
+from django.contrib.auth.models import User
 from django.test import TestCase, Client
 from django.urls import reverse
 
@@ -32,9 +33,8 @@ class RadioServiceTypeModelTests(TestCase):
     """Tests for the RadioServiceType model and seed migration."""
 
     def test_seed_migration_created_all_types(self):
-        """All 9 canonical service types were seeded by the data migration."""
+        """All canonical service types were seeded by the data migrations."""
         expected = [
-            ('EMS', 'Part 9'),
             ('GMRS', 'Part 95E'),
             ('FRS', 'Part 95B'),
             ('CB', 'Part 95D'),
@@ -44,11 +44,13 @@ class RadioServiceTypeModelTests(TestCase):
             ('Marine', 'Part 80'),
             ('Aviation', 'Part 87'),
             ('PoC', 'Parts 22/24/27'),
+            ('Part 15 Subpart B', 'Part 15B'),
+            ('Part 15 Subpart C', 'Part 15C'),
         ]
         names = list(
             RadioServiceType.objects.values_list('name', flat=True)
         )
-        self.assertEqual(len(names), 9)
+        self.assertEqual(len(names), 11)
         for name, rule_part in expected:
             obj = RadioServiceType.objects.get(name=name)
             self.assertEqual(
@@ -67,7 +69,7 @@ class RadioServiceTypeModelTests(TestCase):
             RadioServiceType.objects.values_list('name', flat=True)
         )
         self.assertEqual(names[0], 'GMRS')
-        self.assertEqual(names[-1], 'PoC')
+        self.assertEqual(names[-1], 'Part 15 Subpart C')
 
 
 class RadioCertificationModelTests(TestCase):
@@ -476,11 +478,14 @@ class RadioUpdateViewTests(TestCase):
         self.radio = Radio.objects.create(
             brand='UpdateBrand', model='UPD-900',
         )
+        staff = User.objects.create_user(
+            username='staff', password='testpass123', is_staff=True,
+        )
+        self.client.force_login(staff)
 
     def test_edit_page_has_certification_formset(self):
         """Edit page context includes certification_formset."""
-        client = Client()
-        response = client.get(
+        response = self.client.get(
             reverse('radio_edit', kwargs={'pk': self.radio.pk}),
         )
         self.assertEqual(response.status_code, 200)
@@ -488,16 +493,14 @@ class RadioUpdateViewTests(TestCase):
 
     def test_edit_page_renders_certification_section(self):
         """Edit page HTML contains FCC Certifications section."""
-        client = Client()
-        response = client.get(
+        response = self.client.get(
             reverse('radio_edit', kwargs={'pk': self.radio.pk}),
         )
         self.assertContains(response, 'FCC Certifications', status_code=200)
 
     def test_edit_page_renders_hardware_features(self):
         """Edit page HTML contains hardware feature checkboxes."""
-        client = Client()
-        response = client.get(
+        response = self.client.get(
             reverse('radio_edit', kwargs={'pk': self.radio.pk}),
         )
         self.assertContains(response, 'USB-C Charging', status_code=200)
@@ -511,19 +514,21 @@ class RadioCreateViewTests(TestCase):
 
     def setUp(self):
         Brand.objects.create(name='CreateBrand')
+        staff = User.objects.create_user(
+            username='staff', password='testpass123', is_staff=True,
+        )
+        self.client.force_login(staff)
 
     def test_create_page_has_hardware_features(self):
         """Create page HTML includes hardware feature checkboxes."""
-        client = Client()
-        response = client.get(reverse('radio_add'))
+        response = self.client.get(reverse('radio_add'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'USB-C Charging')
         self.assertContains(response, 'Removable Antenna')
 
     def test_create_page_has_certification_section(self):
         """Create page HTML includes FCC Certifications section."""
-        client = Client()
-        response = client.get(reverse('radio_add'))
+        response = self.client.get(reverse('radio_add'))
         self.assertContains(response, 'FCC Certifications', status_code=200)
 
 

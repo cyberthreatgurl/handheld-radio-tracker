@@ -22,10 +22,11 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Bind-mount the host path where the SMB share is mapped. On Windows set
-      # ARTIFACTS_HOST_PATH=Z:/ (after `net use Z: \\host\artifacts`); defaults
-      # to ./artifacts otherwise.
-      - "${ARTIFACTS_HOST_PATH:-./artifacts}:/app/artifacts"
+      # Artifact files (manuals, OET docs, test reports, images) live on an
+      # SMB share. The named volume below mounts //HOST/FOLDER directly inside
+      # the Docker VM. Docker Desktop for Windows cannot bind-mount a mapped
+      # network drive (e.g. Z:), so the share must be mounted here instead.
+      - artifacts_share:/app/artifacts
       - ./logs:/app/logs
     # Resolve the `docker-server` hostname (used by DB_HOST in .env) to the
     # PostgreSQL host. Uses DOCKER_SERVER_IP from .env, falling back to the
@@ -33,3 +34,11 @@ services:
     # this entry is simply unused.
     extra_hosts:
       - "docker-server:${DOCKER_SERVER_IP:-host-gateway}"
+
+volumes:
+  artifacts_share:
+    driver: local
+    driver_opts:
+      type: cifs
+      device: "//${ARTIFACTS_STORE_HOST}/${ARTIFACTS_STORE_FOLDER}"
+      o: "addr=${ARTIFACTS_STORE_HOST},username=${ARTIFACTS_USER},password=${ARTIFACTS_PASSWORD},vers=3.0,uid=0,gid=0,file_mode=0666,dir_mode=0777"

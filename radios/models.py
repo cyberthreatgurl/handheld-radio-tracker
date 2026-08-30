@@ -422,36 +422,44 @@ class Radio(models.Model):
     # Hardware features
     usb_c_charging = models.BooleanField(
         default=False,
+        verbose_name='USB-C Charging',
         help_text="Has USB-C charging port",
     )
     usb_chargeable = models.BooleanField(
         default=False,
+        verbose_name='USB Chargeable',
         help_text="Charges via USB (any connector type)",
     )
     usb_programmable = models.BooleanField(
         default=False,
+        verbose_name='USB Programmable',
         help_text="Programmable via USB cable/software",
     )
     bluetooth = models.BooleanField(
         default=False,
+        verbose_name='Bluetooth',
         help_text="Has Bluetooth (2.4 GHz ISM band: 2402-2480 MHz). "
                   "Used for programming and/or wireless audio accessories.",
     )
     noaa_wx = models.BooleanField(
         default=False,
+        verbose_name='NOAA Weather Radio',
         help_text="Receives NOAA Weather Radio (162.40-162.55 MHz). "
                   "Receive-only VHF weather band.",
     )
     removable_antenna = models.BooleanField(
         default=True,
+        verbose_name='Removable Antenna',
         help_text="Antenna is user-removable (vs. fixed)",
     )
     unlockable = models.BooleanField(
         default=False,
+        verbose_name='Unlockable',
         help_text="Can be unlocked/widened via key combo or software",
     )
     firmware_updates = models.BooleanField(
         default=False,
+        verbose_name='Firmware Updates',
         help_text="Manufacturer provides firmware updates",
     )
 

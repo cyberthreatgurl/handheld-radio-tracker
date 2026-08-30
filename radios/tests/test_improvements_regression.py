@@ -12,10 +12,13 @@ Covers:
 # protected-access: tests intentionally exercise private (_) helper functions to
 # verify internal correctness without relying on public API surface stability.
 
+import json
+import socket
 import threading
 from unittest.mock import Mock, patch
 
-from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.test import RequestFactory, TestCase
 
 from .. import fcc_id_utils
 from .. import fcc_utils
@@ -388,9 +391,10 @@ class PlaywrightInstancePoolTest(TestCase):
 class CopyOETDocsBetweenRadiosTest(TestCase):
     """P2b.2 — _copy_oet_docs_between_radios copies OET documents between radios."""
 
+    @patch('radios.fcc_utils._document_url_conflicts', return_value=False)
     @patch('radios.fcc_utils.RadioOETDocument')
     @patch('radios.fcc_utils._update_radio_oet_page_url')
-    def test_copies_documents_from_existing_radio(self, mock_update_url, mock_oet_model):
+    def test_copies_documents_from_existing_radio(self, mock_update_url, mock_oet_model, _mock_conflicts):
         """Documents from a sibling radio with same FCC ID are copied."""
         target_radio = Mock(id=1)
         fcc_id = '2AJGM-UV5R'
@@ -435,9 +439,10 @@ class CopyOETDocsBetweenRadiosTest(TestCase):
         self.assertEqual(copied, 0)
         mock_update_url.assert_not_called()
 
+    @patch('radios.fcc_utils._document_url_conflicts', return_value=False)
     @patch('radios.fcc_utils.RadioOETDocument')
     @patch('radios.fcc_utils._update_radio_oet_page_url')
-    def test_skips_already_copied_documents(self, mock_update_url, mock_oet_model):  # pylint: disable=unused-argument
+    def test_skips_already_copied_documents(self, mock_update_url, mock_oet_model, _mock_conflicts):  # pylint: disable=unused-argument
         """Documents that already exist on target (created=False) are not counted."""
         target_radio = Mock(id=1)
         fcc_id = '2AJGM-UV5R'
@@ -762,3 +767,64 @@ class SanitizeFCCXMLTest(TestCase):
         )
         self.assertIn('A &amp; B &amp; C', result)
         self.assertNotIn('A & B & C', result)
+
+
+class ProbeEmbeddableViewTest(TestCase):
+    """Split-viewer embeddability probe: SSRF-safe header check."""
+
+    def _request(self, url='https://example.com/'):
+        user = get_user_model().objects.create_user(
+            'prober', password='pw', is_staff=True,
+        )
+        req = RequestFactory().post('/radios/probe-embeddable/', {'url': url})
+        req.user = user
+        return req
+
+    def _data(self, resp):
+        return json.loads(resp.content)
+
+    def test_host_is_public_rejects_loopback(self):
+        with patch(
+            'radios.views.socket.getaddrinfo',
+            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('127.0.0.1', 80))],
+        ):
+            self.assertFalse(views._host_is_public('example.com'))
+
+    def test_host_is_public_accepts_public_ip(self):
+        with patch(
+            'radios.views.socket.getaddrinfo',
+            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('93.184.216.34', 80))],
+        ):
+            self.assertTrue(views._host_is_public('example.com'))
+
+    def test_x_frame_options_blocks_embedding(self):
+        fake_resp = Mock(status_code=200)
+        fake_resp.headers = {'X-Frame-Options': 'DENY'}
+        fake_resp.close = Mock()
+        with patch('radios.views.curl_requests.get', return_value=fake_resp):
+            with patch('radios.views._host_is_public', return_value=True):
+                resp = views.probe_embeddable_view(self._request())
+        data = self._data(resp)
+        self.assertFalse(data['embeddable'])
+        self.assertEqual(data['reason'], 'x_frame_options')
+
+    def test_plain_page_is_embeddable(self):
+        fake_resp = Mock(status_code=200)
+        fake_resp.headers = {}
+        fake_resp.close = Mock()
+        with patch('radios.views.curl_requests.get', return_value=fake_resp):
+            with patch('radios.views._host_is_public', return_value=True):
+                resp = views.probe_embeddable_view(self._request())
+        self.assertTrue(self._data(resp)['embeddable'])
+
+    def test_invalid_scheme_rejected(self):
+        with patch('radios.views._host_is_public', return_value=True):
+            resp = views.probe_embeddable_view(self._request('file:///etc/passwd'))
+        self.assertFalse(self._data(resp)['embeddable'])
+
+    def test_private_host_rejected(self):
+        with patch('radios.views._host_is_public', return_value=False):
+            resp = views.probe_embeddable_view(self._request('http://192.168.1.1/admin'))
+        data = self._data(resp)
+        self.assertFalse(data['embeddable'])
+        self.assertEqual(data['reason'], 'blocked_host')

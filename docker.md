@@ -68,10 +68,11 @@ The container reads its configuration from `.env`. The relevant variables:
 > (Linux requires `--add-host=host.docker.internal:host-gateway`).
 
 > **Artifacts store:** `artifacts/` (manuals, OET documents, test reports,
-> images) is bind-mounted into the container. Mount the SMB share on the Docker
-> host at that folder (Windows: `net use` / junction; macOS:
-> `./mount-artifacts.sh`), and the container sees the share automatically.
-> See §7 for the exact steps.
+> images) is a CIFS named volume that mounts the SMB share
+> `//ARTIFACTS_STORE_HOST/ARTIFACTS_STORE_FOLDER` directly inside the Docker
+> VM. Docker Desktop for Windows cannot bind-mount a mapped network drive
+> (e.g. `Z:`), so the share is mounted via the `local` volume driver instead.
+> See §7 for details.
 
 ## 4. Build the Image
 
@@ -248,26 +249,29 @@ docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d --force-recreate
 ```
 
-### Artifacts share (host mount)
+### Artifacts share (CIFS named volume)
 
-The container bind-mounts `ARTIFACTS_HOST_PATH` (default `./artifacts`) at
-`/app/artifacts`. On the Windows server, map the share to a drive and set the
-variable in `.env`:
+The container mounts `artifacts_share` — a CIFS volume that connects to
+`//ARTIFACTS_STORE_HOST/ARTIFACTS_STORE_FOLDER` (from `.env`) directly inside
+the Docker VM. This is required because Docker Desktop for Windows cannot
+bind-mount a mapped network drive (`Z:`).
 
 ```powershell
-net use Z: \\10.0.0.9\artifacts /user:radio "##trackb33!!IT" /persistent:yes
-# ARTIFACTS_HOST_PATH=Z:/
+# .env needs ARTIFACTS_STORE_HOST / _FOLDER / _USER / _PASSWORD set
+docker compose -f docker-compose.prod.yml up -d --force-recreate
+docker exec radio-tracker sh -c 'ls /app/artifacts'
 ```
 
-On macOS (local dev), mount the share at `./artifacts` instead:
+> If the CIFS volume fails to mount (the Docker VM must support `mount.cifs`),
+> fall back to mounting the share in WSL2 and bind-mounting its path, or mirror
+> the share to a local folder with robocopy and bind-mount that instead.
+
+On macOS (local dev), mount the share at `./artifacts` with:
 
 ```bash
 ./mount-artifacts.sh            # mount at ./artifacts
 ./mount-artifacts.sh --unmount  # unmount
 ```
-
-Once mounted, `docker compose -f docker-compose.prod.yml up -d` serves the
-shared files.
 
 ## 8. Everyday Operations
 

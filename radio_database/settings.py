@@ -166,6 +166,10 @@ RADIO_IMAGES_DIR = os.environ.get('RADIO_IMAGES_DIR', 'artifacts/images').strip(
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR
 
+# Allow same-origin PDFs (manuals, test reports, OET docs) to be framed in the
+# split-window viewer on the radio edit page. Cross-origin framing stays blocked.
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 # Artifact storage location. The ``artifacts/`` folder is bind-mounted into
 # the container; the Docker host is expected to mount the SMB share at that
 # folder (the ARTIFACTS_STORE_* variables in .env describe the share). Locally

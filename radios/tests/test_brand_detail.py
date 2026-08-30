@@ -5,6 +5,7 @@ hosts inline editing. The legacy ``/edit/`` URL renders the same page with the
 edit form open, and successful edits redirect back to the clean detail URL.
 """
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
@@ -16,6 +17,10 @@ class BrandDetailEditTest(TestCase):
 
     def setUp(self):
         self.brand = Brand.objects.create(name='TestBrand', grantee_code='2TEST')
+        staff = User.objects.create_user(
+            username='staff', password='testpass123', is_staff=True,
+        )
+        self.client.force_login(staff)
 
     def _post_data(self, **overrides):
         data = {

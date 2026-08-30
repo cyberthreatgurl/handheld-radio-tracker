@@ -2,12 +2,19 @@
 
 from unittest import mock
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
 
 class ImportFromUrlRedirectTest(TestCase):
     """After a successful import the user lands on the radio edit page."""
+
+    def setUp(self):
+        staff = User.objects.create_user(
+            username='staff', password='testpass123', is_staff=True,
+        )
+        self.client.force_login(staff)
 
     def test_successful_import_redirects_to_radio_edit(self):
         """A created/updated radio redirects to its edit page."""

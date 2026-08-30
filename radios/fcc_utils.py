@@ -169,8 +169,9 @@ class _FCCConnectionDownError(Exception):
     """
 
 # Allowlist: keywords that identify a device as a two-way radio.  Matched
-# case-insensitively against the combined text of FCC ID, grantee name,
-# application purpose, and secondary metadata.
+# case-insensitively against grantee name, application purpose, grant date,
+# and secondary metadata text.  The FCC ID is intentionally excluded — it is
+# a technical identifier, not a product description.
 #
 # Set FCC_RADIO_ALLOWLIST_TERMS in the environment to override.
 DEFAULT_RADIO_ALLOWLIST_TERMS = (
@@ -260,6 +261,23 @@ DEFAULT_RADIO_DENYLIST_TERMS = (
     "VACUUM CLEANER,AIR CONDITIONER,AIR PURIFIER"
 )
 RADIO_DENYLIST_ENV_NAME = "FCC_RADIO_DENYLIST_TERMS"
+
+# Key fobs and similar low-power vehicle/garage transmitters.  Unlike the
+# denylist (which is bypassed for Change-in-Identification and specific
+# FCC ID lookups), key fob detection always runs — a key fob re-badged via
+# a Change in Identification filing is still a key fob, not a radio.
+# Set FCC_KEY_FOB_KEYWORDS in the environment to override these.
+DEFAULT_KEY_FOB_KEYWORDS = (
+    "KEY FOB,KEYFOB,KEY FOBS,"
+    "REMOTE KEYLESS ENTRY,KEYLESS ENTRY,PASSIVE ENTRY,"
+    "REMOTE KEY,SMART KEY,TRANSMITTER KEY,"
+    "RKE TRANSMITTER,RKE SYSTEM,RKE FOB,"
+    "TPMS,TIRE PRESSURE MONITOR,TIRE PRESSURE SENSOR,"
+    "GARAGE DOOR OPENER,GARAGE DOOR TRANSMITTER,GARAGE DOOR REMOTE,"
+    "IMMOBILIZER,VEHICLE SECURITY SYSTEM,CAR ALARM REMOTE,"
+    "REMOTE CONTROL TOY,TOY REMOTE CONTROL"
+)
+KEY_FOB_KEYWORDS_ENV_NAME = "FCC_KEY_FOB_KEYWORDS"
 
 # Rule parts to exclude from import (e.g. 15.231 covers low-power
 # periodic transmitters like garage door openers, car key fobs,
@@ -637,6 +655,18 @@ def _radio_denylist_terms():
     return _parse_allowlist_terms(DEFAULT_RADIO_DENYLIST_TERMS)
 
 
+def _key_fob_keywords():
+    """Return the key-fob keyword list (env-overridable).
+
+    Set ``FCC_KEY_FOB_KEYWORDS`` to an empty string to disable keyword
+    matching (rule-part and frequency detection still apply).
+    """
+    raw = os.environ.get(KEY_FOB_KEYWORDS_ENV_NAME)
+    if raw is not None:
+        return _parse_allowlist_terms(raw)
+    return _parse_allowlist_terms(DEFAULT_KEY_FOB_KEYWORDS)
+
+
 def _ignored_rule_parts():
     """Return the set of rule parts to exclude from import.
 
@@ -651,6 +681,26 @@ def _ignored_rule_parts():
     return {part.strip() for part in raw.split(',') if part.strip()}
 
 
+def _normalize_rule_part(value):
+    """Normalize a rule part string for comparison.
+
+    FCC rule parts come back with subsection suffixes in several forms:
+    ``15.231``, ``15.231(e)``, ``15.231 (e)``, ``15.231e``.  Normalize all
+    of these to ``15.231`` so ignored/key-fob matching is not defeated by
+    formatting.  Non-dotted parts (``15B``, ``95E``) are left untouched.
+    """
+    part = (value or '').strip().upper()
+    if not part:
+        return ''
+    # Strip a trailing parenthesized subsection: "15.231 (e)" -> "15.231"
+    part = re.sub(r'\s*\([^)]*\)\s*$', '', part).strip()
+    # For dotted parts, strip a bare trailing subsection letter:
+    # "15.231e" -> "15.231", "15.231a" -> "15.231" (leaves "15B", "95E")
+    if '.' in part:
+        part = re.sub(r'[A-Z]+$', '', part)
+    return part
+
+
 def _rule_parts_match_ignored(rule_parts):
     """Return True if any rule part is in the ignored set."""
     if not rule_parts:
@@ -658,9 +708,10 @@ def _rule_parts_match_ignored(rule_parts):
     ignored = _ignored_rule_parts()
     if not ignored:
         return False
-    norm_ignored = {p.strip().upper() for p in ignored}
+    norm_ignored = {_normalize_rule_part(p) for p in ignored}
+    norm_ignored.discard('')
     for rp in rule_parts:
-        if (rp or '').strip().upper() in norm_ignored:
+        if _normalize_rule_part(rp) in norm_ignored:
             return True
     return False
 
@@ -4766,6 +4817,120 @@ def _denylist_match_terms(primary_record, secondary_metadata, denylist_terms):
     return [term for term in denylist_terms if _term_matches_text(term, text)]
 
 
+def _detect_key_fob(primary_record, sec_metadata, product_code=''):
+    """Return matched key-fob signals, or an empty list if not a key fob.
+
+    Key fobs, remote keyless entry (RKE), TPMS sensors, and garage door
+    openers must never enter the radio database, regardless of how the
+    query was initiated (bulk grantee scan, specific FCC ID, or
+    Change-in-Identification).  Detection uses three independent signals:
+
+      1. Rule part 15.231 (FCC "Periodic operation" — the rule part used by
+         nearly all key fobs, garage door openers, and RC toys).
+      2. Keyword matches in the primary record and secondary metadata text.
+      3. A low-power transmitter in the 260–470 MHz band with no radio rule
+         part and no radio emission designator.
+
+    Args:
+        primary_record: Dict from the FCC primary API (getFCCIDList).
+        sec_metadata: Dict from ``fetch_fcc_secondary_metadata``.
+        product_code: Product code portion of the FCC ID (optional).
+
+    Returns:
+        List of matched signal strings (e.g. ['rule_part=15.231']).
+    """
+    signals = []
+
+    # 1) Rule part check (normalized so "15.231(e)" matches "15.231").
+    norm_parts = {
+        _normalize_rule_part(p)
+        for p in (sec_metadata.get('rule_parts') or [])
+        if _normalize_rule_part(p)
+    }
+    if '15.231' in norm_parts:
+        signals.append('rule_part=15.231')
+
+    # 2) Keyword check against primary fields, product code, and text_blob.
+    text = ' | '.join(
+        str(v) for v in (
+            primary_record.get('applicationPurpose', ''),
+            primary_record.get('grantee', ''),
+            product_code or '',
+            (sec_metadata.get('text_blob', '') or ''),
+        ) if v
+    ).upper()
+    for keyword in _key_fob_keywords():
+        if keyword and keyword in text:
+            signals.append(f'keyword={keyword}')
+            break
+
+    # 3) Frequency signature: a low-power transmitter in the 260–470 MHz band
+    #    that does NOT overlap any known radio band and has no radio emission
+    #    designator is characteristic of key fobs / RC toys / garage openers.
+    #    Overlapping a configured radio band (UHF, 70cm amateur, etc.) makes
+    #    the frequency ambiguous, so those rows are not treated as key fobs.
+    #    A device that overlaps ANY configured radio band is a wideband
+    #    receiver/transceiver (e.g. a scanning receiver covering VHF and UHF),
+    #    not a key fob — even if one of its rows falls in the key-fob band
+    #    (e.g. a 350–390 MHz row alongside a 400–520 MHz row).
+    if not signals and not (norm_parts & _get_radio_rule_parts()):
+        radio_bands = _get_radio_freq_bands()
+        oe_rows = sec_metadata.get('original_equipment_rows', []) or []
+        overlaps_any_radio = False
+        in_keyfob_band = False
+        has_radio_emission = False
+        radio_prefixes = _get_radio_emission_prefixes()
+        for row in oe_rows:
+            try:
+                lower = float(row.get('lower_freq_mhz', 0) or 0)
+                upper = float(row.get('upper_freq_mhz', 0) or 0)
+            except (ValueError, TypeError):
+                continue
+            if lower <= 0 or upper <= 0:
+                continue
+            if lower > upper:
+                lower, upper = upper, lower
+            in_band = lower <= 470.0 and upper >= 260.0
+            overlaps_radio = any(
+                lower <= band_high and upper >= band_low
+                for band_low, band_high, _label in radio_bands
+            )
+            if overlaps_radio:
+                overlaps_any_radio = True
+            if in_band and not overlaps_radio:
+                in_keyfob_band = True
+            emission = (row.get('emission_designator') or '').strip().upper()
+            if emission:
+                for prefix in radio_prefixes:
+                    if emission.startswith(prefix):
+                        has_radio_emission = True
+                        break
+        if in_keyfob_band and not has_radio_emission and not overlaps_any_radio:
+            signals.append('freq=keyfob_band')
+
+    return signals
+
+
+def _metadata_is_empty(sec_metadata):
+    """Return True when secondary metadata has no usable classification data.
+
+    When the FCC GenericSearch/TCB endpoints are unreachable (503 outage) or
+    return nothing, ``fetch_fcc_secondary_metadata`` yields an empty result.
+    No device classification, OET link, or keyword evidence can be derived
+    from an empty result — records must not be created on empty data.
+    """
+    if not sec_metadata:
+        return True
+    return not any((
+        sec_metadata.get('rule_parts'),
+        sec_metadata.get('application_id'),
+        sec_metadata.get('oet_documents'),
+        (sec_metadata.get('text_blob') or '').strip(),
+        sec_metadata.get('original_equipment_rows'),
+        sec_metadata.get('test_report_candidates'),
+    ))
+
+
 def _clean_query(value):
     return (value or '').strip().upper().replace(' ', '')
 
@@ -5088,6 +5253,8 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
     skipped_non_radio = 0
     skipped_denylist = 0
     skipped_ignored_rule_part = 0
+    skipped_key_fob = 0
+    skipped_empty_metadata = 0
     skipped_stale = 0
     attached_reports = 0
     synced_oet_docs = 0
@@ -5395,6 +5562,27 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                             current_oe.extend(orig_oe_rows)
                             sec_metadata['original_equipment_rows'] = current_oe
 
+        # ── Empty metadata guard ──
+        # If the secondary metadata fetch yielded nothing usable (FCC outage
+        # or an empty GenericSearch/TCB result), we have no technical data to
+        # classify the device and no application_id to store the FCC page
+        # link.  Do NOT create or update records on empty data — defer them
+        # for a later sync when the FCC site is reachable.  Existing radios
+        # are intentionally not stamped so they are retried next time.
+        if _metadata_is_empty(sec_metadata):
+            skipped_empty_metadata += 1
+            logger.warning(
+                "FCC ingest skipped record source=fcc_api query=%s "
+                "fcc_id=%s reason=empty_secondary_metadata "
+                "record_count=%s rule_parts=%s primary_purpose=%s",
+                fcc_id_query,
+                fcc_id,
+                sec_metadata.get('record_count', 0),
+                sec_metadata.get('rule_parts', []),
+                res.get('applicationPurpose', ''),
+            )
+            continue
+
         # ── Device classification using FCC technical fields ──
         # The classifier checks rule parts, frequency ranges, and emission
         # designators — the authoritative FCC certification fields that
@@ -5437,6 +5625,31 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         # Classifier tags are authoritative (GMRS, FRS, CB, VHF, UHF, etc.).
         # Keyword matches are descriptive (TRANSCEIVER, PORTABLE RADIO, etc.).
         stored_terms = sorted(set(classifier_tags + kw_matched))
+
+        # Key fob / RKE / TPMS / garage-door transmitters must never be
+        # imported, even for Change-in-Identification or specific FCC ID
+        # lookups (which bypass the general non-radio and denylist checks).
+        # This runs after classification so a 15.231 or 260–470 MHz
+        # signature is honored even when the metadata otherwise looks blank.
+        key_fob_signals = _detect_key_fob(res, sec_metadata, product_code)
+        if key_fob_signals:
+            for radio in radios_with_fcc:
+                should_skip, _ = stale_radios.get(radio.id, (False, None))
+                if should_skip:
+                    continue
+                _stamp_lookup_timestamp(radio, lookup_started_at)
+            skipped_key_fob += 1
+            logger.info(
+                "FCC ingest skipped record source=fcc_api query=%s "
+                "fcc_id=%s reason=key_fob signals=%s rule_parts=%s "
+                "primary_purpose=%s",
+                fcc_id_query,
+                fcc_id,
+                ','.join(key_fob_signals),
+                sec_metadata.get('rule_parts', []),
+                res.get('applicationPurpose', ''),
+            )
+            continue
 
         # After the allowlist passes, check the denylist.  A device that
         # matched "RECEIVER" (allowlist) but also matches "SPEAKER
@@ -5768,6 +5981,15 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
             f"Skipped {skipped_denylist} records that matched FCC_RADIO_DENYLIST_TERMS "
             f"({','.join(denylist_terms[:10])}{'...' if len(denylist_terms) > 10 else ''})."
         )
+    if skipped_key_fob:
+        messages.append(
+            f"Skipped {skipped_key_fob} key fob / remote keyless / TPMS / garage door record(s)."
+        )
+    if skipped_empty_metadata:
+        messages.append(
+            f"Skipped {skipped_empty_metadata} record(s) with no FCC metadata "
+            f"(FCC site likely unreachable — retry later)."
+        )
     if skipped_stale:
         messages.append(
             f"Skipped {skipped_stale} radio records because FCC last-modified data was not newer than the prior lookup timestamp."
@@ -5778,7 +6000,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         messages.append(f"Synced {synced_oet_docs} OET exhibit documents.")
     messages.append(f"Successfully processed {len(records)} records for {fcc_id_query}.")
     logger.info(
-        "FCC sync completed query=%s added=%s updated=%s exact_grantee=%s skipped_non_exact=%s skipped_non_radio=%s skipped_denylist=%s skipped_ignored_rule_part=%s skipped_stale_lookup=%s attached_test_reports=%s synced_oet_documents=%s",
+        "FCC sync completed query=%s added=%s updated=%s exact_grantee=%s skipped_non_exact=%s skipped_non_radio=%s skipped_denylist=%s skipped_ignored_rule_part=%s skipped_key_fob=%s skipped_empty_metadata=%s skipped_stale_lookup=%s attached_test_reports=%s synced_oet_documents=%s",
         fcc_id_query,
         count_added,
         count_updated,
@@ -5787,6 +6009,8 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         skipped_non_radio,
         skipped_denylist,
         skipped_ignored_rule_part,
+        skipped_key_fob,
+        skipped_empty_metadata,
         skipped_stale,
         attached_reports,
         synced_oet_docs,

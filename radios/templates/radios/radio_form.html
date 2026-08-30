@@ -3,8 +3,9 @@
 {% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Radio - Ham Radio Database{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto">
-    <div class="space-y-6">
+<div class="max-w-7xl mx-auto">
+    <div id="split-container" class="lg:flex lg:items-start">
+        <div id="split-form-pane" class="lg:flex-1 lg:min-w-0 space-y-6">
         <!-- Header -->
         <div>
             <a href="{% url 'radio_list' %}" class="text-sm text-indigo-600 hover:text-indigo-900 mb-2 inline-block">
@@ -349,12 +350,30 @@
                             <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700">Website</label>
                             {{ form.website }}
                             {% if form.website.errors %}<p class="mt-2 text-sm text-red-600">{{ form.website.errors.0 }}</p>{% endif %}
+                            {% if form.instance.pk and form.instance.website %}
+                            <a href="{{ form.instance.website }}" target="_blank"
+                               onclick="return openSplit(this.href, 'Website');"
+                               class="mt-1 text-xs text-indigo-600 hover:text-indigo-900 inline-block">View website ↗</a>
+                            {% endif %}
                         </div>
                         <div class="sm:col-span-2">
                             <label for="{{ form.youtube_video_urla.id_for_label }}" class="block text-sm font-medium text-gray-700">YouTube Video URLs</label>
                             {{ form.youtube_video_urla }}
                             <p class="mt-1 text-xs text-gray-500">Enter one URL per line.</p>
                             {% if form.youtube_video_urla.errors %}<p class="mt-2 text-sm text-red-600">{{ form.youtube_video_urla.errors.0 }}</p>{% endif %}
+                            {% if form.instance.pk and form.instance.youtube_video_urla %}
+                            <ul class="mt-1 space-y-1">
+                                {% for yt_url in form.instance.youtube_video_urla.splitlines %}
+                                {% if yt_url %}
+                                <li class="text-xs">
+                                    <a href="{{ yt_url }}" target="_blank"
+                                       onclick="return openSplit(this.href, 'YouTube Video');"
+                                       class="text-indigo-600 hover:text-indigo-900">▶ {{ yt_url }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -375,6 +394,11 @@
                                 Review URL
                             </label>
                             {{ form.review_url }}
+                            {% if form.instance.pk and form.instance.review_url %}
+                            <a href="{{ form.instance.review_url }}" target="_blank"
+                               onclick="return openSplit(this.href, 'Review');"
+                               class="mt-1 text-xs text-indigo-600 hover:text-indigo-900 inline-block">View review ↗</a>
+                            {% endif %}
                         </div>
                         <div class="border rounded-md p-4 bg-gray-50">
                             <h4 class="text-sm font-semibold text-gray-900 mb-2">All Documents</h4>
@@ -392,7 +416,9 @@
                                 {% for doc in form.instance.oet_documents.all %}
                                 <li class="text-xs text-gray-700">
                                     {% if doc.document_file %}
-                                    <a href="{{ doc.document_file.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ doc.view_attachment|default:doc.exhibit_type }}</a>
+                                    <a href="{{ doc.document_file.url }}" target="_blank"
+                                       onclick="return openSplit(this.href, '{{ doc.view_attachment|default:doc.exhibit_type|escapejs }}');"
+                                       class="text-indigo-600 hover:text-indigo-900 cursor-pointer">{{ doc.view_attachment|default:doc.exhibit_type }}</a>
                                     {% else %}
                                     <span class="text-gray-500">{{ doc.view_attachment|default:doc.exhibit_type }} (not downloaded)</span>
                                     {% endif %}
@@ -411,7 +437,8 @@
                                     <span class="font-medium text-gray-500">{{ doc.get_doc_type_display }}:</span>
                                     {% if doc.manual_pdf %}
                                     <a href="{{ doc.manual_pdf.url }}" target="_blank"
-                                       class="text-indigo-600 hover:underline">{{ doc.manual_pdf.name|cut:"manuals/" }}</a>
+                                       onclick="return openSplit(this.href, '{{ doc.get_doc_type_display }}: {{ doc.manual_pdf.name|cut:"manuals/"|escapejs }}');"
+                                       class="text-indigo-600 hover:underline cursor-pointer">{{ doc.manual_pdf.name|cut:"manuals/" }}</a>
                                     {% endif %}
                                 </li>
                                 {% endfor %}
@@ -424,7 +451,9 @@
                             <ul class="space-y-1">
                                 {% for report in form.instance.fcc_test_reports.all %}
                                 <li class="text-xs text-gray-700">
-                                    <a href="{{ report.report_pdf.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ report.report_pdf.name }}</a>
+                                    <a href="{{ report.report_pdf.url }}" target="_blank"
+                                       onclick="return openSplit(this.href, '{{ report.report_title|default:report.report_pdf.name|escapejs }}');"
+                                       class="text-indigo-600 hover:text-indigo-900 cursor-pointer">{{ report.report_pdf.name }}</a>
                                     {% if report.product_designation %}
                                     <span class="text-gray-500 ml-1">({{ report.product_designation }})</span>
                                     {% endif %}
@@ -591,6 +620,42 @@
                 </div>
             </form>
         </div>
+        </div>
+
+        {% if form.instance.pk %}
+        <!-- Draggable divider between the form and the split viewer. -->
+        <div id="split-divider"
+             class="w-1.5 flex-shrink-0 self-stretch cursor-col-resize bg-gray-200 hover:bg-indigo-400 rounded-full mx-1"
+             style="display:none;" title="Drag to resize"></div>
+
+        <!-- Split-window viewer: shows a selected document, page, or video alongside the form. -->
+        <div id="split-viewer-pane" class="hidden lg:shrink-0 lg:sticky lg:top-4" style="flex-basis: 50%;"
+             data-probe-url="{% url 'probe_embeddable' %}">
+            <div class="bg-white shadow rounded-lg overflow-hidden flex flex-col">
+                <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-200 bg-gray-50">
+                    <span id="split-viewer-title" class="text-sm font-medium text-gray-900 truncate">Viewer</span>
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <a id="split-viewer-newtab" href="#" target="_blank" rel="noopener"
+                           class="text-xs text-indigo-600 hover:text-indigo-900">Open in new tab ↗</a>
+                        <button type="button" onclick="expandSplitViewer()"
+                                class="text-xs font-medium text-indigo-600 hover:text-indigo-900" title="Enlarge the viewer">Expand ⤢</button>
+                        <button type="button" onclick="closeSplit()"
+                                class="text-xs font-medium text-gray-500 hover:text-gray-700">Close ✕</button>
+                    </div>
+                </div>
+                <iframe id="split-viewer-frame" src="about:blank" title="Preview"
+                        class="w-full border-0" style="height: 78vh; min-height: 480px;"></iframe>
+                <div id="split-viewer-fallback" class="hidden px-6 py-10 text-center" style="min-height: 480px;">
+                    <p id="split-fallback-message" class="text-sm text-gray-600 mb-4">This site does not allow embedding in this page.</p>
+                    <a id="split-fallback-newtab" href="#" target="_blank" rel="noopener"
+                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Open in new tab ↗</a>
+                    <button type="button" onclick="loadSplitFrameDirect()"
+                            class="block mx-auto mt-3 text-xs text-indigo-600 hover:text-indigo-900">Load anyway</button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 </div>
 
@@ -670,6 +735,177 @@
         cb.addEventListener('change', function() { updateVisuals(this.checked); });
         // Run once on load to ensure server-rendered state is reflected
         updateVisuals(cb.checked);
+    });
+})();
+</script>
+
+<script>
+// Split-window viewer for the radio edit page: shows a selected document,
+// web page, or YouTube video alongside the form.
+var _splitCurrentUrl = '';
+var _splitProbeController = null;
+
+function youtubeEmbedUrl(url) {
+    if (!url) return '';
+    var m;
+    m = url.match(/^(?:https?:\/\/)?(?:www\.|m\.)?youtu\.be\/([A-Za-z0-9_-]{6,})/i);
+    if (m) return 'https://www.youtube.com/embed/' + m[1];
+    m = url.match(/^(?:https?:\/\/)?(?:www\.|m\.)?youtube\.com\/(?:embed|shorts)\/([A-Za-z0-9_-]{6,})/i);
+    if (m) return 'https://www.youtube.com/embed/' + m[1];
+    m = url.match(/[?&]v=([A-Za-z0-9_-]{6,})/i);
+    if (m) return 'https://www.youtube.com/embed/' + m[1];
+    return '';
+}
+
+function setSplitViewerWidth(pct) {
+    var pane = document.getElementById('split-viewer-pane');
+    if (!pane) return;
+    pct = Math.max(25, Math.min(85, pct));
+    pane.style.flexBasis = pct + '%';
+}
+
+function showSplitViewer() {
+    var pane = document.getElementById('split-viewer-pane');
+    var divider = document.getElementById('split-divider');
+    if (!pane) return;
+    pane.classList.remove('hidden');
+    if (divider) {
+        divider.style.display = window.innerWidth >= 1024 ? 'block' : 'none';
+    }
+}
+
+function showSplitFrame() {
+    var frame = document.getElementById('split-viewer-frame');
+    var fallback = document.getElementById('split-viewer-fallback');
+    if (frame) frame.classList.remove('hidden');
+    if (fallback) fallback.classList.add('hidden');
+}
+
+function showSplitFallback(message, url) {
+    var frame = document.getElementById('split-viewer-frame');
+    var fallback = document.getElementById('split-viewer-fallback');
+    var msg = document.getElementById('split-fallback-message');
+    var link = document.getElementById('split-fallback-newtab');
+    if (frame) { frame.classList.add('hidden'); frame.src = 'about:blank'; }
+    if (fallback) fallback.classList.remove('hidden');
+    if (msg) msg.textContent = message || 'This site does not allow embedding in this page.';
+    if (link && url) link.href = url;
+}
+
+function loadSplitFrameDirect() {
+    var frame = document.getElementById('split-viewer-frame');
+    showSplitFrame();
+    if (frame && _splitCurrentUrl) frame.src = _splitCurrentUrl;
+}
+
+function probeEmbeddable(url) {
+    var pane = document.getElementById('split-viewer-pane');
+    var probeUrl = pane ? pane.dataset.probeUrl : '';
+    if (!probeUrl) { loadSplitFrameDirect(); return; }
+    showSplitFallback('Checking if this page can be embedded…', url);
+    var tokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    var token = tokenInput ? tokenInput.value : '';
+    if (_splitProbeController && _splitProbeController.abort) _splitProbeController.abort();
+    var controller = new AbortController();
+    _splitProbeController = controller;
+    fetch(probeUrl, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': token,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'url=' + encodeURIComponent(url),
+        signal: controller.signal
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        if (data && data.embeddable) {
+            loadSplitFrameDirect();
+        } else {
+            showSplitFallback('This site does not allow embedding in this page.', url);
+        }
+    })
+    .catch(function () {
+        // Probe failed — try loading directly as a last resort.
+        loadSplitFrameDirect();
+    });
+}
+
+function openSplit(url, title) {
+    var pane = document.getElementById('split-viewer-pane');
+    var frame = document.getElementById('split-viewer-frame');
+    var titleEl = document.getElementById('split-viewer-title');
+    var newTab = document.getElementById('split-viewer-newtab');
+    if (!pane || !frame) return false;
+    _splitCurrentUrl = url;
+    if (titleEl) titleEl.textContent = title || 'Viewer';
+    if (newTab) newTab.href = url;
+    showSplitViewer();
+    pane.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    var embed = youtubeEmbedUrl(url);
+    if (embed) {
+        showSplitFrame();
+        frame.src = embed;
+        return false;
+    }
+    // Same-origin media / PDF documents load directly.
+    if (url.charAt(0) === '/') {
+        showSplitFrame();
+        frame.src = url;
+        return false;
+    }
+    // External web page: check whether the site allows embedding.
+    probeEmbeddable(url);
+    return false;
+}
+
+function closeSplit() {
+    var pane = document.getElementById('split-viewer-pane');
+    var frame = document.getElementById('split-viewer-frame');
+    var fallback = document.getElementById('split-viewer-fallback');
+    var divider = document.getElementById('split-divider');
+    if (_splitProbeController && _splitProbeController.abort) _splitProbeController.abort();
+    if (!pane) return;
+    pane.classList.add('hidden');
+    if (frame) { frame.src = 'about:blank'; frame.classList.remove('hidden'); }
+    if (fallback) fallback.classList.add('hidden');
+    if (divider) divider.style.display = 'none';
+}
+
+function expandSplitViewer() {
+    setSplitViewerWidth(85);
+}
+
+// Draggable divider to resize the two panes.
+(function () {
+    var divider = document.getElementById('split-divider');
+    if (!divider) return;
+
+    divider.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        var container = document.getElementById('split-container');
+        var pane = document.getElementById('split-viewer-pane');
+        if (!container || !pane) return;
+        var startX = e.clientX;
+        var containerWidth = container.getBoundingClientRect().width;
+        var startBasis = pane.getBoundingClientRect().width;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        function onMove(ev) {
+            var dx = startX - ev.clientX;  // dragging left grows the viewer
+            setSplitViewerWidth(((startBasis + dx) / containerWidth) * 100);
+        }
+        function onUp() {
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
     });
 })();
 </script>
