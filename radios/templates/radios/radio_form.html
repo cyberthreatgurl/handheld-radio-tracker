@@ -269,12 +269,14 @@
                     </div>
                 </div>
 
-                {# --- Capabilities — unified toggle grid --- #}
+                {# --- Capabilities --- #}
                 <div class="border-b border-gray-200 pb-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Capabilities</h3>
+
+                    {# GPS / APRS #}
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {% for field in form %}
-                        {% if field.name in 'gps,aprs,dmr,air_band,satellite_tracking' %}
+                        {% if field.name in 'gps,aprs' %}
                         <div>
                             <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
                             {{ field }}
@@ -283,20 +285,50 @@
                         {% endif %}
                         {% endfor %}
                     </div>
-                    <div class="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {% for field in form %}
-                        {% if field.name in 'bluetooth,noaa_wx,usb_c_charging,usb_chargeable,usb_programmable,removable_antenna,unlockable,firmware_updates' %}
-                        <label class="relative inline-flex items-center gap-3 rounded-lg border {% if field.value %}border-indigo-300 bg-indigo-50{% else %}border-gray-200 bg-white hover:border-gray-300{% endif %} px-3.5 py-3 cursor-pointer transition-colors select-none">
-                            {{ field }}
-                            {# Toggle track #}
-                            <span class="pointer-events-none relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 {% if field.value %}bg-indigo-500{% else %}bg-gray-200{% endif %}">
-                                {# Toggle thumb #}
-                                <span class="pointer-events-none relative inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200 {% if field.value %}translate-x-4{% else %}translate-x-0{% endif %}"></span>
-                            </span>
-                            <span class="text-sm font-medium {% if field.value %}text-indigo-700{% else %}text-gray-600{% endif %}">{{ field.label }}</span>
-                        </label>
-                        {% endif %}
-                        {% endfor %}
+
+                    {# Air Band #}
+                    <div class="mt-5">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Air Band</h4>
+                        <div class="flex flex-wrap gap-x-8 gap-y-2">
+                            {% for field in form %}
+                            {% if field.name in 'air_band_rx,air_band_tx' %}
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                                {{ field }}
+                                <span>{{ field.label }}</span>
+                            </label>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {# Digital Modes #}
+                    <div class="mt-5">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Digital Modes</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                            {% for field in form %}
+                            {% if field.name in 'digital_dmr,digital_c4fm,digital_p25,digital_nxdn,digital_m17' %}
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                                {{ field }}
+                                <span>{{ field.label }}</span>
+                            </label>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {# Other capabilities #}
+                    <div class="mt-5">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Other Capabilities</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {% for field in form %}
+                            {% if field.name in 'usb_c_charging,usb_programmable,removable_antenna,unlockable,firmware_updates,bluetooth,noaa_wx,satellite_tracking' %}
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                                {{ field }}
+                                <span>{{ field.label }}</span>
+                            </label>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
 
@@ -308,11 +340,6 @@
                             <label for="{{ form.display.id_for_label }}" class="block text-sm font-medium text-gray-700">Display</label>
                             {{ form.display }}
                             {% if form.display.errors %}<p class="mt-2 text-sm text-red-600">{{ form.display.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div>
-                            <label for="{{ form.display_color.id_for_label }}" class="block text-sm font-medium text-gray-700">Display Color</label>
-                            {{ form.display_color }}
-                            {% if form.display_color.errors %}<p class="mt-2 text-sm text-red-600">{{ form.display_color.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="{{ form.channels.id_for_label }}" class="block text-sm font-medium text-gray-700">Channels</label>
@@ -629,8 +656,7 @@
              style="display:none;" title="Drag to resize"></div>
 
         <!-- Split-window viewer: shows a selected document, page, or video alongside the form. -->
-        <div id="split-viewer-pane" class="hidden lg:shrink-0 lg:sticky lg:top-4" style="flex-basis: 50%;"
-             data-probe-url="{% url 'probe_embeddable' %}">
+        <div id="split-viewer-pane" class="hidden lg:shrink-0 lg:sticky lg:top-4" style="flex-basis: 50%;">
             <div class="bg-white shadow rounded-lg overflow-hidden flex flex-col">
                 <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-200 bg-gray-50">
                     <span id="split-viewer-title" class="text-sm font-medium text-gray-900 truncate">Viewer</span>
@@ -645,13 +671,6 @@
                 </div>
                 <iframe id="split-viewer-frame" src="about:blank" title="Preview"
                         class="w-full border-0" style="height: 78vh; min-height: 480px;"></iframe>
-                <div id="split-viewer-fallback" class="hidden px-6 py-10 text-center" style="min-height: 480px;">
-                    <p id="split-fallback-message" class="text-sm text-gray-600 mb-4">This site does not allow embedding in this page.</p>
-                    <a id="split-fallback-newtab" href="#" target="_blank" rel="noopener"
-                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Open in new tab ↗</a>
-                    <button type="button" onclick="loadSplitFrameDirect()"
-                            class="block mx-auto mt-3 text-xs text-indigo-600 hover:text-indigo-900">Load anyway</button>
-                </div>
             </div>
         </div>
         {% endif %}
@@ -742,9 +761,6 @@
 <script>
 // Split-window viewer for the radio edit page: shows a selected document,
 // web page, or YouTube video alongside the form.
-var _splitCurrentUrl = '';
-var _splitProbeController = null;
-
 function youtubeEmbedUrl(url) {
     if (!url) return '';
     var m;
@@ -774,103 +790,30 @@ function showSplitViewer() {
     }
 }
 
-function showSplitFrame() {
-    var frame = document.getElementById('split-viewer-frame');
-    var fallback = document.getElementById('split-viewer-fallback');
-    if (frame) frame.classList.remove('hidden');
-    if (fallback) fallback.classList.add('hidden');
-}
-
-function showSplitFallback(message, url) {
-    var frame = document.getElementById('split-viewer-frame');
-    var fallback = document.getElementById('split-viewer-fallback');
-    var msg = document.getElementById('split-fallback-message');
-    var link = document.getElementById('split-fallback-newtab');
-    if (frame) { frame.classList.add('hidden'); frame.src = 'about:blank'; }
-    if (fallback) fallback.classList.remove('hidden');
-    if (msg) msg.textContent = message || 'This site does not allow embedding in this page.';
-    if (link && url) link.href = url;
-}
-
-function loadSplitFrameDirect() {
-    var frame = document.getElementById('split-viewer-frame');
-    showSplitFrame();
-    if (frame && _splitCurrentUrl) frame.src = _splitCurrentUrl;
-}
-
-function probeEmbeddable(url) {
-    var pane = document.getElementById('split-viewer-pane');
-    var probeUrl = pane ? pane.dataset.probeUrl : '';
-    if (!probeUrl) { loadSplitFrameDirect(); return; }
-    showSplitFallback('Checking if this page can be embedded…', url);
-    var tokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
-    var token = tokenInput ? tokenInput.value : '';
-    if (_splitProbeController && _splitProbeController.abort) _splitProbeController.abort();
-    var controller = new AbortController();
-    _splitProbeController = controller;
-    fetch(probeUrl, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': token,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'url=' + encodeURIComponent(url),
-        signal: controller.signal
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-        if (data && data.embeddable) {
-            loadSplitFrameDirect();
-        } else {
-            showSplitFallback('This site does not allow embedding in this page.', url);
-        }
-    })
-    .catch(function () {
-        // Probe failed — try loading directly as a last resort.
-        loadSplitFrameDirect();
-    });
-}
-
 function openSplit(url, title) {
     var pane = document.getElementById('split-viewer-pane');
     var frame = document.getElementById('split-viewer-frame');
     var titleEl = document.getElementById('split-viewer-title');
     var newTab = document.getElementById('split-viewer-newtab');
     if (!pane || !frame) return false;
-    _splitCurrentUrl = url;
     if (titleEl) titleEl.textContent = title || 'Viewer';
     if (newTab) newTab.href = url;
     showSplitViewer();
     pane.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    var embed = youtubeEmbedUrl(url);
-    if (embed) {
-        showSplitFrame();
-        frame.src = embed;
-        return false;
-    }
-    // Same-origin media / PDF documents load directly.
-    if (url.charAt(0) === '/') {
-        showSplitFrame();
-        frame.src = url;
-        return false;
-    }
-    // External web page: check whether the site allows embedding.
-    probeEmbeddable(url);
+    // YouTube's full watch page sends X-Frame-Options: SAMEORIGIN, so it
+    // cannot be framed — use the embeddable /embed/ player.  Every other
+    // URL (websites, PDFs, media) loads the full page directly.
+    frame.src = youtubeEmbedUrl(url) || url;
     return false;
 }
 
 function closeSplit() {
     var pane = document.getElementById('split-viewer-pane');
     var frame = document.getElementById('split-viewer-frame');
-    var fallback = document.getElementById('split-viewer-fallback');
     var divider = document.getElementById('split-divider');
-    if (_splitProbeController && _splitProbeController.abort) _splitProbeController.abort();
     if (!pane) return;
     pane.classList.add('hidden');
-    if (frame) { frame.src = 'about:blank'; frame.classList.remove('hidden'); }
-    if (fallback) fallback.classList.add('hidden');
+    if (frame) frame.src = 'about:blank';
     if (divider) divider.style.display = 'none';
 }
 

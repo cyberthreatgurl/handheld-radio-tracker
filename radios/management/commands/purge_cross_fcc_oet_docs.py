@@ -10,6 +10,7 @@ already belongs to a different, known FCC ID.
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 
+from radios.fcc_id_utils import fcc_id_stripped_expression, strip_fcc_id_hyphens
 from radios.models import RadioManual, RadioOETDocument
 
 
@@ -45,8 +46,10 @@ class Command(BaseCommand):
             return
 
         source_urls = set(
-            RadioOETDocument.objects.filter(
-                fcc_id__iexact=source_fcc_id,
+            RadioOETDocument.objects.annotate(
+                _fcc_stripped=fcc_id_stripped_expression('fcc_id'),
+            ).filter(
+                _fcc_stripped__iexact=strip_fcc_id_hyphens(source_fcc_id),
             )
             .exclude(document_url='')
             .values_list('document_url', flat=True)
@@ -58,8 +61,10 @@ class Command(BaseCommand):
             return
 
         contaminated = list(
-            RadioOETDocument.objects.filter(
-                fcc_id__iexact=fcc_id,
+            RadioOETDocument.objects.annotate(
+                _fcc_stripped=fcc_id_stripped_expression('fcc_id'),
+            ).filter(
+                _fcc_stripped__iexact=strip_fcc_id_hyphens(fcc_id),
                 document_url__in=source_urls,
             )
         )

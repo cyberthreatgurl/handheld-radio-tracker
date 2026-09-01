@@ -376,9 +376,10 @@ class Radio(models.Model):
     )
 
     # Features
-    satellite_tracking = models.CharField(
-        max_length=50, blank=True,
-        help_text="Satellite tracking capability (Yes/No/Native)",
+    satellite_tracking = models.BooleanField(
+        default=False,
+        verbose_name='Satellite Tracking',
+        help_text="Has satellite tracking capability",
     )
     harmonic_suppression = models.CharField(
         max_length=100, blank=True,
@@ -392,23 +393,46 @@ class Radio(models.Model):
         max_length=100, blank=True,
         help_text="APRS support (e.g., Yes, Analog, Digital, Beacon)",
     )
-    air_band = models.CharField(
-        max_length=50, blank=True,
-        help_text="Air band receive capability (Yes/No)",
+    air_band_rx = models.BooleanField(
+        default=False,
+        verbose_name='Air Band Receive',
+        help_text="Receives the air band (108-137 MHz)",
     )
-    dmr = models.CharField(
-        max_length=50, blank=True,
-        help_text="DMR support (Yes/No)",
+    air_band_tx = models.BooleanField(
+        default=False,
+        verbose_name='Air Band Transmit',
+        help_text="Transmits on the air band (108-137 MHz)",
+    )
+    digital_dmr = models.BooleanField(
+        default=False,
+        verbose_name='DMR',
+        help_text="DMR (Digital Mobile Radio) digital mode",
+    )
+    digital_c4fm = models.BooleanField(
+        default=False,
+        verbose_name='C4FM',
+        help_text="C4FM digital mode (Yaesu System Fusion)",
+    )
+    digital_p25 = models.BooleanField(
+        default=False,
+        verbose_name='P25',
+        help_text="P25 (APCO Project 25) digital mode",
+    )
+    digital_nxdn = models.BooleanField(
+        default=False,
+        verbose_name='NXDN',
+        help_text="NXDN digital mode",
+    )
+    digital_m17 = models.BooleanField(
+        default=False,
+        verbose_name='M17',
+        help_text="M17 open-source digital mode",
     )
 
     # Hardware details
     display = models.CharField(
         max_length=200, blank=True,
         help_text="Display type (e.g., LCD, Color TFT, Dot-matrix)",
-    )
-    display_color = models.CharField(
-        max_length=100, blank=True,
-        help_text="Display color (e.g., Color, Monochrome, Color TFT)",
     )
     channels = models.IntegerField(
         null=True, blank=True,
@@ -424,11 +448,6 @@ class Radio(models.Model):
         default=False,
         verbose_name='USB-C Charging',
         help_text="Has USB-C charging port",
-    )
-    usb_chargeable = models.BooleanField(
-        default=False,
-        verbose_name='USB Chargeable',
-        help_text="Charges via USB (any connector type)",
     )
     usb_programmable = models.BooleanField(
         default=False,
@@ -599,6 +618,14 @@ class Radio(models.Model):
 
     def save(self, *args, **kwargs):
         """Override save to ensure brand exists in Brand table"""
+        # Canonicalize the FCC ID so only the correctly-hyphenated
+        # GRANTEE-PRODUCT form is ever persisted (e.g. "K44524000" ->
+        # "K44-524000").  Comparisons elsewhere strip hyphens, but the stored
+        # value should always carry the single, correctly-placed hyphen.
+        if self.fcc_id:
+            from .fcc_id_utils import canonical_fcc_id
+            self.fcc_id = canonical_fcc_id(self.fcc_id)
+
         # If the radio's brand string exactly matches a known brand's alias,
         # update it to the canonical brand name before saving the Radio.
         # Skip this if the value is already a canonical Brand.name — that takes priority.

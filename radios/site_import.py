@@ -77,17 +77,21 @@ _LABEL_PATTERNS = {
     'battery_mah': [r'battery\s*capacity', r'battery'],
     'fcc_id': [r'fcc\s*id'],
     'display': [r'display', r'screen'],
-    'display_color': [r'display\s*color', r'screen\s*color', r'color\s*display'],
     'part_number': [r'sku', r'product\s*code', r'part\s*number', r'model\s*no'],
     'cost_approx': [r'price', r'cost'],
     'freq_bands_tx': [r'frequency\s*range', r'frequency', r'band'],
     'gps': [r'gps', r'gnss'],
     'aprs': [r'aprs'],
-    'dmr': [r'dmr'],
-    'air_band': [r'air\s*band', r'airband'],
+    'digital_dmr': [r'dmr'],
+    'digital_c4fm': [r'c4fm'],
+    'digital_p25': [r'p25'],
+    'digital_nxdn': [r'nxdn'],
+    'digital_m17': [r'm17'],
+    'air_band_rx': [r'air\s*band', r'airband'],
+    'air_band_tx': [r'air\s*band\s*(?:transmit|tx)', r'airband\s*(?:transmit|tx)'],
     'bluetooth': [r'bluetooth'],
     'noaa': [r'noaa'],
-    'usb_chargeable': [r'usb.*charg', r'charg.*usb'],
+    'usb_c_charging': [r'usb.?c.*charg', r'usb\s*type-?c'],
     'usb_programmable': [r'usb.*program', r'programming'],
 }
 
@@ -97,10 +101,7 @@ _STRING_FIELDS = {
     'power_watts': 'power_watts',
     'gps': 'gps',
     'aprs': 'aprs',
-    'air_band': 'air_band',
-    'dmr': 'dmr',
     'display': 'display',
-    'display_color': 'display_color',
     'part_number': 'part_number',
     'cost_approx': 'cost_approx',
 }
@@ -108,8 +109,15 @@ _STRING_FIELDS = {
 _BOOL_FIELDS = {
     'bluetooth': 'bluetooth',
     'noaa': 'noaa_wx',
-    'usb_chargeable': 'usb_chargeable',
+    'usb_c_charging': 'usb_c_charging',
     'usb_programmable': 'usb_programmable',
+    'air_band_rx': 'air_band_rx',
+    'air_band_tx': 'air_band_tx',
+    'digital_dmr': 'digital_dmr',
+    'digital_c4fm': 'digital_c4fm',
+    'digital_p25': 'digital_p25',
+    'digital_nxdn': 'digital_nxdn',
+    'digital_m17': 'digital_m17',
     'is_toy': 'is_toy',
 }
 
@@ -126,7 +134,7 @@ _CONFIDENCE_FIELDS = {
     'power_watts': 0.1,
     'gps': 0.05,
     'aprs': 0.05,
-    'dmr': 0.05,
+    'digital_dmr': 0.05,
     'channels': 0.05,
 }
 
@@ -283,7 +291,6 @@ def _parse_value_for_field(field, value):
     text = _clean(value)
     if not text:
         return None
-    lowered = text.lower()
 
     if field == 'channels':
         match = re.search(r'\d+', text)
@@ -294,16 +301,14 @@ def _parse_value_for_field(field, value):
     if field == 'power_watts':
         match = re.search(r'(\d+(?:\.\d+)?)\s*w', text, re.IGNORECASE)
         return f"{match.group(1)}W" if match else _clean(text)
-    if field in ('bluetooth', 'noaa', 'usb_chargeable', 'usb_programmable'):
+    if field in (
+        'bluetooth', 'noaa', 'usb_c_charging', 'usb_programmable',
+        'air_band_rx', 'air_band_tx',
+        'digital_dmr', 'digital_c4fm', 'digital_p25', 'digital_nxdn', 'digital_m17',
+    ):
         return True
-    if field in ('gps', 'aprs', 'dmr', 'air_band'):
+    if field in ('gps', 'aprs'):
         return 'Yes'
-    if field == 'display_color':
-        if re.search(r'color|tft', lowered):
-            return 'Color'
-        if 'mono' in lowered:
-            return 'Monochrome'
-        return None
     return _clean(text)[:200]
 
 

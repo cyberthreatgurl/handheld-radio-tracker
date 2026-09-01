@@ -4,6 +4,11 @@ from django.db import IntegrityError, transaction
 from .models import Brand, Radio
 from .forms_merge_fields import MergeRadiosFieldsForm
 from .accounts_decorators import staff_required
+from .fcc_id_utils import (
+    canonical_fcc_id,
+    fcc_id_stripped_expression,
+    strip_fcc_id_hyphens,
+)
 
 # Enhanced merge view: lets user pick which record's data to keep for each field
 
@@ -35,7 +40,12 @@ def merge_radios(request):
                     if alias_match and alias_match.name != effective_brand:
                         effective_brand = alias_match.name
                 keep.brand = effective_brand
-                
+
+                # Mirror Radio.save() FCC ID normalization so the kept record
+                # always stores the correctly-hyphenated GRANTEE-PRODUCT form.
+                if keep.fcc_id:
+                    keep.fcc_id = canonical_fcc_id(keep.fcc_id)
+
                 # Check if resulting (brand, model) would conflict with an existing record
                 conflict = Radio.objects.filter(
                     brand=keep.brand, model=keep.model
@@ -43,11 +53,40 @@ def merge_radios(request):
                 
                 if conflict:
                     messages.error(
-                        request, 
-                        f'Cannot merge: A radio with brand "{keep.brand}" and model "{keep.model}" '
-                        f'already exists (ID: {conflict.pk}). Consider including that record in the merge.'
+                        request,
+                        f'Cannot merge: A radio with brand "{keep.brand}" '
+                        f'and model "{keep.model}" already exists '
+                        f'(ID: {conflict.pk}). Consider including that record '
+                        'in the merge.'
                     )
-                    return render(request, 'radios/merge_radios.html', {'radios': radios, 'radio_ids': radio_ids, 'form': form})
+                    return render(
+                        request,
+                        'radios/merge_radios.html',
+                        {'radios': radios, 'radio_ids': radio_ids, 'form': form},
+                    )
+
+                # Check for an FCC ID conflict, ignoring hyphen placement so
+                # "K44-524000" and "K44524000" are treated as the same device.
+                if keep.fcc_id:
+                    fcc_conflict = Radio.objects.annotate(
+                        _fcc_stripped=fcc_id_stripped_expression('fcc_id'),
+                    ).filter(
+                        _fcc_stripped__iexact=strip_fcc_id_hyphens(keep.fcc_id),
+                    ).exclude(pk__in=radio_ids).first()
+                    if fcc_conflict:
+                        messages.error(
+                            request,
+                            f'Cannot merge: The merged FCC ID "{keep.fcc_id}" '
+                            f'is already used by another radio '
+                            f'(ID: {fcc_conflict.pk}, '
+                            f'fcc_id "{fcc_conflict.fcc_id}"). Consider '
+                            'including that record in the merge.'
+                        )
+                        return render(
+                            request,
+                            'radios/merge_radios.html',
+                            {'radios': radios, 'radio_ids': radio_ids, 'form': form},
+                        )
                 
                 try:
                     with transaction.atomic():
@@ -63,9 +102,17 @@ def merge_radios(request):
                     messages.success(request, f'Merged {len(radios)} radios into one record.')
                 except IntegrityError as e:
                     messages.error(request, f'Merge failed due to duplicate constraint: {e}')
-                    return render(request, 'radios/merge_radios.html', {'radios': radios, 'radio_ids': radio_ids, 'form': form})
+                    return render(
+                        request,
+                        'radios/merge_radios.html',
+                        {'radios': radios, 'radio_ids': radio_ids, 'form': form},
+                    )
                 return redirect('radio_list')
         else:
             form = MergeRadiosFieldsForm(radios)
-        return render(request, 'radios/merge_radios.html', {'radios': radios, 'radio_ids': radio_ids, 'form': form})
+        return render(
+            request,
+            'radios/merge_radios.html',
+            {'radios': radios, 'radio_ids': radio_ids, 'form': form},
+        )
     return redirect('radio_list')

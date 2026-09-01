@@ -112,7 +112,7 @@ class SyncSkippedGranteeAdmin(admin.ModelAdmin):
 @admin.register(Radio)
 class RadioAdmin(admin.ModelAdmin):
     list_display = ['brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'grant_date', 'freq_bands_tx', 'power_watts', 'bluetooth', 'noaa_wx', 'cost_approx']
-    list_filter = ['brand', 'last_fccid_lookup_at', 'grant_date', 'dmr', 'gps', 'aprs', 'service_types']
+    list_filter = ['brand', 'last_fccid_lookup_at', 'grant_date', 'digital_dmr', 'gps', 'aprs', 'service_types']
     search_fields = ['brand', 'model', 'fcc_id']
     ordering = ['brand', 'model']
     filter_horizontal = ['service_types']
@@ -125,7 +125,7 @@ class RadioAdmin(admin.ModelAdmin):
             'fields': ('freq_bands_tx', 'power_watts')
         }),
         ('Features', {
-            'fields': ('satellite_tracking', 'harmonic_suppression', 'gps', 'aprs', 'air_band', 'dmr')
+            'fields': ('satellite_tracking', 'harmonic_suppression', 'gps', 'aprs', 'air_band_rx', 'air_band_tx', 'digital_dmr', 'digital_c4fm', 'digital_p25', 'digital_nxdn', 'digital_m17')
         }),
         ('Hardware', {
             'fields': ('display', 'battery_mah')

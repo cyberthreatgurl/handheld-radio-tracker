@@ -175,7 +175,7 @@ class FCCIDUtilsTest(TestCase):
         lookup = normalize_fcc_id_for_lookup('2AJGM-BF-1904')
         self.assertEqual(lookup, '2AJGM-BF-1904')
 
-    def test_detail_renders_compact_fcc_id_with_brand_grantee(self):
+    def test_detail_renders_canonical_fcc_id_with_brand_grantee(self):
         Brand.objects.create(name='Kydera', grantee_code='VO6')
         radio = Radio.objects.create(
             brand='Kydera',
@@ -183,9 +183,13 @@ class FCCIDUtilsTest(TestCase):
             fcc_id='VO6200UV',
         )
 
+        # Save canonicalizes the compact ID to the GRANTEE-PRODUCT form.
+        radio.refresh_from_db()
+        self.assertEqual(radio.fcc_id, 'VO6-200UV')
+
         response = self.client.get(reverse('radio_detail', kwargs={'pk': radio.pk}))
 
-        self.assertContains(response, 'VO6200UV')
+        self.assertContains(response, 'VO6-200UV')
 
     def test_lookup_variants_include_normalized_form_for_hyphen_in_product_code(self):
         variants = _fcc_lookup_variants('2A4FBTDBL-1')
@@ -667,8 +671,8 @@ class FCCPdfSpecExtractionTest(TestCase):
         self.assertEqual(extracted['power_watts'], '5W')
         self.assertEqual(extracted['gps'], 'Yes')
         self.assertEqual(extracted['aprs'], 'Yes')
-        self.assertEqual(extracted['dmr'], 'Yes')
-        self.assertEqual(extracted['air_band'], 'Yes')
+        self.assertTrue(extracted['digital_dmr'])
+        self.assertTrue(extracted['air_band_rx'])
         self.assertEqual(extracted['battery_mah'], 2500)
         self.assertIn('VHF', extracted['freq_bands_tx'])
         self.assertIn('UHF', extracted['freq_bands_tx'])
@@ -689,7 +693,7 @@ class FCCPdfSpecExtractionTest(TestCase):
                 'power_watts': '5W',
                 'gps': 'Yes',
                 'aprs': 'Yes',
-                'dmr': 'Yes',
+                'digital_dmr': True,
                 'battery_mah': 2500,
             },
             'unit-test',
@@ -699,7 +703,7 @@ class FCCPdfSpecExtractionTest(TestCase):
         self.assertEqual(radio.power_watts, '10W')
         self.assertEqual(radio.gps, 'Yes')
         self.assertEqual(radio.aprs, 'Yes')
-        self.assertEqual(radio.dmr, 'Yes')
+        self.assertTrue(radio.digital_dmr)
         self.assertEqual(radio.battery_mah, 2500)
         self.assertNotIn('power_watts', changes)
         self.assertIn('gps', changes)

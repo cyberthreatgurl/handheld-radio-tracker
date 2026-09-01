@@ -61,34 +61,6 @@ class RadioForm(forms.ModelForm):
                      'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
         }),
     )
-    air_band = forms.ChoiceField(
-        label='Air Band',
-        choices=[('', '—'), ('Yes', 'Yes'), ('No', 'No')],
-        required=False,
-        widget=forms.Select(attrs={
-            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
-                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-        }),
-    )
-    dmr = forms.ChoiceField(
-        label='DMR',
-        choices=[('', '—'), ('Yes', 'Yes'), ('No', 'No')],
-        required=False,
-        widget=forms.Select(attrs={
-            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
-                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-        }),
-    )
-    satellite_tracking = forms.ChoiceField(
-        label='Satellite Tracking',
-        choices=[('', '—'), ('Yes', 'Yes'), ('No', 'No'), ('Native', 'Native')],
-        required=False,
-        widget=forms.Select(attrs={
-            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm '
-                     'focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-        }),
-    )
-
     class Meta:
         model = Radio
         fields = [
@@ -97,9 +69,11 @@ class RadioForm(forms.ModelForm):
             'service_types', 'fcc_id',
             'power_watts',
             'satellite_tracking', 'harmonic_suppression',
-            'gps', 'aprs', 'air_band', 'dmr',
-            'display', 'display_color', 'channels', 'battery_mah',
-            'usb_c_charging', 'usb_chargeable', 'usb_programmable',
+            'gps', 'aprs',
+            'air_band_rx', 'air_band_tx',
+            'digital_dmr', 'digital_c4fm', 'digital_p25', 'digital_nxdn', 'digital_m17',
+            'display', 'channels', 'battery_mah',
+            'usb_c_charging', 'usb_programmable',
             'removable_antenna', 'unlockable', 'firmware_updates',
             'bluetooth', 'noaa_wx',
             'cost_approx', 'rebadges_clones', 'white_label_vendors',
@@ -114,52 +88,46 @@ class RadioForm(forms.ModelForm):
                 'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'bluetooth': forms.CheckboxInput(attrs={
-                'class': (
-                    'appearance-none absolute inset-0 w-full h-full '
-                    'opacity-0 cursor-pointer z-10'
-                )
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'noaa_wx': forms.CheckboxInput(attrs={
-                'class': (
-                    'appearance-none absolute inset-0 w-full h-full '
-                    'opacity-0 cursor-pointer z-10'
-                )
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'usb_c_charging': forms.CheckboxInput(attrs={
-                'class': (
-                    'appearance-none absolute inset-0 w-full h-full '
-                    'opacity-0 cursor-pointer z-10'
-                )
-            }),
-            'usb_chargeable': forms.CheckboxInput(attrs={
-                'class': (
-                    'appearance-none absolute inset-0 w-full h-full '
-                    'opacity-0 cursor-pointer z-10'
-                )
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'usb_programmable': forms.CheckboxInput(attrs={
-                'class': (
-                    'appearance-none absolute inset-0 w-full h-full '
-                    'opacity-0 cursor-pointer z-10'
-                )
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'removable_antenna': forms.CheckboxInput(attrs={
-                'class': (
-                    'appearance-none absolute inset-0 w-full h-full '
-                    'opacity-0 cursor-pointer z-10'
-                )
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'unlockable': forms.CheckboxInput(attrs={
-                'class': (
-                    'appearance-none absolute inset-0 w-full h-full '
-                    'opacity-0 cursor-pointer z-10'
-                )
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'firmware_updates': forms.CheckboxInput(attrs={
-                'class': (
-                    'appearance-none absolute inset-0 w-full h-full '
-                    'opacity-0 cursor-pointer z-10'
-                )
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'air_band_rx': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'air_band_tx': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'digital_dmr': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'digital_c4fm': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'digital_p25': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'digital_nxdn': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+            }),
+            'digital_m17': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'model': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
@@ -180,37 +148,16 @@ class RadioForm(forms.ModelForm):
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., 5W, 10W'
             }),
-            'satellite_tracking': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'e.g., Yes, No, Native'
+            'satellite_tracking': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
             }),
             'harmonic_suppression': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., Good, Excellent, Poor, Unknown'
             }),
-            'gps': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'e.g., Yes, No, Optional'
-            }),
-            'aprs': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'e.g., Yes, Analog, Digital, Beacon'
-            }),
-            'air_band': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'e.g., Yes, No'
-            }),
-            'dmr': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'e.g., Yes, No'
-            }),
             'display': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., LCD, Color TFT, Dot-matrix'
-            }),
-            'display_color': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                'placeholder': 'e.g., Color, Monochrome'
             }),
             'channels': forms.NumberInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',

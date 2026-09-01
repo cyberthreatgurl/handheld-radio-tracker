@@ -40,11 +40,12 @@ class SpecExtractionTest(SimpleTestCase):
         self.assertEqual(specs['power_watts'], '10W')
         self.assertEqual(specs['channels'], 199)
         self.assertEqual(specs['battery_mah'], 2500)
-        self.assertEqual(specs['display_color'], 'Color')
         self.assertEqual(specs['part_number'], '101293')
         self.assertTrue(specs['noaa'])
         self.assertTrue(specs['bluetooth'])
-        self.assertTrue(specs['usb_chargeable'])
+        self.assertTrue(specs['usb_c_charging'])
+        self.assertTrue(specs['digital_dmr'])
+        self.assertTrue(specs['air_band_rx'])
         self.assertFalse(specs['usb_programmable'])
 
     def test_usb_programmable_detection(self):
@@ -86,8 +87,8 @@ class MergePrecedenceTest(SimpleTestCase):
     def test_first_non_empty_wins(self):
         merged = _merge_specs(
             {'power_watts': '10W', 'gps': 'Yes'},
-            {'power_watts': '5W', 'dmr': 'Yes'},
+            {'power_watts': '5W', 'digital_dmr': True},
         )
         self.assertEqual(merged['power_watts'], '10W')
         self.assertEqual(merged['gps'], 'Yes')
-        self.assertEqual(merged['dmr'], 'Yes')
+        self.assertTrue(merged['digital_dmr'])

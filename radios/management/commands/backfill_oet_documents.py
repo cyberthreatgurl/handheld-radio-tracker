@@ -4,6 +4,7 @@ from pathlib import Path
 from django.core.management.base import BaseCommand, CommandError
 
 from radios.fcc_utils import _extract_oet_documents_from_html, _parse_date_only
+from radios.fcc_id_utils import fcc_id_stripped_expression, strip_fcc_id_hyphens
 from radios.models import Radio, RadioOETDocument
 
 
@@ -23,7 +24,10 @@ def _parse_oet_rows_from_csv(file_path):
     with file_path.open('r', encoding='utf-8-sig', newline='') as handle:
         reader = csv.DictReader(handle)
         for raw in reader:
-            normalized = {_normalize_header(key): (value or '').strip() for key, value in raw.items()}
+            normalized = {
+                _normalize_header(key): (value or '').strip()
+                for key, value in raw.items()
+            }
             row = {
                 'view_attachment': _first_present(
                     normalized,
@@ -95,7 +99,11 @@ class Command(BaseCommand):
         if not source_path.exists() or not source_path.is_file():
             raise CommandError(f'Source file not found: {source_path}')
 
-        radios = list(Radio.objects.filter(fcc_id__iexact=fcc_id))
+        radios = list(
+            Radio.objects.annotate(
+                _fcc_stripped=fcc_id_stripped_expression('fcc_id'),
+            ).filter(_fcc_stripped__iexact=strip_fcc_id_hyphens(fcc_id))
+        )
         if not radios:
             raise CommandError(f'No radios found with fcc_id={fcc_id}.')
 
@@ -161,6 +169,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'Backfill complete for {fcc_id}: created={created}, updated={updated}, skipped={skipped}.'
+                f'Backfill complete for {fcc_id}: created={created}, '
+                f'updated={updated}, skipped={skipped}.'
             )
         )

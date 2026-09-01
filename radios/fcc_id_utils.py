@@ -1,4 +1,15 @@
+"""FCC ID parsing, normalization, and comparison utilities.
+
+FCC IDs are stored in the canonical ``GRANTEE-PRODUCT`` form (a single
+hyphen between the grantee code and product code).  Comparison should
+always strip hyphens (:func:`strip_fcc_id_hyphens`) so IDs that differ
+only in hyphen placement still match.
+"""
+
 from typing import Optional, Tuple
+
+from django.db.models import Value
+from django.db.models.functions import Replace
 
 
 def _clean_fcc_id(value: Optional[str]) -> str:
@@ -46,7 +57,7 @@ def _validate_grantee_code(grantee_code: str) -> bool:
     return '1' not in grantee_code and '0' not in grantee_code
 
 
-def split_fcc_id(
+def split_fcc_id(  # pylint: disable=too-many-return-statements
     fcc_id: Optional[str],
     preferred_grantee_code: Optional[str] = None,
 ) -> Tuple[str, str]:
@@ -89,7 +100,55 @@ def normalize_fcc_id_for_lookup(
     fcc_id: Optional[str],
     preferred_grantee_code: Optional[str] = None,
 ) -> str:
+    """Return the canonical ``GRANTEE-PRODUCT`` form, or '' if unsplittable."""
     grantee_code, product_code = split_fcc_id(fcc_id, preferred_grantee_code=preferred_grantee_code)
     if not grantee_code or not product_code:
         return ''
     return f'{grantee_code}-{product_code}'
+
+
+def strip_fcc_id_hyphens(value: Optional[str]) -> str:
+    """Return the comparison-only form of an FCC ID (no hyphens, spaces, or case).
+
+    This is the canonical comparison key: two FCC IDs that differ only in
+    hyphen placement (e.g. ``K44-524000`` vs ``K44524000``) produce the same
+    key and therefore match.  Use this ONLY for comparing/looking up FCC IDs —
+    never for persisting a value (see :func:`canonical_fcc_id`).
+    """
+    return _clean_fcc_id(value).replace('-', '')
+
+
+def fcc_ids_match(a: Optional[str], b: Optional[str]) -> bool:
+    """Return True when two FCC IDs match ignoring hyphen placement and case."""
+    a_key = strip_fcc_id_hyphens(a)
+    b_key = strip_fcc_id_hyphens(b)
+    return bool(a_key) and a_key == b_key
+
+
+def canonical_fcc_id(
+    value: Optional[str],
+    preferred_grantee_code: Optional[str] = None,
+) -> str:
+    """Return the correctly-hyphenated ``GRANTEE-PRODUCT`` form for storage.
+
+    Falls back to the cleaned (uppercased, space-stripped) input when the value
+    cannot be split into a grantee/product pair.
+    """
+    cleaned = _clean_fcc_id(value)
+    if not cleaned:
+        return cleaned
+    canonical = normalize_fcc_id_for_lookup(
+        cleaned,
+        preferred_grantee_code=preferred_grantee_code,
+    )
+    return canonical or cleaned
+
+
+def fcc_id_stripped_expression(field: str = 'fcc_id'):
+    """Return a Django expression for the comparison form of an FCC ID field.
+
+    Strips hyphens and spaces so ``filter(_fcc_stripped__iexact=...)`` compares
+    FCC IDs without regard to hyphen placement.
+    """
+    no_hyphens = Replace(field, Value('-'), Value(''))
+    return Replace(no_hyphens, Value(' '), Value(''))

@@ -206,8 +206,13 @@ def extract_specs_from_text(text, source_name=''):
 
     aprs = 'Yes' if 'aprs' in lowered else ''
     gps = 'Yes' if (' gps' in lowered or 'gnss' in lowered) else ''
-    dmr = 'Yes' if re.search(r'\bdmr\b', lowered) else ''
-    air_band = 'Yes' if ('air band' in lowered or 'airband' in lowered or 'aviation band' in lowered) else ''
+    digital_dmr = bool(re.search(r'\bdmr\b', lowered))
+    digital_c4fm = bool(re.search(r'\bc4fm\b', lowered))
+    digital_p25 = bool(re.search(r'\bp25\b', lowered))
+    digital_nxdn = bool(re.search(r'\bnxdn\b', lowered))
+    digital_m17 = bool(re.search(r'\bm17\b', lowered))
+    air_band_rx = bool('air band' in lowered or 'airband' in lowered or 'aviation band' in lowered)
+    air_band_tx = bool(re.search(r'air\s*band\s*(?:transmit|tx)', lowered))
     battery = _extract_first(r'(\d{3,5})\s*m\s*ah', text)
     cost = _extract_first(r'\$\s*(\d{2,5}(?:\.\d{1,2})?)', text)
     cost_approx = f'${cost}' if cost else ''
@@ -224,23 +229,13 @@ def extract_specs_from_text(text, source_name=''):
     )
     noaa = 'noaa' in lowered
     bluetooth = 'bluetooth' in lowered
-    usb_chargeable = ('usb' in lowered and 'charg' in lowered)
+    usb_c_charging = bool(re.search(r'usb.?c.*charg', lowered) or 'usb type-c' in lowered)
     usb_programmable = (
         ('usb' in lowered and 'program' in lowered)
         or 'programming cable' in lowered
         or 'usb cable' in lowered
     )
     is_toy = bool(re.search(r'\btoy\b', lowered))
-
-    if re.search(
-        r'color\s*(?:tft\s*)?(?:display|screen)|full-?color|color\s*screen',
-        lowered,
-    ):
-        display_color = 'Color'
-    elif 'monochrome' in lowered or 'black and white' in lowered:
-        display_color = 'Monochrome'
-    else:
-        display_color = ''
 
     # Extract FCC rule parts from STANDARD(S) lines (for test reports)
     fcc_rule_parts = _extract_fcc_part_from_standards(text)
@@ -257,18 +252,22 @@ def extract_specs_from_text(text, source_name=''):
         'freq_bands_tx': _clean_text(freq_bands_tx),
         'aprs': aprs,
         'gps': gps,
-        'dmr': dmr,
-        'air_band': air_band,
+        'digital_dmr': digital_dmr,
+        'digital_c4fm': digital_c4fm,
+        'digital_p25': digital_p25,
+        'digital_nxdn': digital_nxdn,
+        'digital_m17': digital_m17,
+        'air_band_rx': air_band_rx,
+        'air_band_tx': air_band_tx,
         'power_watts': _clean_text(power_watts),
         'battery_mah': int(battery) if battery else None,
         'cost_approx': _clean_text(cost_approx),
         'fcc_rule_parts': sorted(fcc_rule_parts) if fcc_rule_parts else [],
         'channels': int(channels) if channels else None,
-        'display_color': _clean_text(display_color),
         'part_number': _clean_text(part_number),
         'noaa': noaa,
         'bluetooth': bluetooth,
-        'usb_chargeable': usb_chargeable,
+        'usb_c_charging': usb_c_charging,
         'usb_programmable': usb_programmable,
         'is_toy': is_toy,
     }
@@ -473,7 +472,7 @@ def _parse_retevis(soup, _title, page_text):
             ],
             'power_watts': [r'(\d+W)', r'(\d+\s*Watts?)'],
             'gps': [r'(GPS|GNSS)'],
-            'dmr': [r'(DMR|Digital Mobile Radio)'],
+            'digital_dmr': [r'(DMR|Digital Mobile Radio)'],
         }
         for img in soup.find_all('img', alt=True):
             alt = img.get('alt', '')
@@ -486,8 +485,10 @@ def _parse_retevis(soup, _title, page_text):
                                 data[field] = match.group(1).replace(' ', '')
                             elif field in ('freq_bands_tx',):
                                 data[field] = _clean_text(match.group(1))
-                            elif field in ('gps', 'dmr'):
+                            elif field == 'gps':
                                 data[field] = 'Yes'
+                            elif field == 'digital_dmr':
+                                data[field] = True
                             break
 
     # USB-C detection

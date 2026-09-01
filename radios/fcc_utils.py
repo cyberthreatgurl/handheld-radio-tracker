@@ -23,7 +23,12 @@ from radios.models import (
     normalize_grantee_code,
 )
 from radios.fcc_id_utils import (
-    normalize_fcc_id_for_lookup, split_fcc_id, _validate_grantee_code,
+    canonical_fcc_id,
+    fcc_id_stripped_expression,
+    normalize_fcc_id_for_lookup,
+    split_fcc_id,
+    strip_fcc_id_hyphens,
+    _validate_grantee_code,
 )
 from radios.manual_extraction import extract_specs_from_text, extract_text_from_pdf_with_metadata
 from radios.fcc_validation import validate_fcc_brand_assignment
@@ -2971,8 +2976,13 @@ def _apply_extracted_specs_to_radio(radio, extracted_specs, source_label):
         'power_watts': 'power_watts',
         'gps': 'gps',
         'aprs': 'aprs',
-        'dmr': 'dmr',
-        'air_band': 'air_band',
+        'digital_dmr': 'digital_dmr',
+        'digital_c4fm': 'digital_c4fm',
+        'digital_p25': 'digital_p25',
+        'digital_nxdn': 'digital_nxdn',
+        'digital_m17': 'digital_m17',
+        'air_band_rx': 'air_band_rx',
+        'air_band_tx': 'air_band_tx',
         'cost_approx': 'cost_approx',
     }
     for extracted_key, radio_field in field_map.items():
@@ -4230,13 +4240,13 @@ def _parse_youtube_videos_for_specs(radio):
 
     logger.info(
         "YouTube transcript parse result radio_id=%s "
-        "freq_bands=%s power=%s gps=%s aprs=%s dmr=%s",
+        "freq_bands=%s power=%s gps=%s aprs=%s digital_dmr=%s",
         getattr(radio, 'id', None),
         extracted.get('freq_bands_tx', ''),
         extracted.get('power_watts', ''),
         extracted.get('gps', ''),
         extracted.get('aprs', ''),
-        extracted.get('dmr', ''),
+        extracted.get('digital_dmr', ''),
     )
     return extracted
 
@@ -4363,10 +4373,17 @@ def _apply_website_specs_to_radio(radio, extracted):
         'power_watts': 'power_watts',
         'gps': 'gps',
         'aprs': 'aprs',
-        'dmr': 'dmr',
-        'air_band': 'air_band',
-        'satellite_tracking': 'satellite_tracking',
         'cost_approx': 'cost_approx',
+    }
+    bool_map = {
+        'digital_dmr': 'digital_dmr',
+        'digital_c4fm': 'digital_c4fm',
+        'digital_p25': 'digital_p25',
+        'digital_nxdn': 'digital_nxdn',
+        'digital_m17': 'digital_m17',
+        'air_band_rx': 'air_band_rx',
+        'air_band_tx': 'air_band_tx',
+        'satellite_tracking': 'satellite_tracking',
     }
     changes = []
     for extracted_key, radio_field in field_map.items():
@@ -4380,6 +4397,11 @@ def _apply_website_specs_to_radio(radio, extracted):
         # is often incorrect).
         if str_value and str_value != (current or ''):
             setattr(radio, radio_field, str_value)
+            changes.append(radio_field)
+
+    for extracted_key, radio_field in bool_map.items():
+        if extracted.get(extracted_key) and not getattr(radio, radio_field):
+            setattr(radio, radio_field, True)
             changes.append(radio_field)
 
     # Numeric fields
@@ -5185,7 +5207,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
             q_grantee,
         )
         return 0, 0, messages
-    request_url = f"{URL}fccId={fcc_id_query}"
+    request_url = f"{URL}fccId={_extract_fcc_key(fcc_id_query)}"
     if start_date is not None:
         # Accept either a date or datetime object.
         sd = start_date.date() if hasattr(start_date, 'date') else start_date
@@ -5245,7 +5267,10 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
     # is too aggressive: filings like "Change in Identification" contain no radio
     # keywords but are legitimate updates to an existing device grant.
     # Only enforce the allowlist for bulk grantee-code scans.
-    is_specific_fcc_id = '-' in _clean_query(fcc_id_query)
+    # A specific FCC ID is hyphenated OR longer than a bare grantee code —
+    # some FCC IDs carry no hyphen (e.g. "K44524000" = grantee K44 + product
+    # 524000) and would otherwise be mistaken for a grantee-code scan.
+    is_specific_fcc_id = '-' in _clean_query(fcc_id_query) or not exact_grantee
     allowlist_terms = _radio_allowlist_terms()
     denylist_terms = _radio_denylist_terms()
     skipped_non_exact = 0
@@ -5273,6 +5298,12 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         grantee_code = normalize_grantee_code(grantee_code)
         if not product_code:
             product_code = fcc_id
+
+        # Persist only the correctly-hyphenated GRANTEE-PRODUCT form.
+        # The FCC API returns raw values without the hyphen (e.g.
+        # "K44524000"); canonicalize to "K44-524000" so every DB row and
+        # downstream comparison shares one canonical spelling.
+        fcc_id = canonical_fcc_id(fcc_id, preferred_grantee_code=grantee_code)
 
         if grantee_code and grantee_code in ignored_codes:
             skipped_ignored += 1
@@ -5350,7 +5381,13 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 validation.get('provided_brand_name', ''),
             )
 
-        radios_with_fcc = list(Radio.objects.filter(fcc_id__iexact=fcc_id))
+        radios_with_fcc = list(
+            Radio.objects.annotate(
+                _fcc_stripped=fcc_id_stripped_expression('fcc_id'),
+            ).filter(
+                _fcc_stripped__iexact=strip_fcc_id_hyphens(fcc_id),
+            )
+        )
         existing_radio = None
         if not radios_with_fcc:
             existing_radio = Radio.objects.filter(brand=brand_val, model=product_code).first()

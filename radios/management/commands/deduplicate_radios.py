@@ -15,7 +15,14 @@ class Command(BaseCommand):
                 # Keep the one with the most non-empty fields
                 def score(r):
                     return sum(bool(getattr(r, f)) for f in [
-                        'fcc_id','intro_year','freq_bands_tx','power_watts','satellite_tracking','harmonic_suppression','gps','aprs','air_band','dmr','display','battery_mah','cost_approx','rebadges_clones','website','notes'])
+                        'fcc_id', 'intro_year', 'freq_bands_tx', 'power_watts',
+                        'satellite_tracking', 'harmonic_suppression', 'gps', 'aprs',
+                        'air_band_rx', 'air_band_tx',
+                        'digital_dmr', 'digital_c4fm', 'digital_p25',
+                        'digital_nxdn', 'digital_m17',
+                        'display', 'battery_mah', 'cost_approx',
+                        'rebadges_clones', 'website', 'notes',
+                    ])
                 radios = sorted(radios, key=score, reverse=True)
                 keep = radios[0]
                 # Merge notes from all

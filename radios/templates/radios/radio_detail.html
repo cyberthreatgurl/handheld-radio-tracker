@@ -283,25 +283,25 @@
                             </div>
                         </div>
                         {% endif %}
-                        {% if caps.dmr %}
+                        {% if caps.digital_dmr or caps.digital_c4fm or caps.digital_p25 or caps.digital_nxdn or caps.digital_m17 %}
                         <div class="flex items-center gap-2.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2.5">
                             <div class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-gray-700">DMR</p>
-                                <p class="text-xs text-purple-700 font-semibold">{{ caps.dmr }}</p>
+                                <p class="text-xs font-medium text-gray-700">Digital Modes</p>
+                                <p class="text-xs text-purple-700 font-semibold">{% if caps.digital_dmr %}DMR{% endif %}{% if caps.digital_c4fm %} C4FM{% endif %}{% if caps.digital_p25 %} P25{% endif %}{% if caps.digital_nxdn %} NXDN{% endif %}{% if caps.digital_m17 %} M17{% endif %}</p>
                             </div>
                         </div>
                         {% endif %}
-                        {% if caps.air_band %}
+                        {% if caps.air_band_rx or caps.air_band_tx %}
                         <div class="flex items-center gap-2.5 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5">
                             <div class="flex-shrink-0 w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-700">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                             </div>
                             <div>
                                 <p class="text-xs font-medium text-gray-700">Air Band</p>
-                                <p class="text-xs text-sky-700 font-semibold">{{ caps.air_band }}</p>
+                                <p class="text-xs text-sky-700 font-semibold">{% if caps.air_band_rx %}RX{% endif %}{% if caps.air_band_tx %}{% if caps.air_band_rx %} / {% endif %}TX{% endif %}</p>
                             </div>
                         </div>
                         {% endif %}
@@ -312,7 +312,7 @@
                             </div>
                             <div>
                                 <p class="text-xs font-medium text-gray-700">Satellite</p>
-                                <p class="text-xs text-amber-700 font-semibold">{{ caps.satellite_tracking }}</p>
+                                <p class="text-xs text-amber-700 font-semibold">✓</p>
                             </div>
                         </div>
                         {% endif %}
@@ -345,17 +345,6 @@
                             </div>
                             <div>
                                 <p class="text-xs font-medium text-gray-700">USB-C</p>
-                                <p class="text-xs text-emerald-700 font-semibold">✓</p>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if caps.usb_chargeable %}
-                        <div class="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
-                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            </div>
-                            <div>
-                                <p class="text-xs font-medium text-gray-700">USB Chargeable</p>
                                 <p class="text-xs text-emerald-700 font-semibold">✓</p>
                             </div>
                         </div>
@@ -417,7 +406,7 @@
                         {% endif %}
                         {% endwith %}
                     </div>
-                    {% if not radio.gps and not radio.aprs and not radio.dmr and not radio.air_band and not radio.satellite_tracking and not radio.bluetooth and not radio.noaa_wx and not radio.usb_c_charging and not radio.usb_chargeable and not radio.usb_programmable and not radio.is_toy and not radio.removable_antenna and not radio.unlockable and not radio.firmware_updates %}
+                    {% if not radio.gps and not radio.aprs and not radio.satellite_tracking and not radio.digital_dmr and not radio.digital_c4fm and not radio.digital_p25 and not radio.digital_nxdn and not radio.digital_m17 and not radio.air_band_rx and not radio.air_band_tx and not radio.bluetooth and not radio.noaa_wx and not radio.usb_c_charging and not radio.usb_programmable and not radio.is_toy and not radio.removable_antenna and not radio.unlockable and not radio.firmware_updates %}
                     <p class="text-sm text-gray-400 italic mt-2">No capabilities recorded yet — <a href="{% url 'radio_edit' radio.pk %}" class="text-indigo-600 hover:underline">add some</a>.</p>
                     {% endif %}
                 </div>
@@ -429,10 +418,6 @@
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Display</p>
                             <p class="mt-1 text-sm text-gray-900">{{ radio.display|default:"Not specified" }}</p>
-                        </div>
-                        <div>
-                            <p class="block text-sm font-medium text-gray-700">Display Color</p>
-                            <p class="mt-1 text-sm text-gray-900">{{ radio.display_color|default:"Not specified" }}</p>
                         </div>
                         <div>
                             <p class="block text-sm font-medium text-gray-700">Channels</p>

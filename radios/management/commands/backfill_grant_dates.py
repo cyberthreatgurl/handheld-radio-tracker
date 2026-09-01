@@ -19,6 +19,7 @@ from datetime import date as date_type
 from django.core.management.base import BaseCommand
 from django.db.models import Min
 
+from radios.fcc_id_utils import fcc_id_stripped_expression, strip_fcc_id_hyphens
 from radios.models import Radio, RadioOETDocument
 
 logger = logging.getLogger(__name__)
@@ -26,9 +27,11 @@ logger = logging.getLogger(__name__)
 
 def _earliest_oet_date_for_fcc_id(fcc_id):
     """Return the earliest date_submitted_to_fcc across all OET docs
-    matching this FCC ID, or None."""
-    agg = RadioOETDocument.objects.filter(
-        fcc_id__iexact=fcc_id,
+    matching this FCC ID (ignoring hyphen placement), or None."""
+    agg = RadioOETDocument.objects.annotate(
+        _fcc_stripped=fcc_id_stripped_expression('fcc_id'),
+    ).filter(
+        _fcc_stripped__iexact=strip_fcc_id_hyphens(fcc_id),
         date_submitted_to_fcc__isnull=False,
     ).aggregate(earliest=Min('date_submitted_to_fcc'))
     return agg.get('earliest') or None
@@ -89,7 +92,9 @@ class Command(BaseCommand):
         # ── Phase 1: Local backfill from existing OET docs ──────
         radios = Radio.objects.exclude(fcc_id='').filter(grant_date__isnull=True)
         if single_fcc_id:
-            radios = radios.filter(fcc_id__iexact=single_fcc_id)
+            radios = radios.annotate(
+                _fcc_stripped=fcc_id_stripped_expression('fcc_id'),
+            ).filter(_fcc_stripped__iexact=strip_fcc_id_hyphens(single_fcc_id))
 
         total = radios.count()
         if total == 0:

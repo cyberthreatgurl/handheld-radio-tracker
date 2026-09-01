@@ -15,15 +15,12 @@ maintenance pages.
 # too-many-*, too-many-lines: complex views justified by varied page requirements
 # import-outside-toplevel: lazy imports avoid circular deps
 
-import ipaddress
-import json
 import logging
 import re
-import socket
+import json
 import threading
 from collections import Counter
 from pathlib import Path
-from urllib.parse import urlparse
 
 from curl_cffi import requests as curl_requests
 
@@ -37,10 +34,14 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from .fcc_id_utils import normalize_fcc_id_for_lookup, split_fcc_id
+from .fcc_id_utils import (
+    fcc_id_stripped_expression,
+    normalize_fcc_id_for_lookup,
+    split_fcc_id,
+    strip_fcc_id_hyphens,
+)
 from .fcc_utils import fetch_and_sync_fcc_id
 from .forms import (
     RadioForm, RadioSearchForm, BrandForm, ManufacturerForm, RadioImageFormSet,
@@ -57,69 +58,6 @@ from .models import (
 from .nodal_graph import build_nodal_graph_data
 
 logger = logging.getLogger(__name__)
-
-
-def _host_is_public(hostname):
-    """Return True when every resolved address is a public internet IP."""
-    try:
-        infos = socket.getaddrinfo(hostname, None)
-    except socket.gaierror:
-        return False
-    for info in infos:
-        try:
-            addr = ipaddress.ip_address(info[4][0])
-        except ValueError:
-            continue
-        if (
-            addr.is_private or addr.is_loopback or addr.is_link_local
-            or addr.is_reserved or addr.is_multicast or addr.is_unspecified
-        ):
-            return False
-    return True
-
-
-@staff_required
-@require_POST
-def probe_embeddable_view(request):
-    """Check whether a URL can be shown inside the edit-page split viewer.
-
-    Many sites send ``X-Frame-Options`` or a CSP ``frame-ancestors``
-    directive that blocks iframe embedding.  We probe only the response
-    headers (never the body) so the client can show a graceful fallback
-    instead of the browser's error page.
-    """
-    url = (request.POST.get('url') or '').strip()
-    parsed = urlparse(url)
-    if parsed.scheme not in ('http', 'https') or not parsed.hostname:
-        return JsonResponse({'embeddable': False, 'reason': 'invalid'})
-    if not _host_is_public(parsed.hostname):
-        return JsonResponse({'embeddable': False, 'reason': 'blocked_host'})
-
-    try:
-        resp = curl_requests.get(
-            url, impersonate='chrome124', timeout=5,
-            allow_redirects=False, stream=True,
-        )
-    except Exception:
-        return JsonResponse({'embeddable': False, 'reason': 'unreachable'})
-
-    status = resp.status_code
-    xfo = (resp.headers.get('X-Frame-Options') or '').strip().lower()
-    csp = (resp.headers.get('Content-Security-Policy') or '').lower()
-    try:
-        resp.close()
-    except Exception:
-        pass
-
-    # Redirects are deferred to the browser (which enforces the final
-    # page's frame headers); we only probe the exact URL provided.
-    if 300 <= status < 400:
-        return JsonResponse({'embeddable': True, 'reason': 'redirect'})
-    if xfo in ('deny', 'sameorigin'):
-        return JsonResponse({'embeddable': False, 'reason': 'x_frame_options'})
-    if 'frame-ancestors' in csp:
-        return JsonResponse({'embeddable': False, 'reason': 'csp'})
-    return JsonResponse({'embeddable': True, 'reason': 'ok'})
 
 
 def _normalize_brand_key(value):
@@ -320,19 +258,44 @@ def sync_radio_fcc_view(request, pk):
                  if 'ignore list' in msg.lower()),
                 '',
             )
+            oet_msg = next(
+                (msg for msg in _processing_msgs
+                 if 'OET exhibit documents' in msg),
+                '',
+            )
+            report_msg = next(
+                (msg for msg in _processing_msgs
+                 if 'FCC test report files' in msg),
+                '',
+            )
+
+            detail_parts = []
+            if added > 0 and updated > 0:
+                detail_parts.append(
+                    f"Added {added}, updated {updated} record(s)"
+                )
+            elif added > 0:
+                detail_parts.append(f"Added {added} record(s)")
+            elif updated > 0:
+                detail_parts.append(f"Updated {updated} record(s)")
+            if report_msg:
+                detail_parts.append(report_msg)
+            if oet_msg:
+                detail_parts.append(oet_msg)
+
             if ignore_message:
                 messages.warning(request, ignore_message)
-            elif added > 0 or updated > 0:
+            elif detail_parts:
                 messages.success(
                     request,
-                    f"Success! Updated FCC data for '{radio.fcc_id}'. "
-                    f"Added {added} and updated {updated} records.",
+                    f"FCC sync for '{radio.fcc_id}' completed: "
+                    + "; ".join(detail_parts) + ".",
                 )
             else:
                 messages.info(
                     request,
                     f"FCC sync completed for '{radio.fcc_id}'. "
-                    "No new records or updates found.",
+                    "No new records, updates, or documents.",
                 )
         except Exception as e:
             logger.exception(
@@ -798,8 +761,11 @@ class RadioDetailView(DetailView):
         white_label_models = []
 
         if fcc_id:
-            # Group by FCC ID
-            related_radios = Radio.objects.filter(fcc_id__iexact=fcc_id)
+            # Group by FCC ID, ignoring hyphen placement so radios like
+            # "K44-524000" and "K44524000" are treated as the same device.
+            related_radios = Radio.objects.annotate(
+                _fcc_stripped=fcc_id_stripped_expression('fcc_id'),
+            ).filter(_fcc_stripped__iexact=strip_fcc_id_hyphens(fcc_id))
             primary_models = related_radios.filter(is_a_whitelabel=False)
             white_label_models = related_radios.filter(is_a_whitelabel=True)
 
@@ -2319,7 +2285,7 @@ FEATURE_DEFS = {
     'dmr': {
         'label': 'DMR',
         'description': 'Digital Mobile Radio',
-        'filter': Q(dmr__iexact='Yes'),
+        'filter': Q(digital_dmr=True),
     },
     'vhf': {
         'label': 'VHF',

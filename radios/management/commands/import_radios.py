@@ -70,12 +70,15 @@ class Command(BaseCommand):
                                 'intro_year': intro_year,
                                 'freq_bands_tx': row.get('Freq. Bands (TX)', '').strip(),
                                 'power_watts': row.get('Power (W)', '').strip(),
-                                'satellite_tracking': row.get('Satellite Tracking', '').strip(),
+                                'satellite_tracking': (
+                                    row.get('Satellite Tracking', '').strip().lower().startswith('yes')
+                                ),
                                 'harmonic_suppression': row.get('Harmonic Suppression Status', '').strip(),
                                 'gps': row.get('GPS', '').strip(),
                                 'aprs': row.get('APRS', '').strip(),
-                                'air_band': row.get('Air Band', '').strip(),
-                                'dmr': row.get('DMR', '').strip(),
+                                'air_band_rx': row.get('Air Band', '').strip().lower() == 'yes',
+                                'air_band_tx': False,
+                                'digital_dmr': row.get('DMR', '').strip().lower() == 'yes',
                                 'display': row.get('Display', '').strip(),
                                 'battery_mah': battery_mah,
                                 'cost_approx': row.get('Cost (Approx)', '').strip(),
