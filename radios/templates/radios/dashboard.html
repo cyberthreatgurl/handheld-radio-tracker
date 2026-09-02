@@ -167,7 +167,7 @@
                             {% endif %}
                             <div class="text-xs text-gray-500 flex items-center justify-between">
                                 <span>{{ manual.created_at|date:"M d, Y H:i" }}</span>
-                                <a href="{{ manual.manual_pdf.url }}" download class="text-indigo-600 hover:text-indigo-800">PDF</a>
+                                <a href="{% url 'serve_manual' manual.pk %}" download class="text-indigo-600 hover:text-indigo-800">PDF</a>
                             </div>
                         </li>
                         {% empty %}

@@ -15,9 +15,11 @@ maintenance pages.
 # too-many-*, too-many-lines: complex views justified by varied page requirements
 # import-outside-toplevel: lazy imports avoid circular deps
 
-import logging
-import re
 import json
+import logging
+import math
+import re
+import shutil
 import threading
 from collections import Counter
 from pathlib import Path
@@ -2068,6 +2070,58 @@ def _build_local_fcc_id_map():
     return mapping
 
 
+def _artifacts_storage_stats():
+    """Return storage usage for the artifacts directory, or None on failure.
+
+    Uses ``shutil.disk_usage`` on the artifacts folder so the maintenance page
+    can show total/used/free capacity for cloud resource planning.  On the
+    Docker server this folder is the dedicated SMB-backed artifacts share.
+    """
+    artifacts_dir = Path(settings.BASE_DIR) / 'artifacts'
+    try:
+        usage = shutil.disk_usage(artifacts_dir)
+    except OSError:
+        logger.warning("Artifacts storage check failed path=%s", artifacts_dir)
+        return None
+
+    total = usage.total
+    percent_used = round((usage.used / total) * 100, 1) if total else 0.0
+    if percent_used >= 90:
+        needle_color = '#dc2626'
+    elif percent_used >= 70:
+        needle_color = '#d97706'
+    else:
+        needle_color = '#10b981'
+
+    # Gauge geometry: 0% points left, 100% points right, over the top.
+    sweep_rad = math.radians(180 + percent_used * 1.8)
+    ticks = []
+    for tick in (0, 25, 50, 75, 100):
+        rad = math.radians(180 + tick * 1.8)
+        ticks.append({
+            'label': f'{tick}%',
+            'inner_x': round(100 + 70 * math.cos(rad), 1),
+            'inner_y': round(100 + 70 * math.sin(rad), 1),
+            'outer_x': round(100 + 80 * math.cos(rad), 1),
+            'outer_y': round(100 + 80 * math.sin(rad), 1),
+            'label_x': round(100 + 52 * math.cos(rad), 1),
+            'label_y': round(100 + 52 * math.sin(rad) + 4, 1),
+        })
+
+    return {
+        'path': str(artifacts_dir),
+        'total_bytes': total,
+        'used_bytes': usage.used,
+        'free_bytes': usage.free,
+        'percent_used': percent_used,
+        'needle_angle': round(-90 + percent_used * 1.8, 1),
+        'needle_color': needle_color,
+        'sweep_x': round(100 + 80 * math.cos(sweep_rad), 1),
+        'sweep_y': round(100 + 80 * math.sin(sweep_rad), 1),
+        'ticks': ticks,
+    }
+
+
 @staff_required
 def maintenance_view(request):
     """Maintenance page — DB stats, country counts, grant year chart."""
@@ -2117,6 +2171,7 @@ def maintenance_view(request):
         'grant_chart_json': json.dumps([[int(y), c] for y, c in grant_chart]),
         'max_grant_year_count': max((c for _, c in grant_chart), default=1),
         'last_grantee_sync_at': FCCSyncState.get_instance().last_grantee_sync_at,
+        'storage': _artifacts_storage_stats(),
     }
     return render(request, 'radios/maintenance.html', context)
 

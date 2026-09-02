@@ -1,5 +1,11 @@
+"""URL routing for the radios app, including document-serving views."""
 from django.urls import path
 from . import views
+from .views_documents import (
+    serve_manual_view,
+    serve_oet_document_view,
+    serve_test_report_view,
+)
 from .views_import import import_grantee_radios
 from .views_merge import merge_radios
 from .views_manual import manual_upload_view
@@ -34,6 +40,24 @@ urlpatterns = [
         name='scrape_radio_website',
     ),
     path('radios/import-from-url/', views.import_radio_from_url_view, name='import_radio_from_url'),
+
+    # Document serving — falls back to re-downloading the FCC copy when the
+    # stored file is missing from the server's artifacts share.
+    path(
+        'documents/oet/<int:pk>/',
+        serve_oet_document_view,
+        name='serve_oet_document',
+    ),
+    path(
+        'documents/report/<int:pk>/',
+        serve_test_report_view,
+        name='serve_test_report',
+    ),
+    path(
+        'documents/manual/<int:pk>/',
+        serve_manual_view,
+        name='serve_manual',
+    ),
 
     path('sync-fcc/', views.sync_fcc_view, name='sync_fcc_id'),
     path('sync-all-grantees/', views.sync_all_grantees_view, name='sync_all_grantees'),

@@ -148,7 +148,7 @@
                         <div class="flex items-start gap-2">
                             {% if radio.available_manuals %}
                             <a
-                                href="{{ radio.available_manuals.0.manual_pdf.url }}"
+                                href="{% url 'serve_manual' radio.available_manuals.0.pk %}"
                                 download
                                 title="Download manual PDF"
                                 aria-label="Download manual PDF"

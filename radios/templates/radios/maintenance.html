@@ -39,6 +39,40 @@
         </div>
     </div>
 
+    <!-- Artifacts Storage Gauge -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Storage Used by Artifacts</h3>
+            {% if storage %}
+            <div class="flex flex-col sm:flex-row items-center gap-8">
+                <div class="w-full sm:w-1/2 max-w-xs">
+                    <svg viewBox="0 0 200 120" class="w-full" role="img" aria-label="Artifacts storage usage gauge">
+                        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="12" stroke-linecap="round"/>
+                        {% if storage.percent_used > 0 %}
+                        <path d="M 20 100 A 80 80 0 0 1 {{ storage.sweep_x }} {{ storage.sweep_y }}" fill="none" stroke="{{ storage.needle_color }}" stroke-width="12" stroke-linecap="round"/>
+                        {% endif %}
+                        {% for tick in storage.ticks %}
+                        <line x1="{{ tick.inner_x }}" y1="{{ tick.inner_y }}" x2="{{ tick.outer_x }}" y2="{{ tick.outer_y }}" stroke="#9ca3af" stroke-width="2"/>
+                        <text x="{{ tick.label_x }}" y="{{ tick.label_y }}" text-anchor="middle" font-size="10" fill="#6b7280">{{ tick.label }}</text>
+                        {% endfor %}
+                        <line x1="100" y1="100" x2="100" y2="32" stroke="#374151" stroke-width="4" stroke-linecap="round" transform="rotate({{ storage.needle_angle }} 100 100)"/>
+                        <circle cx="100" cy="100" r="7" fill="#374151"/>
+                    </svg>
+                </div>
+                <div class="flex-1 space-y-1 text-sm">
+                    <p class="text-3xl font-semibold" style="color:{{ storage.needle_color }}">{{ storage.percent_used }}%</p>
+                    <p class="text-gray-700">Used: <span class="font-medium">{{ storage.used_bytes|filesizeformat }}</span></p>
+                    <p class="text-gray-700">Total capacity: <span class="font-medium">{{ storage.total_bytes|filesizeformat }}</span></p>
+                    <p class="text-gray-700">Free: <span class="font-medium">{{ storage.free_bytes|filesizeformat }}</span></p>
+                    <p class="text-xs text-gray-400 pt-2 break-all">Measured at {{ storage.path }}</p>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500">Storage information unavailable.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Management Links -->
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
