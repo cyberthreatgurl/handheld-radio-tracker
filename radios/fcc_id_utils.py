@@ -100,8 +100,23 @@ def normalize_fcc_id_for_lookup(
     fcc_id: Optional[str],
     preferred_grantee_code: Optional[str] = None,
 ) -> str:
-    """Return the canonical ``GRANTEE-PRODUCT`` form, or '' if unsplittable."""
-    grantee_code, product_code = split_fcc_id(fcc_id, preferred_grantee_code=preferred_grantee_code)
+    """Return the canonical lookup form, or '' if unsplittable.
+
+    The FCC does not consistently place a hyphen between the grantee code and
+    the product code — many FCC IDs carry hyphens inside the product code
+    (e.g. ``Y23DM-568`` = grantee Y23 + product DM-568).  When a hyphen is
+    already present, trust it and return the cleaned value unchanged; only
+    insert a hyphen for compact (hyphenless) IDs.
+    """
+    cleaned = _clean_fcc_id(fcc_id)
+    if not cleaned:
+        return ''
+    if '-' in cleaned:
+        return cleaned
+    grantee_code, product_code = split_fcc_id(
+        cleaned,
+        preferred_grantee_code=preferred_grantee_code,
+    )
     if not grantee_code or not product_code:
         return ''
     return f'{grantee_code}-{product_code}'
@@ -129,13 +144,18 @@ def canonical_fcc_id(
     value: Optional[str],
     preferred_grantee_code: Optional[str] = None,
 ) -> str:
-    """Return the correctly-hyphenated ``GRANTEE-PRODUCT`` form for storage.
+    """Return the storage form of an FCC ID, preserving any existing hyphen.
 
-    Falls back to the cleaned (uppercased, space-stripped) input when the value
-    cannot be split into a grantee/product pair.
+    The FCC often stores the grantee and product code together without a
+    separator hyphen, or with hyphens inside the product code (e.g.
+    ``YC2VEV-V8`` = grantee YC2 + product VEV-V8).  An already-hyphenated ID is
+    therefore kept exactly as-is; only compact (hyphenless) IDs get a single
+    hyphen inserted between the inferred grantee and product codes.
     """
     cleaned = _clean_fcc_id(value)
     if not cleaned:
+        return cleaned
+    if '-' in cleaned:
         return cleaned
     canonical = normalize_fcc_id_for_lookup(
         cleaned,

@@ -191,10 +191,10 @@ class FCCIDUtilsTest(TestCase):
 
         self.assertContains(response, 'VO6-200UV')
 
-    def test_lookup_variants_include_normalized_form_for_hyphen_in_product_code(self):
+    def test_lookup_variants_preserve_hyphen_in_product_code(self):
         variants = _fcc_lookup_variants('2A4FBTDBL-1')
         self.assertEqual(variants[0], '2A4FBTDBL-1')
-        self.assertIn('2A4FB-TDBL-1', variants)
+        self.assertNotIn('2A4FB-TDBL-1', variants)
         self.assertIn('2A4FBTDBL1', variants)
 
     def test_generic_search_payload_uses_live_form_field_names(self):

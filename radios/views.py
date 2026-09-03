@@ -111,26 +111,68 @@ def _preferred_brand_display_name(radio, alias_map):
     return brand_value
 
 
-def _normalized_query_match_ids(query, radios_qs=None):
-    query_key = _normalize_model_key(query)
-    if not query_key:
-        return []
+_SEARCH_TOKEN_RE = re.compile(r'"([^"]+)"|\S+')
 
-    source_qs = radios_qs if radios_qs is not None else Radio.objects.all()
-    return [
-        radio['id']
-        for radio in source_qs.values(
-            'id', 'brand', 'model', 'fcc_id', 'rebadges_clones',
-            'white_label_vendors',
-        )
-        if (
-            query_key in _normalize_model_key(radio.get('brand'))
-            or query_key in _normalize_model_key(radio.get('model'))
-            or query_key in _normalize_model_key(radio.get('fcc_id'))
-            or query_key in _normalize_model_key(radio.get('rebadges_clones'))
-            or query_key in _normalize_model_key(radio.get('white_label_vendors'))
-        )
-    ]
+_RADIO_SEARCH_FIELDS = (
+    'brand', 'model', 'fcc_id', 'rebadges_clones', 'white_label_vendors',
+)
+_BRAND_SEARCH_FIELDS = (
+    'name', 'alias', 'full_name', 'grantee_code', 'white_label_vendors',
+)
+_MANUFACTURER_SEARCH_FIELDS = (
+    'full_name', 'alias', 'country', 'address', 'brands__name',
+)
+
+
+def _parse_search_tokens(query):
+    """Split a search query into (term, is_quoted) tokens.
+
+    Quoted terms (``"like this"``) are matched literally; unquoted terms are
+    normalized (hyphens, spaces, and case stripped) before matching.
+    """
+    tokens = []
+    for match in _SEARCH_TOKEN_RE.finditer(query or ''):
+        if match.group(1) is not None:
+            tokens.append((match.group(1), True))
+        else:
+            tokens.append((match.group(0), False))
+    return tokens
+
+
+def _normalized_match_ids(queryset, term, fields):
+    """Return IDs whose normalized field values contain the normalized term."""
+    key = _normalize_model_key(term)
+    if not key:
+        return []
+    ids = []
+    for row in queryset.values('id', *fields):
+        if any(key in _normalize_model_key(row.get(field)) for field in fields):
+            ids.append(row['id'])
+    return ids
+
+
+def _search_queryset(queryset, query, fields):
+    """Filter a queryset by a search query.
+
+    Unquoted tokens match hyphen/space-insensitively (normalized); quoted
+    tokens (``"A-P8000"``) match the literal text, hyphens included.
+    """
+    tokens = _parse_search_tokens(query)
+    if not tokens:
+        return queryset
+
+    combined = None
+    for term, is_quoted in tokens:
+        if is_quoted:
+            token_q = None
+            for field in fields:
+                cond = Q(**{f'{field}__icontains': term})
+                token_q = cond if token_q is None else token_q | cond
+        else:
+            token_q = Q(id__in=_normalized_match_ids(queryset, term, fields))
+        combined = token_q if combined is None else combined & token_q
+
+    return queryset.filter(combined) if combined is not None else queryset
 
 
 def _actor_label(request):
@@ -639,15 +681,7 @@ class RadioListView(ListView):
                 "User action radio_search actor=%s query=%s",
                 _actor_label(self.request), query,
             )
-            normalized_match_ids = _normalized_query_match_ids(query, radios_qs=queryset)
-            queryset = queryset.filter(
-                Q(brand__icontains=query) |
-                Q(model__icontains=query) |
-                Q(fcc_id__icontains=query) |
-                Q(rebadges_clones__icontains=query) |
-                Q(white_label_vendors__icontains=query) |
-                Q(id__in=normalized_match_ids)
-            )
+            queryset = _search_queryset(queryset, query, _RADIO_SEARCH_FIELDS)
 
         # Brand filter
         brand = self.request.GET.get('brand')
@@ -1095,13 +1129,7 @@ class BrandListView(ListView):
 
         query = self.request.GET.get('query')
         if query:
-            queryset = queryset.filter(
-                Q(name__icontains=query) |
-                Q(alias__icontains=query) |
-                Q(full_name__icontains=query) |
-                Q(grantee_code__icontains=query) |
-                Q(white_label_vendors__icontains=query)
-            )
+            queryset = _search_queryset(queryset, query, _BRAND_SEARCH_FIELDS)
 
         sort = self.request.GET.get('sort', 'name')
         order = self.request.GET.get('order', 'asc')
@@ -1408,13 +1436,7 @@ class ManufacturerListView(ListView):
         qs = super().get_queryset().prefetch_related('brands')
         query = self.request.GET.get('query', '').strip()
         if query:
-            qs = qs.filter(
-                Q(full_name__icontains=query) |
-                Q(alias__icontains=query) |
-                Q(country__icontains=query) |
-                Q(address__icontains=query) |
-                Q(brands__name__icontains=query)
-            ).distinct()
+            qs = _search_queryset(qs, query, _MANUFACTURER_SEARCH_FIELDS).distinct()
         return qs
 
     def get_context_data(self, **kwargs):

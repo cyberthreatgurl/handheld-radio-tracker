@@ -9,7 +9,11 @@ Covers:
 """
 
 from django.test import TestCase
-from ..fcc_id_utils import split_fcc_id, normalize_fcc_id_for_lookup
+from ..fcc_id_utils import (
+    canonical_fcc_id,
+    split_fcc_id,
+    normalize_fcc_id_for_lookup,
+)
 from ..fcc_utils import _extract_fcc_key, _fcc_lookup_variants
 
 
@@ -123,6 +127,20 @@ class NormalizeFCCIDTest(TestCase):
         result = normalize_fcc_id_for_lookup('2AJGM-UV5R')
         self.assertEqual(result, '2AJGM-UV5R')
 
+    def test_normalize_preserves_long_prefix_hyphen(self):
+        """YC2VEV-V8 is the FCC's own spelling (grantee YC2 + product VEV-V8)."""
+        self.assertEqual(normalize_fcc_id_for_lookup('YC2VEV-V8'), 'YC2VEV-V8')
+
+    def test_canonical_preserves_long_prefix_hyphen(self):
+        """canonical_fcc_id keeps the FCC's own spelling when a hyphen exists."""
+        self.assertEqual(canonical_fcc_id('YC2VEV-V8'), 'YC2VEV-V8')
+
+    def test_split_still_derives_grantee_for_long_prefix(self):
+        """split_fcc_id still derives grantee=YC2 from YC2VEV-V8."""
+        grantee, product = split_fcc_id('YC2VEV-V8')
+        self.assertEqual(grantee, 'YC2')
+        self.assertEqual(product, 'VEV-V8')
+
 
 class ExtractFCCKeyTest(TestCase):
     """Tests for _extract_fcc_key — strips dashes for comparison."""
@@ -160,7 +178,7 @@ class FCCLookupVariantsTest(TestCase):
     def test_variants_for_dash_in_product(self):
         variants = _fcc_lookup_variants('2A4FBTDBL-1')
         self.assertIn('2A4FBTDBL-1', variants)
-        self.assertIn('2A4FB-TDBL-1', variants)
+        self.assertNotIn('2A4FB-TDBL-1', variants)
         self.assertIn('2A4FBTDBL1', variants)
 
     def test_variants_deduplicated(self):

@@ -56,10 +56,16 @@ class DocumentServingTest(TestCase):
                 with patch(
                     'radios.views_documents._download_oet_document_bytes',
                     return_value=b'%PDF-1.4 refetched',
-                ):
+                ) as mock_download:
                     response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.content, b'%PDF-1.4 refetched')
+
+                # The FCC attachment endpoint requires an exhibits-page referer.
+                mock_download.assert_called_once_with(
+                    source_url,
+                    referer_url='https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm',
+                )
 
                 # The re-fetched file must now be persisted on the storage backend.
                 doc.refresh_from_db()

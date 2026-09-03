@@ -26,6 +26,10 @@ from .models import RadioFCCTestReport, RadioManual, RadioOETDocument
 
 logger = logging.getLogger(__name__)
 
+# FCC attachment URLs (GetApplicationAttachment.html?id=...) return 403 unless
+# the request carries a Referer from the exhibits listing page.
+_FCC_EXHIBITS_REFERER = 'https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm'
+
 
 def _content_type(filename):
     """Return the MIME type for a filename, defaulting to PDF for OET docs."""
@@ -46,6 +50,13 @@ def _serve_bytes(content, filename):
     return response
 
 
+def _referer_for_record(record):
+    """Return the referer the FCC expects when downloading this record's file."""
+    radio = getattr(record, 'radio', None)
+    oet_url = getattr(radio, 'oet_page_url', '') if radio else ''
+    return (oet_url or '').strip() or _FCC_EXHIBITS_REFERER
+
+
 def _fetch_missing_file(record, file_field, source_url, filename_hint):
     """Re-download a missing document from its authoritative FCC source.
 
@@ -59,7 +70,10 @@ def _fetch_missing_file(record, file_field, source_url, filename_hint):
         )
         return b'', ''
 
-    content = _download_oet_document_bytes(source_url)
+    content = _download_oet_document_bytes(
+        source_url,
+        referer_url=_referer_for_record(record),
+    )
     if not content:
         logger.info(
             "Document serve re-download empty doc_type=%s pk=%s url=%s",
