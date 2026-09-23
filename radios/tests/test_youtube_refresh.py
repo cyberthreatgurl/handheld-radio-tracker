@@ -189,3 +189,31 @@ class RefreshRadioYoutubeViewTest(TestCase):
         self.assertRedirects(response, self.edit_url)
         self.radio.refresh_from_db()
         self.assertTrue(self.radio.youtube_video_urla)
+
+
+class RadioFormTemplateTest(TestCase):
+    """The edit page shows the refresh control only to superusers."""
+
+    def setUp(self):
+        self.radio = Radio.objects.create(brand='Baofeng', model='UV-5R')
+        self.url = reverse('radio_edit', kwargs={'pk': self.radio.pk})
+
+    def _superuser(self):
+        return User.objects.create_superuser(
+            username='admin', password='testpass123', email='admin@example.com')
+
+    def test_superuser_sees_refresh_button(self):
+        self.client.force_login(self._superuser())
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Refresh YouTube Videos')
+
+    def test_non_superuser_staff_does_not_see_button(self):
+        staff = User.objects.create_user(
+            username='staff', password='testpass123', is_staff=True)
+        self.client.force_login(staff)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Refresh YouTube Videos')

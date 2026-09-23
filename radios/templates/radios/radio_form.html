@@ -15,6 +15,7 @@
                 <h1 class="text-3xl font-bold text-gray-900">
                     {% if form.instance.pk %}Edit Radio{% else %}Add New Radio{% endif %}
                 </h1>
+                <div class="flex flex-wrap items-center gap-2 justify-end">
                 {% if form.instance.pk and form.instance.fcc_id %}
                 <form action="{% url 'sync_radio_fcc' form.instance.pk %}" method="post" class="inline">
                     {% csrf_token %}
@@ -45,6 +46,20 @@
                     </button>
                 </form>
                 {% endif %}
+                {% if form.instance.pk and request.user.is_superuser %}
+                <form action="{% url 'refresh_radio_youtube' form.instance.pk %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                            title="Search YouTube for this radio's top-viewed videos (brand + model). Max once per day.">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        Refresh YouTube Videos
+                    </button>
+                </form>
+                {% endif %}
+                </div>
             </div>
         </div>
 
@@ -387,22 +402,10 @@
                             <label for="{{ form.youtube_video_urla.id_for_label }}" class="block text-sm font-medium text-gray-700">YouTube Video URLs</label>
                             {{ form.youtube_video_urla }}
                             <p class="mt-1 text-xs text-gray-500">Enter one URL per line.</p>
-                            {% if form.instance.pk and request.user.is_superuser %}
-                            <div class="mt-2 flex items-center gap-3">
-                                <form action="{% url 'refresh_radio_youtube' form.instance.pk %}" method="post" class="inline">
-                                    {% csrf_token %}
-                                    <button type="submit"
-                                            class="inline-flex items-center px-3 py-1.5 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                                            title="Search YouTube for this radio's top-viewed videos (brand + model). Max once per day.">
-                                        ▶ Refresh YouTube Videos
-                                    </button>
-                                </form>
-                                {% if form.instance.youtube_videos_refreshed_at %}
-                                <span class="text-xs text-gray-400">
-                                    Last refreshed: {{ form.instance.youtube_videos_refreshed_at|date:"M j, Y H:i" }}
-                                </span>
-                                {% endif %}
-                            </div>
+                            {% if form.instance.pk and form.instance.youtube_videos_refreshed_at %}
+                            <p class="mt-1 text-xs text-gray-400">
+                                Last refreshed: {{ form.instance.youtube_videos_refreshed_at|date:"M j, Y H:i" }}
+                            </p>
                             {% endif %}
                             {% if form.youtube_video_urla.errors %}<p class="mt-2 text-sm text-red-600">{{ form.youtube_video_urla.errors.0 }}</p>{% endif %}
                             {% if form.instance.pk and form.instance.youtube_video_urla %}
