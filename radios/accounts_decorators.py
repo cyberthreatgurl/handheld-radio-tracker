@@ -14,16 +14,8 @@ def is_admin_user(user):
     return user.is_authenticated and user.is_staff
 
 
-def is_superuser_user(user):
-    """Django superusers only (site admins)."""
-    return user.is_authenticated and user.is_superuser
-
-
 # Decorator for function-based views.
 staff_required = user_passes_test(is_admin_user)
-
-# Decorator restricting a view to Django superusers only.
-admin_required = user_passes_test(is_superuser_user)
 
 
 class StaffRequiredMixin:

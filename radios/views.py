@@ -50,14 +50,12 @@ from .forms import (
     RadioCertificationFormSet,
 )
 from .forms_accounts import RadioCommentForm
-from .accounts_decorators import (
-    StaffRequiredMixin, admin_required, is_admin_user, staff_required,
-)
+from .accounts_decorators import StaffRequiredMixin, is_admin_user, staff_required
 from .image_utils import ingest_radio_image
 from .models import (
     Radio, Brand, RadioManual, RadioFirmware, Manufacturer, FCCSyncState,
     IgnoredGrantee, SyncSkippedGrantee, RadioFCCTestReport, RadioOETDocument,
-    RadioImage, YouTubeRefreshLog, delete_brand_and_related,
+    RadioImage, UserProfile, YouTubeRefreshLog, delete_brand_and_related,
 )
 from .nodal_graph import build_nodal_graph_data
 
@@ -1108,13 +1106,19 @@ def scrape_radio_website_view(request, pk):
     return redirect('radio_edit', pk=pk)
 
 
-@admin_required
+@staff_required
 def refresh_radio_youtube_view(request, pk):
-    """POST: refresh a radio's YouTube URLs (admins, at most once/24h)."""
+    """POST: refresh a radio's YouTube URLs (Admin accounts, once/24h)."""
     from datetime import timedelta
 
     radio = get_object_or_404(Radio, pk=pk)
     if request.method != 'POST':
+        return redirect('radio_edit', pk=pk)
+
+    profile = UserProfile.objects.filter(user=request.user).first()
+    if not (profile and profile.is_admin_account):
+        messages.error(
+            request, 'Only Admin accounts may refresh YouTube videos.')
         return redirect('radio_edit', pk=pk)
 
     day_ago = timezone.now() - timedelta(days=1)

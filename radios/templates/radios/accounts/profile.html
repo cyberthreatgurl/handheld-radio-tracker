@@ -25,10 +25,12 @@
             <div class="mt-8 pt-6 border-t">
                 <h3 class="text-lg font-medium text-gray-900">Membership</h3>
                 <p class="text-sm text-gray-600 mt-1">
-                    {% if profile.membership_active %}
-                        Active{% if profile.membership_expires_at %} — expires {{ profile.membership_expires_at|date:"M d, Y" }}{% endif %}.
+                    Account type:
+                    <span class="font-medium text-gray-900">{{ profile.get_account_type_display }}</span>
+                    {% if profile.membership_expires_at %}
+                        &middot; expires {{ profile.membership_expires_at|date:"M d, Y" }}
                     {% else %}
-                        No active membership. A $1/month plan unlocks database search.
+                        &middot; never expires
                     {% endif %}
                 </p>
             </div>

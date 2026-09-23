@@ -46,7 +46,7 @@
                     </button>
                 </form>
                 {% endif %}
-                {% if form.instance.pk and request.user.is_superuser %}
+                {% if form.instance.pk and user_profile and user_profile.is_admin_account %}
                 <form action="{% url 'refresh_radio_youtube' form.instance.pk %}" method="post" class="inline">
                     {% csrf_token %}
                     <button type="submit"

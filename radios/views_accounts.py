@@ -85,9 +85,17 @@ def login_view(request):
 
         form = LogInForm(request, data=request.POST)
         if form.is_valid():
-            auth_login(request, form.get_user())
+            user = form.get_user()
+            auth_login(request, user)
             reset_rate_limit('login', request, identifier=identifier)
-            logger.info('User action login actor=%s', form.get_user().username)
+            profile = UserProfile.objects.get_or_create(user=user)[0]
+            if profile.refresh_membership_status():
+                messages.warning(
+                    request,
+                    'Your membership has expired. Some features are limited '
+                    'until you renew.',
+                )
+            logger.info('User action login actor=%s', user.username)
             return redirect(request.GET.get('next') or 'dashboard')
         messages.error(request, 'Invalid handle/username or password.')
 

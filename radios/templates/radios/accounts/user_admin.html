@@ -25,6 +25,7 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Call sign</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reviewed</th>
@@ -39,6 +40,7 @@
                             <td class="px-4 py-3 text-sm text-gray-900">{{ u.first_name }} {{ u.last_name }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ u.profile.callsign|default:"&mdash;" }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{% if u.profile.membership_active %}Yes{% else %}No{% endif %}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ u.profile.get_account_type_display }}</td>
                             <td class="px-4 py-3 text-sm text-gray-500">{{ u.date_joined|date:"M d, Y" }}</td>
                             <td class="px-4 py-3 text-sm">
                                 {% if not u.profile.admin_reviewed %}
@@ -52,7 +54,7 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="7" class="px-4 py-6 text-sm text-gray-500 text-center">No users yet.</td></tr>
+                        <tr><td colspan="8" class="px-4 py-6 text-sm text-gray-500 text-center">No users yet.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

@@ -4,14 +4,31 @@ import urllib.parse
 
 import requests
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import Brand, Manufacturer
+from .models import Brand, Manufacturer, UserProfile
 from .oem_relationships import apply_oem_mapping_for_brand
 
 
 logger = logging.getLogger(__name__)
+
+
+@receiver(post_save, sender=get_user_model())
+def create_user_profile(sender, instance, created, **kwargs):
+    """Ensure every user has a UserProfile; superusers start as Admins."""
+    # pylint: disable=unused-argument
+    if not created:
+        return
+    account_type = (
+        UserProfile.AccountType.ADMIN
+        if instance.is_superuser
+        else UserProfile.AccountType.USER_FREE
+    )
+    UserProfile.objects.get_or_create(
+        user=instance, defaults={'account_type': account_type})
+
 
 # Nominatim requires an identifying User-Agent per the usage policy.
 _NOMINATIM_USER_AGENT = getattr(

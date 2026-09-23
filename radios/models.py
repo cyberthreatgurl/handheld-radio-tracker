@@ -12,11 +12,14 @@ ham radio equipment database.
 # import-outside-toplevel: lazy imports avoid circular deps in model methods
 # too-many-branches: Radio.save() branching reflects real-world FCC ID logic
 
+import calendar
 import logging
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.urls import reverse
+from django.utils import timezone
 
 
 logger = logging.getLogger(__name__)
@@ -25,6 +28,15 @@ logger = logging.getLogger(__name__)
 def normalize_grantee_code(value):
     """Strip whitespace and uppercase a grantee code string."""
     return (value or '').strip().upper()
+
+
+def _add_months(value, months):
+    """Add ``months`` calendar months to a datetime, clamping the day."""
+    month = value.month - 1 + months
+    year = value.year + month // 12
+    month = month % 12 + 1
+    day = min(value.day, calendar.monthrange(year, month)[1])
+    return value.replace(year=year, month=month, day=day)
 
 
 class Brand(models.Model):
@@ -1191,6 +1203,21 @@ class UserProfile(models.Model):
     email, and call sign are private and must never be shown to other users.
     """
 
+    class AccountType(models.TextChoices):
+        """Membership/account tiers."""
+        ADMIN = 'admin', 'Admin'
+        USER = 'user', 'User'
+        USER_FREE = 'user_free', 'User (Free)'
+        VENDOR = 'vendor', 'Vendor'
+        OEM = 'oem', 'OEM'
+
+    class MembershipDuration(models.TextChoices):
+        """Membership length measured from the date the user was added."""
+        ONE_MONTH = '1', '1 month'
+        SIX_MONTHS = '6', '6 months'
+        TWELVE_MONTHS = '12', '12 months'
+        NEVER = 'never', 'Never'
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -1199,6 +1226,19 @@ class UserProfile(models.Model):
     callsign = models.CharField(
         max_length=20, blank=True,
         help_text="FCC call sign (private).",
+    )
+    account_type = models.CharField(
+        max_length=20,
+        choices=AccountType.choices,
+        default=AccountType.USER_FREE,
+        db_index=True,
+        help_text="Membership/account tier.",
+    )
+    membership_duration = models.CharField(
+        max_length=10,
+        choices=MembershipDuration.choices,
+        default=MembershipDuration.ONE_MONTH,
+        help_text="Membership length from the date the user was added.",
     )
     membership_plan = models.ForeignKey(
         MembershipPlan,
@@ -1231,9 +1271,69 @@ class UserProfile(models.Model):
         return self.user.username
 
     @property
+    def is_admin_account(self):
+        """True for Admin-type accounts and Django superusers."""
+        if self.account_type == self.AccountType.ADMIN:
+            return True
+        user = self.user
+        return bool(user is not None and user.is_superuser)
+
+    @property
+    def is_free_account(self):
+        """Free and admin accounts never expire."""
+        return self.is_admin_account or (
+            self.account_type == self.AccountType.USER_FREE)
+
+    def is_expired(self):
+        """Whether the current membership has passed its expiry date."""
+        if self.is_free_account or self.membership_expires_at is None:
+            return False
+        return self.membership_expires_at < timezone.now()
+
+    def refresh_membership_status(self, save=True):
+        """Deactivate an expired membership; return True if it changed."""
+        if self.is_expired() and self.membership_active:
+            self.membership_active = False
+            if save:
+                self.save(update_fields=['membership_active'])
+            return True
+        return False
+
+    def _never_expires(self):
+        """Admin/free accounts, superusers, and 'never' durations never end."""
+        if self.account_type in (self.AccountType.ADMIN, self.AccountType.USER_FREE):
+            return True
+        if self.membership_duration == self.MembershipDuration.NEVER:
+            return True
+        if self.user_id:
+            return get_user_model().objects.filter(
+                pk=self.user_id, is_superuser=True).exists()
+        return False
+
+    def save(self, *args, **kwargs):
+        """Derive ``membership_expires_at`` when tier or duration changes."""
+        update_fields = kwargs.get('update_fields')
+        recompute = (
+            self._state.adding
+            or update_fields is None
+            or 'account_type' in update_fields
+            or 'membership_duration' in update_fields
+        )
+        if recompute:
+            if self._never_expires():
+                self.membership_expires_at = None
+            else:
+                base = self.created_at or timezone.now()
+                self.membership_expires_at = _add_months(
+                    base, int(self.membership_duration))
+        super().save(*args, **kwargs)
+
+    @property
     def has_search_access(self):
-        """Whether this user may use the (future) paid search feature."""
-        return self.membership_active
+        """Paid search access: Admin always; others only while active."""
+        if self.is_admin_account:
+            return True
+        return self.membership_active and not self.is_expired()
 
 
 class RadioComment(models.Model):

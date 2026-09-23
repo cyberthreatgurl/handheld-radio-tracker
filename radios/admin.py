@@ -253,12 +253,14 @@ class MembershipPlanAdmin(admin.ModelAdmin):
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = [
-        'handle', 'callsign', 'membership_active', 'membership_plan',
-        'admin_reviewed', 'created_at',
+        'handle', 'callsign', 'account_type', 'membership_duration',
+        'membership_expires_at', 'membership_active', 'admin_reviewed',
+        'created_at',
     ]
-    list_filter = ['membership_active', 'admin_reviewed']
+    list_filter = ['account_type', 'membership_active', 'admin_reviewed']
     search_fields = ['user__username', 'user__email', 'callsign']
     ordering = ['-created_at']
+    readonly_fields = ['membership_expires_at']
 
     def handle(self, obj):
         """The user's public handle (username)."""

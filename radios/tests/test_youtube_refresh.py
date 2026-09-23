@@ -12,7 +12,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from ..models import Radio, YouTubeRefreshLog
+from ..models import Radio, UserProfile, YouTubeRefreshLog
 from ..youtube_utils import (
     YouTubeQuotaExceeded, search_radio_videos,
 )
@@ -127,6 +127,13 @@ class RefreshRadioYoutubeViewTest(TestCase):
         return User.objects.create_user(
             username='staff', password='testpass123', is_staff=True)
 
+    def _admin_staff(self):
+        user = User.objects.create_user(
+            username='adminstaff', password='testpass123', is_staff=True)
+        UserProfile.objects.filter(user=user).update(
+            account_type=UserProfile.AccountType.ADMIN)
+        return user
+
     @patch('radios.youtube_utils.search_radio_videos')
     def test_superuser_refresh_populates_field(self, mock_search):
         mock_search.return_value = [
@@ -164,15 +171,39 @@ class RefreshRadioYoutubeViewTest(TestCase):
             YouTubeRefreshLog.objects.filter(radio=self.radio).count(), 1)
 
     @patch('radios.youtube_utils.search_radio_videos')
-    def test_non_superuser_is_redirected_to_login(self, mock_search):
+    def test_non_admin_staff_is_denied(self, mock_search):
         mock_search.return_value = ['https://www.youtube.com/watch?v=video000']
         self.client.force_login(self._staff())
         response = self.client.post(self.url)
 
-        self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse('login'), response.url)
+        self.assertRedirects(response, self.edit_url)
         self.radio.refresh_from_db()
         self.assertEqual(self.radio.youtube_video_urla, '')
+        mock_search.assert_not_called()
+
+    @patch('radios.youtube_utils.search_radio_videos')
+    def test_admin_account_can_refresh(self, mock_search):
+        mock_search.return_value = ['https://www.youtube.com/watch?v=video000']
+        self.client.force_login(self._admin_staff())
+        response = self.client.post(self.url)
+
+        self.assertRedirects(response, self.edit_url)
+        self.radio.refresh_from_db()
+        self.assertEqual(
+            self.radio.youtube_video_urla,
+            'https://www.youtube.com/watch?v=video000',
+        )
+
+    @patch('radios.youtube_utils.search_radio_videos')
+    def test_non_staff_user_is_redirected_to_login(self, mock_search):
+        mock_search.return_value = ['https://www.youtube.com/watch?v=video000']
+        user = User.objects.create_user(
+            username='member', password='testpass123')
+        self.client.force_login(user)
+        response = self.client.post(self.url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('login'), response.url)
 
     def test_refresh_allowed_again_after_24h(self):
         user = self._superuser()
