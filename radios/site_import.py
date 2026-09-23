@@ -30,7 +30,9 @@ from django.utils import timezone
 from .manual_extraction import (
     _extract_from_title,
     _extract_json_ld_objects,
+    _extract_mah,
     _extract_meta_content,
+    drop_capability_fields,
     extract_specs_from_text,
 )
 from .models import (
@@ -58,6 +60,10 @@ _MODEL_RE = re.compile(
 )
 _MODEL_EXCLUSIONS = {
     'ip67', 'ip68', 'ip65', 'ip54', 'ipx7', 'ipx4', 'ipx8',
+}
+
+_MODEL_VARIANT_SUFFIXES = {
+    'pro', 'plus', 'max', 'lite', 'mini', 'ultra', 'neo',
 }
 
 _DOMAIN_BRAND_HINTS = {
@@ -102,6 +108,7 @@ _STRING_FIELDS = {
     'gps': 'gps',
     'aprs': 'aprs',
     'display': 'display',
+    'ip_rating': 'ip_rating',
     'part_number': 'part_number',
     'cost_approx': 'cost_approx',
 }
@@ -296,8 +303,7 @@ def _parse_value_for_field(field, value):
         match = re.search(r'\d+', text)
         return int(match.group()) if match else None
     if field == 'battery_mah':
-        match = re.search(r'(\d{3,5})\s*m\s*ah', text, re.IGNORECASE)
-        return int(match.group(1)) if match else None
+        return _extract_mah(text)
     if field == 'power_watts':
         match = re.search(r'(\d+(?:\.\d+)?)\s*w', text, re.IGNORECASE)
         return f"{match.group(1)}W" if match else _clean(text)
@@ -356,8 +362,19 @@ def _derive_model(*candidates):
             token = match.group(1).strip()
             if token.lower() in _MODEL_EXCLUSIONS:
                 continue
-            return token
+            suffix = _trailing_model_variant(str(candidate), match.end())
+            return f"{token} {suffix}" if suffix else token
     return ''
+
+
+def _trailing_model_variant(candidate, end):
+    """Return a variant suffix (Pro, Plus, ...) immediately following a model
+    token, so 'DM-1801 Pro' stays distinct from 'DM-1801'."""
+    word = re.match(r'\s*([A-Za-z0-9]+)', candidate[end:])
+    if not word:
+        return ''
+    suffix = word.group(1)
+    return suffix if suffix.lower() in _MODEL_VARIANT_SUFFIXES else ''
 
 
 def _detect_service_hints(text):
@@ -509,7 +526,9 @@ def extract_from_url(url):
         )
 
     pair_specs = _parse_spec_pairs(extract_spec_pairs(soup))
-    text_specs = extract_specs_from_text(page_text, source_name=title)
+    text_specs = drop_capability_fields(
+        extract_specs_from_text(page_text, source_name=title),
+    )
 
     specs = _merge_specs(structured, desc_specs, meta_specs, pair_specs, text_specs)
     specs['website'] = url
@@ -552,6 +571,19 @@ def _locate_radio(brand, model, part_number):
     ).first()
     if radio:
         return radio, False
+
+    # Fall back to punctuation/case-insensitive matching so a parsed model
+    # like 'DM-1801 Pro' can match an existing 'DM-1801PRO' record.
+    norm_model = re.sub(r'[^a-z0-9]+', '', (model or '').lower())
+    if norm_model:
+        for candidate in Radio.objects.filter(brand__iexact=brand).only(
+            'id', 'model',
+        ):
+            if re.sub(
+                r'[^a-z0-9]+', '', (candidate.model or '').lower(),
+            ) == norm_model:
+                return candidate, False
+
     if part_number:
         radio = Radio.objects.filter(part_number__iexact=part_number).first()
         if radio:

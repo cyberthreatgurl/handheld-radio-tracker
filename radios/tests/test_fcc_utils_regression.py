@@ -162,6 +162,31 @@ class RadioAllowlistTermsTest(TestCase):
         self.assertIn('CB', terms)
 
 
+class ModuleOnlyGranteeCodesTest(TestCase):
+    """Regression tests for _module_only_grantee_codes()."""
+
+    def setUp(self):
+        self.original_env = os.environ.get('FCC_MODULE_ONLY_GRANTEE_CODES')
+
+    def tearDown(self):
+        if self.original_env is not None:
+            os.environ['FCC_MODULE_ONLY_GRANTEE_CODES'] = self.original_env
+        else:
+            os.environ.pop('FCC_MODULE_ONLY_GRANTEE_CODES', None)
+
+    def test_default_includes_xmr(self):
+        os.environ.pop('FCC_MODULE_ONLY_GRANTEE_CODES', None)
+        self.assertIn('XMR', fcc_utils._module_only_grantee_codes())
+
+    def test_env_override_replaces_defaults(self):
+        os.environ['FCC_MODULE_ONLY_GRANTEE_CODES'] = 'ABC1'
+        self.assertEqual(fcc_utils._module_only_grantee_codes(), {'ABC1'})
+
+    def test_empty_env_disables_list(self):
+        os.environ['FCC_MODULE_ONLY_GRANTEE_CODES'] = ''
+        self.assertEqual(fcc_utils._module_only_grantee_codes(), set())
+
+
 class OriginalEquipmentPurposeTest(TestCase):
     """Regression tests for _is_original_equipment_purpose."""
 

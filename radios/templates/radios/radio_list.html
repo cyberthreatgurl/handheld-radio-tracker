@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load radio_extras %}
 
 {% block title %}All Radios - Ham Radio Database{% endblock %}
 
@@ -80,9 +81,9 @@
                         </a>
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <a href="?sort=intro_year&order={% if current_sort == 'intro_year' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
+                        <a href="?sort=grant_date&order={% if current_sort == 'grant_date' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}" class="flex items-center hover:text-gray-700">
                             Year
-                            {% if current_sort == 'intro_year' %}
+                            {% if current_sort == 'grant_date' %}
                                 <span class="ml-1">{% if current_order == 'asc' %}↑{% else %}↓{% endif %}</span>
                             {% endif %}
                         </a>
@@ -168,10 +169,22 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {{ radio.intro_year|default:"-" }}
+                        {{ radio.grant_date|date:"Y"|default:"-" }}
                     </td>
-                    <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">
-                        {{ radio.freq_bands_tx|default:"-" }}
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {% with bands=radio.freq_bands_tx|band_labels %}
+                        {% if bands %}
+                        <div class="flex flex-wrap gap-1">
+                            {% for band in bands %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                                {{ band }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-gray-400">-</span>
+                        {% endif %}
+                        {% endwith %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {{ radio.power_watts|default:"-" }}

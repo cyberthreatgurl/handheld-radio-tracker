@@ -252,11 +252,6 @@
                             {% endif %}
                         </div>
                         <div>
-                            <label for="{{ form.intro_year.id_for_label }}" class="block text-sm font-medium text-gray-700">Intro Year</label>
-                            {{ form.intro_year }}
-                            {% if form.intro_year.errors %}<p class="mt-2 text-sm text-red-600">{{ form.intro_year.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div>
                             <label for="{{ form.power_watts.id_for_label }}" class="block text-sm font-medium text-gray-700">Power (W)</label>
                             {{ form.power_watts }}
                             {% if form.power_watts.errors %}<p class="mt-2 text-sm text-red-600">{{ form.power_watts.errors.0 }}</p>{% endif %}
@@ -350,6 +345,11 @@
                             <label for="{{ form.battery_mah.id_for_label }}" class="block text-sm font-medium text-gray-700">Battery (mAh)</label>
                             {{ form.battery_mah }}
                             {% if form.battery_mah.errors %}<p class="mt-2 text-sm text-red-600">{{ form.battery_mah.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.ip_rating.id_for_label }}" class="block text-sm font-medium text-gray-700">IP Rating</label>
+                            {{ form.ip_rating }}
+                            {% if form.ip_rating.errors %}<p class="mt-2 text-sm text-red-600">{{ form.ip_rating.errors.0 }}</p>{% endif %}
                         </div>
                     </div>
                 </div>

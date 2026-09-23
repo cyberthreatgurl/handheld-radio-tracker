@@ -72,7 +72,7 @@ class RadioForm(forms.ModelForm):
             'gps', 'aprs',
             'air_band_rx', 'air_band_tx',
             'digital_dmr', 'digital_c4fm', 'digital_p25', 'digital_nxdn', 'digital_m17',
-            'display', 'channels', 'battery_mah',
+            'display', 'channels', 'battery_mah', 'ip_rating',
             'usb_c_charging', 'usb_programmable',
             'removable_antenna', 'unlockable', 'firmware_updates',
             'bluetooth', 'noaa_wx',
@@ -166,6 +166,10 @@ class RadioForm(forms.ModelForm):
             'battery_mah': forms.NumberInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                 'placeholder': 'e.g., 2500'
+            }),
+            'ip_rating': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'placeholder': 'e.g., IP54, IP67, IP68'
             }),
             'white_label_vendors': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',

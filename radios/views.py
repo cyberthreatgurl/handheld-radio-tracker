@@ -634,6 +634,101 @@ def sync_progress_view(_request):
     return JsonResponse(progress)
 
 
+def _run_sync_grantee(grantee_code):
+    """Run a full-history FCC sync for one grantee code in a background thread."""
+    import os
+    from django.db import close_old_connections
+    os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
+    close_old_connections()
+    try:
+        added, updated, _processing_msgs = fetch_and_sync_fcc_id(
+            grantee_code, honor_skip_lists=False,
+        )
+        result = (
+            f"Success! Added {added} and updated {updated} records for "
+            f"grantee '{grantee_code}'."
+            if added > 0 or updated > 0
+            else f"No new records or updates found for grantee '{grantee_code}'."
+        )
+        cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+            'in_progress': False,
+            'total': 1,
+            'completed': 1,
+            'current': '',
+            'message': 'Sync complete.',
+            'added': added,
+            'updated': updated,
+            'success': True,
+            'result': result,
+        }, timeout=300)
+        logger.info(
+            "Background sync_grantee result grantee=%s added=%s updated=%s",
+            grantee_code, added, updated,
+        )
+    except Exception as e:
+        cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+            'in_progress': False,
+            'total': 0,
+            'completed': 0,
+            'current': '',
+            'message': 'Sync error.',
+            'added': 0,
+            'updated': 0,
+            'success': False,
+            'result': f"Error processing grantee '{grantee_code}': {e}",
+        }, timeout=300)
+        logger.exception("Background sync_grantee error grantee=%s", grantee_code)
+    finally:
+        close_old_connections()
+
+
+@staff_required
+def sync_brand_fcc_view(request, pk):
+    """Kick off an FCC API sync for a brand's grantee code.
+
+    Uses the brand's own grantee code, falling back to its parent brand's
+    code for white-label/subsidiary brands.
+    """
+    brand = get_object_or_404(Brand, pk=pk)
+
+    if request.method != 'POST':
+        return redirect('brand_detail', pk=pk)
+
+    grantee_code = (brand.grantee_code or '').strip()
+    if not grantee_code and brand.parent_brand:
+        grantee_code = (brand.parent_brand.grantee_code or '').strip()
+
+    if not grantee_code:
+        messages.error(
+            request,
+            f"No FCC grantee code is assigned to '{brand.name}'.",
+        )
+        return redirect('brand_detail', pk=pk)
+
+    logger.info(
+        "User action sync_brand_fcc submit actor=%s brand_id=%s grantee=%s",
+        _actor_label(request), pk, grantee_code,
+    )
+    cache.set(_GRANTEE_SYNC_PROGRESS_KEY, {
+        'in_progress': True,
+        'total': 1,
+        'completed': 0,
+        'current': grantee_code,
+        'message': f'Syncing grantee {grantee_code} — this may take a while...',
+        'added': 0,
+        'updated': 0,
+    }, timeout=3600)
+    thread = threading.Thread(
+        target=_run_sync_grantee, args=(grantee_code,), daemon=True,
+    )
+    thread.start()
+    messages.info(
+        request,
+        f"FCC refresh for grantee '{grantee_code}' started in the background.",
+    )
+    return redirect('brand_detail', pk=pk)
+
+
 class RadioListView(ListView):
     """View for listing all radios with search and filter"""
     model = Radio
@@ -2537,6 +2632,14 @@ def brand_detail_view(request, pk, edit=False):
     # Manufacturer linked via the Brand-M2M
     manufacturer = brand.manufacturers.first()
 
+    # Downstream brands this OEM manufactures for (for the "brands supplied
+    # by this OEM" list). Excludes the brand's own record.
+    oem_supplied_brands = []
+    if manufacturer:
+        oem_supplied_brands = list(
+            manufacturer.brands.exclude(pk=brand.pk).order_by('name')
+        )
+
     # Year-over-year chart data
     yearly_counts = list(
         radios_qs.filter(grant_date__isnull=False)
@@ -2602,6 +2705,8 @@ def brand_detail_view(request, pk, edit=False):
         'feature_defs': FEATURE_DEFS,
         'active_feature': active_feature,
         'filtered_radios': filtered_radios,
+        'effective_grantee': effective_grantee,
         'brand_radios': brand_radios,
+        'oem_supplied_brands': oem_supplied_brands,
     }
     return render(request, 'radios/brand_detail.html', context)

@@ -73,6 +73,7 @@ urlpatterns = [
     path('brands/<int:pk>/', views.brand_detail_view, name='brand_detail'),
     path('brands/add/', views.BrandCreateView.as_view(), name='brand_add'),
     path('brands/<int:pk>/edit/', views.brand_detail_view, {'edit': True}, name='brand_edit'),
+    path('brands/<int:pk>/sync-fcc/', views.sync_brand_fcc_view, name='brand_sync_fcc'),
     path('brands/<int:pk>/delete/', views.BrandDeleteView.as_view(), name='brand_delete'),
     path('brands/<int:pk>/merge/', views.brand_merge_view, name='brand_merge'),
 

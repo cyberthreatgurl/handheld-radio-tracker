@@ -13,6 +13,97 @@ _FCC_ID_RE = re.compile(r'^[A-Z0-9]{3,5}-')
 # URL / domain pattern
 _URL_RE = re.compile(r'\.(com|org|net|io|co|us)\b', re.IGNORECASE)
 
+# Frequency band classification used by the brand detail table.
+_BAND_ORDER = [
+    'HF', 'CB', 'VHF', 'UHF', '800 MHz', '900 MHz', '2.4 GHz',
+]
+
+# (label, lower_mhz, upper_mhz).  Specific bands are listed before the
+# broader HF/VHF/UHF buckets so they win during classification.
+_BAND_RANGES = [
+    ('CB', 26.90, 27.50),
+    ('HF', 0.0, 29.999),
+    ('800 MHz', 764.0, 895.999),
+    ('900 MHz', 896.0, 960.0),
+    ('2.4 GHz', 2400.0, 2500.0),
+    ('VHF', 30.0, 299.999),
+    ('UHF', 300.0, 2999.999),
+]
+
+# Fallback keywords for text that carries band names instead of numbers.
+_KEYWORD_BANDS = [
+    (r'\b2\.4\s*ghz\b', '2.4 GHz'),
+    (r'\b900\s*mhz\b', '900 MHz'),
+    (r'\b800\s*mhz\b', '800 MHz'),
+    (r'\buhf\b', 'UHF'),
+    (r'\bvhf\b', 'VHF'),
+    (r'\b(?:gmrs|frs)\b', 'UHF'),
+    (r'\bcb\b', 'CB'),
+    (r'\bhf\b', 'HF'),
+]
+
+_MHZ_RANGE_RE = re.compile(
+    r'(\d{1,5}(?:\.\d+)?)\s*(?:-|–|—|to)\s*(\d{1,5}(?:\.\d+)?)\s*MHz',
+    re.IGNORECASE,
+)
+_MHZ_SINGLE_RE = re.compile(
+    r'(?<![\d.-])(\d{1,5}(?:\.\d+)?)\s*MHz',
+    re.IGNORECASE,
+)
+
+
+def _extract_mhz_values(text):
+    """Return all MHz frequencies found in *text* (range endpoints first)."""
+    values = []
+    for match in _MHZ_RANGE_RE.finditer(text):
+        values.append(float(match.group(1)))
+        values.append(float(match.group(2)))
+    remaining = _MHZ_RANGE_RE.sub(' ', text)
+    for match in _MHZ_SINGLE_RE.finditer(remaining):
+        values.append(float(match.group(1)))
+    return values
+
+
+def _classify_mhz(mhz):
+    """Map a single MHz frequency to a short band label, or None."""
+    for label, lower, upper in _BAND_RANGES:
+        if lower <= mhz <= upper:
+            return label
+    return None
+
+
+@register.filter
+def band_labels(text):
+    """Collapse a radio's TX frequency text into short band labels.
+
+    Returns a list of band names (e.g. ``['VHF', 'UHF']``) derived from
+    numeric MHz values in *text*.  Anything below 30 MHz is treated as
+    ``HF`` except the 27 MHz CB allocation.  Falls back to recognised band
+    keywords (VHF/UHF/GMRS/...) when no numeric frequencies are present.
+
+    Usage: ``{{ radio.freq_bands_tx|band_labels }}``
+    """
+    if not text:
+        return []
+
+    labels = set()
+    for mhz in _extract_mhz_values(text):
+        label = _classify_mhz(mhz)
+        if label:
+            labels.add(label)
+
+    if not labels:
+        lowered = text.lower()
+        for pattern, label in _KEYWORD_BANDS:
+            if re.search(pattern, lowered):
+                labels.add(label)
+
+    if not labels:
+        cleaned = text.strip()
+        return [cleaned] if cleaned else []
+
+    return [label for label in _BAND_ORDER if label in labels]
+
 
 @register.filter
 def dictget(dictionary, key):

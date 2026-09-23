@@ -20,7 +20,8 @@ class ModelDerivationTest(SimpleTestCase):
             'BTECH DA-7X2 Digital & Analog Dual Band Two-Way Radio': 'DA-7X2',
             'Radtel RT-S10 Dual Band 10W Handheld 2 Way Radio': 'RT-S10',
             '3rd Gen TD-H8 10W Ham GMRS Radio Handheld 8-Band': 'TD-H8',
-            'GT-5R Pro 5W Multi-Band Radio': 'GT-5R',
+            'GT-5R Pro 5W Multi-Band Radio': 'GT-5R Pro',
+            'DM-1801 Pro 7W Dual Band DMR Ham Radio': 'DM-1801 Pro',
         }
         for title, expected in cases.items():
             self.assertEqual(_derive_model(title), expected)
@@ -53,6 +54,12 @@ class SpecExtractionTest(SimpleTestCase):
             "Program the radio via USB programming cable using CHIRP or CPS.",
         )
         self.assertTrue(specs['usb_programmable'])
+
+    def test_battery_mah_with_thousands_separator(self):
+        specs = extract_specs_from_text(
+            "Battery Capacity: 2,200 mAh",
+        )
+        self.assertEqual(specs['battery_mah'], 2200)
 
 
 class SpecPairsTest(SimpleTestCase):

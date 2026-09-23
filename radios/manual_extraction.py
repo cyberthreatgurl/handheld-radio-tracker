@@ -117,6 +117,18 @@ def _extract_first(pattern, text, flags=re.IGNORECASE):
     return match.group(1).strip() if match else ''
 
 
+def _extract_mah(text):
+    """Extract battery capacity in mAh, tolerating '2,200 mAh' formatting."""
+    match = re.search(r'(\d[\d,]*(?:\.\d+)?)\s*m\s*ah', text, re.IGNORECASE)
+    if not match:
+        return None
+    digits = match.group(1).replace(',', '')
+    try:
+        return int(float(digits))
+    except ValueError:
+        return None
+
+
 def _detect_bands(text):
     bands = set()
     ranges = re.findall(r'(\d{2,4}(?:\.\d+)?)\s*[-~to]{1,3}\s*(\d{2,4}(?:\.\d+)?)\s*mhz', text, flags=re.IGNORECASE)
@@ -189,6 +201,48 @@ def _extract_fcc_part_from_standards(text):
     return rule_parts
 
 
+# Capability fields that must not be inferred from full-page text. Product
+# pages commonly include comparison tables, "frequently bought together"
+# modules, and navigation that mention features (GPS, APRS, USB-C charging)
+# the target radio does not actually have.
+CAPABILITY_KEYS = frozenset({
+    'gps', 'aprs',
+    'digital_dmr', 'digital_c4fm', 'digital_p25', 'digital_nxdn', 'digital_m17',
+    'air_band_rx', 'air_band_tx',
+    'noaa', 'bluetooth', 'usb_c_charging', 'usb_programmable', 'is_toy',
+})
+
+_NEGATION_WORDS = re.compile(
+    r'\b(?:no|not|without|lacks?|missing|none|unavailable|'
+    r'not\s+available|not\s+supported)\b',
+    re.IGNORECASE,
+)
+
+
+def _feature_present(text, pattern, window=32):
+    """Return True if *pattern* matches text and isn't negated nearby.
+
+    Capability keywords frequently appear in negated form on product pages
+    (``No GPS``, ``USB-C charging not supported``). Checking a small window
+    around the match keeps those phrases from marking the feature present.
+    """
+    match = re.search(pattern, text, re.IGNORECASE)
+    if not match:
+        return False
+    start = max(0, match.start() - window)
+    end = min(len(text), match.end() + window)
+    return not _NEGATION_WORDS.search(text[start:end])
+
+
+def drop_capability_fields(extracted):
+    """Return *extracted* minus capability flags, for full-page text layers."""
+    return {
+        key: value
+        for key, value in (extracted or {}).items()
+        if key not in CAPABILITY_KEYS
+    }
+
+
 def extract_specs_from_text(text, source_name=''):
     """Extract normalized radio specs from manual text."""
     logger.info("Spec parse attempt source=%s text_length=%s", source_name, len(text or ''))
@@ -204,16 +258,20 @@ def extract_specs_from_text(text, source_name=''):
     power = _extract_first(r'(\d{1,3}(?:\.\d+)?)\s*w(?:att)?s?', text)
     power_watts = f'{power}W' if power else ''
 
-    aprs = 'Yes' if 'aprs' in lowered else ''
-    gps = 'Yes' if (' gps' in lowered or 'gnss' in lowered) else ''
-    digital_dmr = bool(re.search(r'\bdmr\b', lowered))
-    digital_c4fm = bool(re.search(r'\bc4fm\b', lowered))
-    digital_p25 = bool(re.search(r'\bp25\b', lowered))
-    digital_nxdn = bool(re.search(r'\bnxdn\b', lowered))
-    digital_m17 = bool(re.search(r'\bm17\b', lowered))
-    air_band_rx = bool('air band' in lowered or 'airband' in lowered or 'aviation band' in lowered)
-    air_band_tx = bool(re.search(r'air\s*band\s*(?:transmit|tx)', lowered))
-    battery = _extract_first(r'(\d{3,5})\s*m\s*ah', text)
+    aprs = 'Yes' if _feature_present(lowered, r'\baprs\b') else ''
+    gps = 'Yes' if _feature_present(lowered, r'\bgps\b|\bgnss\b') else ''
+    digital_dmr = _feature_present(lowered, r'\bdmr\b')
+    digital_c4fm = _feature_present(lowered, r'\bc4fm\b')
+    digital_p25 = _feature_present(lowered, r'\bp25\b')
+    digital_nxdn = _feature_present(lowered, r'\bnxdn\b')
+    digital_m17 = _feature_present(lowered, r'\bm17\b')
+    air_band_rx = _feature_present(
+        lowered, r'air\s*band|airband|aviation\s*band',
+    )
+    air_band_tx = _feature_present(
+        lowered, r'air\s*band\s*(?:transmit|tx)',
+    )
+    battery_mah = _extract_mah(text)
     cost = _extract_first(r'\$\s*(\d{2,5}(?:\.\d{1,2})?)', text)
     cost_approx = f'${cost}' if cost else ''
     freq_bands_tx = _detect_bands(text)
@@ -227,15 +285,21 @@ def extract_specs_from_text(text, source_name=''):
         r'([A-Za-z0-9][A-Za-z0-9\-\s/.]{2,60})',
         text,
     )
-    noaa = 'noaa' in lowered
-    bluetooth = 'bluetooth' in lowered
-    usb_c_charging = bool(re.search(r'usb.?c.*charg', lowered) or 'usb type-c' in lowered)
+    noaa = _feature_present(lowered, r'\bnoaa\b')
+    bluetooth = _feature_present(lowered, r'\bbluetooth\b')
+    usb_c_charging = _feature_present(
+        lowered, r'usb.?c.*charg|usb\s*type-?c',
+    )
     usb_programmable = (
         ('usb' in lowered and 'program' in lowered)
         or 'programming cable' in lowered
         or 'usb cable' in lowered
     )
-    is_toy = bool(re.search(r'\btoy\b', lowered))
+    is_toy = _feature_present(lowered, r'\btoy\b')
+
+    # Ingress Protection rating (IP00-IP69), e.g. "IP67" or "IP 68"
+    ip_rating_match = _extract_first(r'\bIP\s?([0-6]\d)\b', text)
+    ip_rating = f'IP{ip_rating_match}' if ip_rating_match else ''
 
     # Extract FCC rule parts from STANDARD(S) lines (for test reports)
     fcc_rule_parts = _extract_fcc_part_from_standards(text)
@@ -260,7 +324,7 @@ def extract_specs_from_text(text, source_name=''):
         'air_band_rx': air_band_rx,
         'air_band_tx': air_band_tx,
         'power_watts': _clean_text(power_watts),
-        'battery_mah': int(battery) if battery else None,
+        'battery_mah': battery_mah,
         'cost_approx': _clean_text(cost_approx),
         'fcc_rule_parts': sorted(fcc_rule_parts) if fcc_rule_parts else [],
         'channels': int(channels) if channels else None,
@@ -270,6 +334,7 @@ def extract_specs_from_text(text, source_name=''):
         'usb_c_charging': usb_c_charging,
         'usb_programmable': usb_programmable,
         'is_toy': is_toy,
+        'ip_rating': _clean_text(ip_rating),
     }
     logger.info("Spec parse result source=%s model=%s fcc_id=%s bands=%s", source_name, extracted.get('model', ''), extracted.get('fcc_id', ''), extracted.get('freq_bands_tx', ''))
     return extracted
@@ -429,9 +494,9 @@ def _parse_retevis(soup, _title, page_text):
         'battery capacity': 'battery_mah',
         'battery': 'battery_mah',
         'battery type': 'battery_mah',
-        'waterproof': 'waterproof_rating',
-        'waterproof rating': 'waterproof_rating',
-        'ip rating': 'waterproof_rating',
+        'waterproof': 'ip_rating',
+        'waterproof rating': 'ip_rating',
+        'ip rating': 'ip_rating',
         'gps': 'gps',
         'gnss': 'gps',
         'weight': 'weight',
@@ -444,9 +509,9 @@ def _parse_retevis(soup, _title, page_text):
         for key, field in _LABEL_MAP.items():
             if key in label:
                 if field == 'battery_mah':
-                    match = re.search(r'(\d{3,5})\s*m\s*ah', value, re.IGNORECASE)
-                    if match:
-                        data[field] = int(match.group(1))
+                    parsed_mah = _extract_mah(value)
+                    if parsed_mah is not None:
+                        data[field] = parsed_mah
                 elif field == 'power_watts':
                     if not data.get(field):
                         match = re.search(r'(\d+(?:\.\d+)?)\s*w', value, re.IGNORECASE)
@@ -458,10 +523,10 @@ def _parse_retevis(soup, _title, page_text):
                 elif field == 'gps':
                     if 'yes' in value.lower() or 'gps' in value.lower():
                         data[field] = 'Yes'
-                elif field == 'waterproof_rating':
+                elif field == 'ip_rating':
                     match = re.search(r'IP(\d{2})', value, re.IGNORECASE)
                     if match:
-                        data['waterproof_rating'] = f"IP{match.group(1)}"
+                        data['ip_rating'] = f"IP{match.group(1)}"
                 break
 
     # Fallback: extract specs from image alt text (Retevis uses info-graphic images)
@@ -492,7 +557,7 @@ def _parse_retevis(soup, _title, page_text):
                             break
 
     # USB-C detection
-    if 'type-c' in page_text.lower() or 'usb c' in page_text.lower():
+    if _feature_present(page_text, r'usb.?c.*charg|usb\s*type-?c'):
         data['usb_c_charging'] = True
 
     return data
@@ -587,19 +652,22 @@ def _parse_generic_product_page(soup, _title, page_text):
                     if match:
                         data['power_watts'] = f"{match.group(1)}W"
                 if not data.get('battery_mah') and 'batt' in label:
-                    match = re.search(r'(\d{3,5})\s*m\s*ah', value, re.IGNORECASE)
-                    if match:
-                        data['battery_mah'] = int(match.group(1))
+                    parsed_mah = _extract_mah(value)
+                    if parsed_mah is not None:
+                        data['battery_mah'] = parsed_mah
 
-    # Strategy 4: Fallback to full page text
+    # Strategy 4: Fallback to full page text (capability flags excluded —
+    # full-page text includes comparison tables and related-product modules).
     if not data.get('freq_bands_tx') and not data.get('power_watts'):
-        text_specs = extract_specs_from_text(page_text, source_name='page_text')
+        text_specs = drop_capability_fields(
+            extract_specs_from_text(page_text, source_name='page_text'),
+        )
         for k, v in text_specs.items():
             if v and not data.get(k):
                 data[k] = v
 
     # USB-C detection
-    if 'type-c' in page_text.lower() or 'usb c' in page_text.lower():
+    if _feature_present(page_text, r'usb.?c.*charg|usb\s*type-?c'):
         data['usb_c_charging'] = True
 
     return data
@@ -702,7 +770,12 @@ def enrich_specs_from_product_url(url):
         )
 
     # ── Generic spec extraction ──────────────────────────────────────
-    extracted = extract_specs_from_text(page_text, source_name=title)
+    # Capability flags are dropped from the full-page text layer: page text
+    # includes comparison tables, "frequently bought together" modules, and
+    # navigation that mention features the target radio does not have.
+    extracted = drop_capability_fields(
+        extract_specs_from_text(page_text, source_name=title),
+    )
     extracted['website'] = url
     extracted['source_domain'] = domain
     logger.info(

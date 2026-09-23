@@ -164,6 +164,7 @@ Access the Django admin at `/admin/` for advanced database management:
 - Data export
 - User management
 - **Sync-Skipped Grantee IDs** — manage grantee codes (e.g. `ICOM`, `MOTOROLA`, `YAESU`) to skip during bulk FCC sync while keeping their existing radios in the database. Also skippable at the command line via `python manage.py sync_fcc --all-grantees --ignore-grantees=ICOM,MOTOROLA`
+- **Ignored Grantee IDs** — permanently block out-of-scope grantees from all sync/import workflows, e.g. RF module makers like Quectel (`XMR`). Backed by the code-level `FCC_MODULE_ONLY_GRANTEE_CODES` default list.
 - **FCC Sync State** — trigger full-history grantee sync and view the last sync timestamp
 
 ## Project Structure

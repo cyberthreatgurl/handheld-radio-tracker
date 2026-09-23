@@ -111,7 +111,7 @@ class SyncSkippedGranteeAdmin(admin.ModelAdmin):
 
 @admin.register(Radio)
 class RadioAdmin(admin.ModelAdmin):
-    list_display = ['brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'grant_date', 'freq_bands_tx', 'power_watts', 'bluetooth', 'noaa_wx', 'cost_approx']
+    list_display = ['brand', 'model', 'fcc_id', 'last_fccid_lookup_at', 'grant_date', 'freq_bands_tx', 'power_watts', 'ip_rating', 'bluetooth', 'noaa_wx', 'cost_approx']
     list_filter = ['brand', 'last_fccid_lookup_at', 'grant_date', 'digital_dmr', 'gps', 'aprs', 'service_types']
     search_fields = ['brand', 'model', 'fcc_id']
     ordering = ['brand', 'model']
@@ -128,7 +128,7 @@ class RadioAdmin(admin.ModelAdmin):
             'fields': ('satellite_tracking', 'harmonic_suppression', 'gps', 'aprs', 'air_band_rx', 'air_band_tx', 'digital_dmr', 'digital_c4fm', 'digital_p25', 'digital_nxdn', 'digital_m17')
         }),
         ('Hardware', {
-            'fields': ('display', 'battery_mah')
+            'fields': ('display', 'battery_mah', 'ip_rating')
         }),
         ('Hardware Features', {
             'fields': ('usb_c_charging', 'removable_antenna', 'unlockable', 'firmware_updates', 'bluetooth', 'noaa_wx')

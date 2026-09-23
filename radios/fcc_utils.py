@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import re
@@ -283,6 +284,16 @@ DEFAULT_KEY_FOB_KEYWORDS = (
     "REMOTE CONTROL TOY,TOY REMOTE CONTROL"
 )
 KEY_FOB_KEYWORDS_ENV_NAME = "FCC_KEY_FOB_KEYWORDS"
+
+# Grantee codes that make RF modules/components (cellular, GNSS, Bluetooth,
+# Wi-Fi) rather than complete two-way radios. Records from these grantees are
+# blocked at ingest/discovery in addition to the DB-backed IgnoredGrantee list.
+# Set FCC_MODULE_ONLY_GRANTEE_CODES to override (comma-separated).
+# Set it to an empty string to disable this code-level list.
+DEFAULT_MODULE_ONLY_GRANTEE_CODES = (
+    'XMR'  # Quectel Wireless Solutions — cellular/GNSS modules
+)
+MODULE_ONLY_GRANTEE_CODES_ENV = 'FCC_MODULE_ONLY_GRANTEE_CODES'
 
 # Rule parts to exclude from import (e.g. 15.231 covers low-power
 # periodic transmitters like garage door openers, car key fobs,
@@ -670,6 +681,18 @@ def _key_fob_keywords():
     if raw is not None:
         return _parse_allowlist_terms(raw)
     return _parse_allowlist_terms(DEFAULT_KEY_FOB_KEYWORDS)
+
+
+def _module_only_grantee_codes():
+    """Return grantee codes that produce RF modules, not complete radios.
+
+    Set ``FCC_MODULE_ONLY_GRANTEE_CODES`` to an empty string to disable the
+    code-level list (the DB-backed ``IgnoredGrantee`` list still applies).
+    """
+    raw = os.environ.get(MODULE_ONLY_GRANTEE_CODES_ENV)
+    if raw is not None:
+        return set(_parse_allowlist_terms(raw))
+    return set(_parse_allowlist_terms(DEFAULT_MODULE_ONLY_GRANTEE_CODES))
 
 
 def _ignored_rule_parts():
@@ -1495,6 +1518,35 @@ def _generic_search_headers():
 
 
 def _submit_generic_search_form_via_playwright(fcc_id):
+    """Submit the FCC search form without using sync Playwright in an event loop."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return _submit_generic_search_form_via_playwright_on_thread(fcc_id)
+
+    result = {}
+
+    def run_playwright():
+        try:
+            result['value'] = _submit_generic_search_form_via_playwright_on_thread(fcc_id)
+        except Exception as exc:
+            result['error'] = exc
+        finally:
+            _close_playwright_instance()
+
+    worker = _threading.Thread(
+        target=run_playwright,
+        name='fcc-playwright-fallback',
+    )
+    worker.start()
+    worker.join()
+
+    if 'error' in result:
+        raise result['error']
+    return result.get('value', ('', GENERIC_SEARCH_FORM_URL))
+
+
+def _submit_generic_search_form_via_playwright_on_thread(fcc_id):
     global _fcc_playwright_down
     if _fcc_playwright_down:
         logger.info(
@@ -1812,7 +1864,9 @@ def discover_new_grantees_from_fcc(start_date, end_date):
         .values_list('grantee_code', flat=True)
     )
     known_codes = {c.strip().upper() for c in known_codes}
-    ignored_codes = set(IgnoredGrantee.ignored_codes())
+    ignored_codes = (
+        set(IgnoredGrantee.ignored_codes()) | _module_only_grantee_codes()
+    )
     skipped_codes = set(SyncSkippedGrantee.skipped_codes())
     excluded = known_codes | ignored_codes | skipped_codes
 
@@ -5180,7 +5234,9 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
     Returns (count_added, count_updated, messages)
     """
     messages = []
-    ignored_codes = set(IgnoredGrantee.ignored_codes())
+    ignored_codes = (
+        set(IgnoredGrantee.ignored_codes()) | _module_only_grantee_codes()
+    )
     skipped_codes = set(SyncSkippedGrantee.skipped_codes())
     q_grantee = _exact_grantee_query(fcc_id_query)
     if not q_grantee:

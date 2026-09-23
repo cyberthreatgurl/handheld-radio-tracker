@@ -442,6 +442,10 @@ class Radio(models.Model):
         null=True, blank=True,
         help_text="Battery capacity in mAh",
     )
+    ip_rating = models.CharField(
+        max_length=50, blank=True,
+        help_text="Ingress Protection (IP) rating (e.g., IP54, IP67, IP68)",
+    )
 
     # Hardware features
     usb_c_charging = models.BooleanField(

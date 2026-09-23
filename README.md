@@ -161,12 +161,14 @@ LOGS_DIR=logs
 MANUALS_DIR=artifacts/manuals
 FCC_TEST_REPORTS_DIR=artifacts/test_reports
 FCC_RADIO_ALLOWLIST_TERMS=TRANSCEIVER,TRANSMITTER,FRS,GMRS,AMATEUR,RECEIVER,MURS,ORIGINAL EQUIPMENT
+FCC_MODULE_ONLY_GRANTEE_CODES=XMR
 FCC_PLAYWRIGHT_HEADLESS=0
 ```
 
 Notes:
 
 - `FCC_RADIO_ALLOWLIST_TERMS` controls which FCC records are treated as relevant radio equipment.
+- `FCC_MODULE_ONLY_GRANTEE_CODES` — comma-separated grantee codes for RF module makers (cellular, GNSS, Bluetooth, Wi-Fi) that never ship complete two-way radios; default `XMR` (Quectel Wireless Solutions). Set to an empty string to disable the code-level list (the `IgnoredGrantee` admin list still applies).
 - `FCC_PLAYWRIGHT_HEADLESS` — the Playwright browser runs **headless by default** (no visible window). Set to `0` / `false` / `no` to show the browser during FCC OET fetches, which is useful for debugging timeout or form-submission failures.
 
 ### 7. Run Django migrations
@@ -472,6 +474,19 @@ application.
 2. **CLI** (`--ignore-grantees=ICOM,MOTOROLA`) — ad-hoc skip for a single run, merged with any DB-stored codes.
 
 Unlike `IgnoredGrantee` (which completely blocks import of those grantees), Sync-Skipped Grantees keep their existing radios in the database — they're just not queried during bulk sync.
+
+### Ignored / Module-Only Grantee IDs
+
+**Purpose:** Block grantees that make RF modules or components (cellular,
+GNSS, Bluetooth, Wi-Fi) rather than complete two-way radios. These are not
+walkie-talkies, portables, or base stations and must never enter the database.
+
+**Mechanisms:**
+
+1. **Django Admin** (`/admin/radios/ignoredgrantee/`) — add grantee codes to permanently exclude them from all sync, import, and grantee-discovery workflows.
+2. **Code-level default** (`FCC_MODULE_ONLY_GRANTEE_CODES`) — an environment-overridable list (default `XMR` — Quectel Wireless Solutions) merged into the ignore list on every run, so the policy survives a database reset.
+
+Unlike Sync-Skipped Grantees, ignored grantees are fully excluded. If such a grantee is already in the database, delete its brand (the deletion flow automatically adds the grantee code to the ignore list) and remove its radios.
 
 ## Service Type Auto-Assignment
 

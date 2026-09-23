@@ -345,6 +345,22 @@ class PlaywrightInstancePoolTest(TestCase):
         self.assertIs(browser, mock_browser)
         self.assertIs(pw, mock_pw)
 
+    @patch('radios.fcc_utils._close_playwright_instance')
+    @patch('radios.fcc_utils._submit_generic_search_form_via_playwright_on_thread')
+    @patch('radios.fcc_utils.asyncio.get_running_loop')
+    def test_active_asyncio_loop_uses_dedicated_thread(
+        self, mock_get_loop, mock_submit, mock_close,
+    ):
+        """Sync Playwright fallback runs outside an active asyncio loop."""
+        mock_get_loop.return_value = Mock()
+        mock_submit.return_value = ('<html>', 'https://example.test')
+
+        result = fcc_utils._submit_generic_search_form_via_playwright('2AJGM-UV5R')
+
+        self.assertEqual(result, ('<html>', 'https://example.test'))
+        mock_submit.assert_called_once_with('2AJGM-UV5R')
+        mock_close.assert_called_once_with()
+
     def test_close_instance_clears_thread_local(self):
         """_close_playwright_instance() clears thread-local browser and pw."""
         mock_browser = Mock()
