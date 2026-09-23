@@ -387,6 +387,23 @@
                             <label for="{{ form.youtube_video_urla.id_for_label }}" class="block text-sm font-medium text-gray-700">YouTube Video URLs</label>
                             {{ form.youtube_video_urla }}
                             <p class="mt-1 text-xs text-gray-500">Enter one URL per line.</p>
+                            {% if form.instance.pk and request.user.is_superuser %}
+                            <div class="mt-2 flex items-center gap-3">
+                                <form action="{% url 'refresh_radio_youtube' form.instance.pk %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="inline-flex items-center px-3 py-1.5 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                                            title="Search YouTube for this radio's top-viewed videos (brand + model). Max once per day.">
+                                        ▶ Refresh YouTube Videos
+                                    </button>
+                                </form>
+                                {% if form.instance.youtube_videos_refreshed_at %}
+                                <span class="text-xs text-gray-400">
+                                    Last refreshed: {{ form.instance.youtube_videos_refreshed_at|date:"M j, Y H:i" }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                             {% if form.youtube_video_urla.errors %}<p class="mt-2 text-sm text-red-600">{{ form.youtube_video_urla.errors.0 }}</p>{% endif %}
                             {% if form.instance.pk and form.instance.youtube_video_urla %}
                             <ul class="mt-1 space-y-1">

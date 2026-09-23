@@ -39,6 +39,11 @@ urlpatterns = [
         views.scrape_radio_website_view,
         name='scrape_radio_website',
     ),
+    path(
+        'radios/<int:pk>/refresh-youtube/',
+        views.refresh_radio_youtube_view,
+        name='refresh_radio_youtube',
+    ),
     path('radios/import-from-url/', views.import_radio_from_url_view, name='import_radio_from_url'),
 
     # Document serving — falls back to re-downloading the FCC copy when the

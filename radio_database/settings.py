@@ -180,6 +180,9 @@ ARTIFACTS_STORE_FOLDER = os.environ.get('ARTIFACTS_STORE_FOLDER', 'artifacts')
 ARTIFACTS_USER = os.environ.get('ARTIFACTS_USER', '')
 ARTIFACTS_PASSWORD = os.environ.get('ARTIFACTS_PASSWORD', '')
 
+# YouTube Data API v3 key used to pre-fill radio video URLs.
+YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY', '')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 

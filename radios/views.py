@@ -50,12 +50,14 @@ from .forms import (
     RadioCertificationFormSet,
 )
 from .forms_accounts import RadioCommentForm
-from .accounts_decorators import StaffRequiredMixin, is_admin_user, staff_required
+from .accounts_decorators import (
+    StaffRequiredMixin, admin_required, is_admin_user, staff_required,
+)
 from .image_utils import ingest_radio_image
 from .models import (
     Radio, Brand, RadioManual, RadioFirmware, Manufacturer, FCCSyncState,
     IgnoredGrantee, SyncSkippedGrantee, RadioFCCTestReport, RadioOETDocument,
-    RadioImage, delete_brand_and_related,
+    RadioImage, YouTubeRefreshLog, delete_brand_and_related,
 )
 from .nodal_graph import build_nodal_graph_data
 
@@ -1103,6 +1105,51 @@ def scrape_radio_website_view(request, pk):
                 "Website scraped, but no new data to apply "
                 "(all target fields already populated).",
             )
+    return redirect('radio_edit', pk=pk)
+
+
+@admin_required
+def refresh_radio_youtube_view(request, pk):
+    """POST: refresh a radio's YouTube URLs (admins, at most once/24h)."""
+    from datetime import timedelta
+
+    radio = get_object_or_404(Radio, pk=pk)
+    if request.method != 'POST':
+        return redirect('radio_edit', pk=pk)
+
+    day_ago = timezone.now() - timedelta(days=1)
+    if YouTubeRefreshLog.objects.filter(created_at__gte=day_ago).exists():
+        messages.warning(
+            request,
+            'YouTube videos were already refreshed within the last '
+            '24 hours. Please try again tomorrow.',
+        )
+        return redirect('radio_edit', pk=pk)
+
+    logger.info(
+        'User action refresh_youtube actor=%s radio_pk=%s',
+        _actor_label(request), pk,
+    )
+    try:
+        from .youtube_utils import search_radio_videos
+        urls = search_radio_videos(radio.brand, radio.model)
+    except Exception:
+        logger.exception('refresh_youtube error radio_pk=%s', pk)
+        messages.error(request, 'Could not retrieve YouTube videos.')
+        return redirect('radio_edit', pk=pk)
+
+    if not urls:
+        messages.info(request, 'No YouTube videos found matching this model.')
+        return redirect('radio_edit', pk=pk)
+
+    radio.youtube_video_urla = '\n'.join(urls)
+    radio.youtube_videos_refreshed_at = timezone.now()
+    radio.save(update_fields=[
+        'youtube_video_urla', 'youtube_videos_refreshed_at'])
+    YouTubeRefreshLog.objects.create(user=request.user, radio=radio)
+    messages.success(
+        request, f'Added {len(urls)} YouTube video(s) for {radio}.',
+    )
     return redirect('radio_edit', pk=pk)
 
 

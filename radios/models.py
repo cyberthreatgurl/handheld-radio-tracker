@@ -511,6 +511,10 @@ class Radio(models.Model):
         blank=True,
         help_text="One YouTube URL per line.",
     )
+    youtube_videos_refreshed_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Last time this radio's YouTube URLs were refreshed.",
+    )
 
     # FCC certification summary (auto-computed from certifications)
     rule_parts_summary = models.CharField(
@@ -722,6 +726,27 @@ class Radio(models.Model):
         # Automatically create Brand entry if it doesn't exist
         if self.brand:
             Brand.objects.get_or_create(name=self.brand)
+
+
+class YouTubeRefreshLog(models.Model):
+    """One manual YouTube refresh request; used for the global daily cap."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='youtube_refreshes',
+    )
+    radio = models.ForeignKey(
+        Radio, on_delete=models.CASCADE,
+        related_name='youtube_refreshes',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        """Model options."""
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user} refreshed {self.radio} at {self.created_at}'
 
 
 def manual_upload_to(_instance, filename):

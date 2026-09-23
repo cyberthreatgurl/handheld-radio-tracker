@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+gd#!/usr/bin/env bash
 # Build and push the radio-tracker image to the local Docker server.
 #
 # Reads DOCKER_SERVER_IP and DOCKER_REGISTRY_PORT from .env (or the shell
