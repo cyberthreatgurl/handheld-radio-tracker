@@ -50,6 +50,11 @@ It can also enrich radios from FCC sources:
   firmware updates, Bluetooth, NOAA Weather Radio)
 - Automated FCC grantee discovery — scans the FCC GenericSearch for new
   grantee codes not yet in the local database
+- YouTube video pre-fill — searches YouTube for each radio model (brand +
+  model) and stores the top 5 most-viewed videos per model
+- Manual YouTube refresh (Admin accounts, throttled to once per day)
+- User membership/account types (Admin, User, User (Free), Vendor, OEM)
+  with expiry dates and automatic deactivation on expiry
 
 ## FCC ID Parsing
 

@@ -2,7 +2,7 @@
 
 ## Version
 
-Current application version: 1.0
+Current application version: 1.3.0
 
 A Django web application for managing and browsing ham radio specifications with PostgreSQL database and Tailwind CSS styling.
 
@@ -19,6 +19,8 @@ A Django web application for managing and browsing ham radio specifications with
 - 📥 **CSV Import**: Import your existing radio data from CSV files
 - 🧭 **FCC ID Normalization**: Shared parser applies FCC grantee/product rules for 3-char and 5-char grantee codes
 - 🔗 **Official FCC Links**: Radio detail page links to official FCC ID search on fcc.gov
+- ▶ **YouTube Video Pre-fill**: Auto-fill the top 5 most-viewed videos per model via the YouTube Data API, with a manual refresh button (Admin only, once per day)
+- 👥 **Account Types & Membership**: Admin, User, User (Free), Vendor, and OEM tiers with expiry dates and automatic deactivation on expiry
 
 ## Prerequisites
 
