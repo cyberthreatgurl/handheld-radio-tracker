@@ -50,10 +50,10 @@ The container reads its configuration from `.env`. The relevant variables:
 | `DB_PASSWORD`          | PostgreSQL password                                  | *(set in `.env`)*          |
 | `DB_HOST`              | PostgreSQL host (must be reachable from the container)| `docker-server`           |
 | `DB_PORT`              | PostgreSQL port                                      | `5432`                     |
-| `DOCKER_SERVER_IP`     | IP of the Docker server (used for tagging/pushing)   | `10.0.0.7`                 |
+| `DOCKER_SERVER_IP`     | IP of the Docker server (used for tagging/pushing)   | `10.0.0.104`                 |
 | `DOCKER_REGISTRY_PORT` | Registry port on the Docker server                   | `5000`                     |
 | `DEBUG`                | `true`/`false` (defaults to `true`)                  | `true`                     |
-| `ALLOWED_HOSTS`        | Comma-separated hostnames/IPs allowed to connect     | `localhost,127.0.0.1,10.0.0.7` |
+| `ALLOWED_HOSTS`        | Comma-separated hostnames/IPs allowed to connect     | `localhost,127.0.0.1,10.0.0.104` |
 | `SECRET_KEY`           | Django secret key (strongly recommended in prod)     | *(optional)*               |
 | `ARTIFACTS_STORE_TYPE` | `samba` (network share) or `local`                   | `samba`                    |
 | `ARTIFACTS_STORE_HOST` | SMB share host/IP                                    | `10.0.0.9`                 |
@@ -136,7 +136,7 @@ This builds and pushes the image tagged as:
 
 ```
 <DOCKER_SERVER_IP>:<DOCKER_REGISTRY_PORT>/radio-tracker:latest
-# e.g. 10.0.0.7:5000/radio-tracker:latest
+# e.g. 10.0.0.104:5000/radio-tracker:latest
 ```
 
 `deploy.sh` builds a single-architecture `linux/amd64` image (your server's
@@ -146,8 +146,8 @@ Docker Desktop handles the QEMU cross-compilation automatically.
 Manual equivalent:
 
 ```bash
-docker build --platform linux/amd64 -t 10.0.0.7:5000/radio-tracker:latest .
-docker push 10.0.0.7:5000/radio-tracker:latest
+docker build --platform linux/amd64 -t 10.0.0.104:5000/radio-tracker:latest .
+docker push 10.0.0.104:5000/radio-tracker:latest
 ```
 
 > **Why build and push separately?** The `docker push` step runs through the
@@ -163,7 +163,7 @@ registry is insecure. On the **Docker server** edit
 
 ```json
 {
-  "insecure-registries": ["10.0.0.7:5000"]
+  "insecure-registries": ["10.0.0.104:5000"]
 }
 ```
 
@@ -273,7 +273,182 @@ On macOS (local dev), mount the share at `./artifacts` with:
 ./mount-artifacts.sh --unmount  # unmount
 ```
 
-## 8. Everyday Operations
+## 8. Run on RHEL with Podman
+
+On a RHEL server (written for RHEL 10.x) the container runs under Podman
+as a systemd service via **Quadlet**. Podman has no Compose daemon, and
+`--restart unless-stopped` does not survive a reboot, so Quadlet replaces
+`docker-compose.prod.yml`. All commands run as root.
+
+The RHEL server (`10.0.0.104`) hosts both the image registry (port `5000`)
+and the app (port `8000`). PostgreSQL stays on its own host (`DB_HOST` in
+`.env`). Replace the `<ARTIFACTS_*>` placeholders with the values from `.env`.
+
+### Packages and firewall
+
+```bash
+sudo dnf install -y podman cifs-utils
+sudo firewall-cmd --permanent --add-port=5000/tcp --add-port=8000/tcp
+sudo firewall-cmd --reload
+```
+
+### Image registry
+
+The registry stores pushed images in `/srv/registry` and runs as its own
+Quadlet service. Podman must also be told the registry is plain HTTP.
+
+```bash
+sudo mkdir -p /srv/registry
+
+sudo tee /etc/containers/registries.conf.d/radio-tracker.conf <<'EOF'
+[[registry]]
+location = "10.0.0.104:5000"
+insecure = true
+EOF
+
+sudo tee /etc/containers/systemd/registry.container <<'EOF'
+[Unit]
+Description=Container image registry
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=docker.io/library/registry:2
+ContainerName=registry
+PublishPort=5000:5000
+Volume=/srv/registry:/var/lib/registry:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl start registry
+curl http://10.0.0.104:5000/v2/_catalog     # {"repositories":[]}
+```
+
+### Push the first image
+
+On the build machine, `.env` must have `DOCKER_SERVER_IP=10.0.0.104` and
+Docker Desktop's `insecure-registries` must include `10.0.0.104:5000`
+(see §6). Then:
+
+```bash
+./deploy.sh
+```
+
+Back on the server, confirm the image is there:
+
+```bash
+curl http://10.0.0.104:5000/v2/_catalog     # {"repositories":["radio-tracker"]}
+sudo podman pull 10.0.0.104:5000/radio-tracker:latest
+```
+
+### Config and folders
+
+Copy `.env` from the build machine:
+
+```bash
+scp .env <user>@10.0.0.104:/tmp/radio-tracker.env
+```
+
+Then on the server:
+
+```bash
+sudo mkdir -p /etc/radio-tracker /srv/radio-tracker/{artifacts,logs}
+sudo install -m 600 /tmp/radio-tracker.env /etc/radio-tracker/radio-tracker.env
+rm /tmp/radio-tracker.env
+```
+
+`ALLOWED_HOSTS` must include `10.0.0.104`, and `DB_HOST` should be the
+PostgreSQL host's IP. If `DB_HOST` is a hostname such as `docker-server`
+instead, add `AddHost=docker-server:<PG_IP>` to the Quadlet file below.
+
+### Artifacts share (host CIFS mount)
+
+Instead of a CIFS named volume, the share is mounted on the host and
+bind-mounted into the container. The `context=` option gives it the SELinux
+label containers are allowed to read and write.
+
+```bash
+sudo tee /etc/radio-tracker/smb.cred <<'EOF'
+username=<ARTIFACTS_USER>
+password=<ARTIFACTS_PASSWORD>
+EOF
+sudo chmod 600 /etc/radio-tracker/smb.cred
+
+echo '//<ARTIFACTS_STORE_HOST>/<ARTIFACTS_STORE_FOLDER> /srv/radio-tracker/artifacts cifs credentials=/etc/radio-tracker/smb.cred,vers=3.0,uid=0,gid=0,file_mode=0666,dir_mode=0777,_netdev,nofail,context=system_u:object_r:container_file_t:s0 0 0' \
+  | sudo tee -a /etc/fstab
+
+sudo systemctl daemon-reload
+sudo mount /srv/radio-tracker/artifacts
+ls /srv/radio-tracker/artifacts            # should list manuals, images, etc.
+```
+
+### Quadlet service
+
+```bash
+sudo tee /etc/containers/systemd/radio-tracker.container <<'EOF'
+[Unit]
+Description=Radio Tracker
+Wants=network-online.target registry.service
+After=network-online.target registry.service
+RequiresMountsFor=/srv/radio-tracker/artifacts
+
+[Container]
+Image=10.0.0.104:5000/radio-tracker:latest
+ContainerName=radio-tracker
+EnvironmentFile=/etc/radio-tracker/radio-tracker.env
+Environment=FCC_PLAYWRIGHT_HEADLESS=0
+PublishPort=8000:8000
+Volume=/srv/radio-tracker/artifacts:/app/artifacts
+Volume=/srv/radio-tracker/logs:/app/logs:Z
+AutoUpdate=registry
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl start radio-tracker
+```
+
+The `[Install]` section makes the service start at boot; Quadlet-generated
+units cannot be `systemctl enable`d.
+
+### Verify
+
+```bash
+sudo systemctl status radio-tracker
+sudo podman logs -f radio-tracker          # wait for gunicorn "Listening at :8000"
+curl -I http://localhost:8000/radios/
+```
+
+Then open `http://10.0.0.104:8000/radios/`. If the database connection
+fails, allow `10.0.0.104` in the PostgreSQL host's `pg_hba.conf` and reload
+Postgres.
+
+### Updating to a new build
+
+`AutoUpdate=registry` lets Podman pull a newer `latest` and restart the
+service:
+
+```bash
+sudo podman auto-update                                # update now
+sudo systemctl enable --now podman-auto-update.timer   # or check daily
+```
+
+For everyday operations (§9), substitute `sudo podman` for `docker` and use
+`sudo systemctl restart radio-tracker` to restart.
+
+## 9. Everyday Operations
 
 | Action                     | Command                                                          |
 |----------------------------|------------------------------------------------------------------|
@@ -285,19 +460,32 @@ On macOS (local dev), mount the share at `./artifacts` with:
 | Restart                    | `docker restart radio-tracker`                                    |
 | Stop / remove              | `docker rm -f radio-tracker`                                      |
 
-## 9. How It Works (file map)
+## 10. How It Works (file map)
 
 | File                    | Purpose                                                        |
 |-------------------------|----------------------------------------------------------------|
 | `Dockerfile`            | Builds the image (deps → Tailwind → static → Playwright).       |
 | `docker-entrypoint.sh`  | Runs migrations + collectstatic, then starts gunicorn.          |
 | `docker-compose.yml`    | Local run with volumes, env, port, and `extra_hosts` mapping.   |
-| `docker-compose.prod.yml` | Server run — image-only; bind-mounts `./artifacts` (share). |
+| `docker-compose.prod.yml` | Docker server run — image-only; mounts the artifacts share as a CIFS volume. |
 | `mount-artifacts.sh`    | Mounts/unmounts the artifacts SMB share on macOS.              |
-| `deploy.sh`             | Builds, tags, and pushes the image to the Docker server.        |
+| `deploy.sh`             | Builds, tags, and pushes the image to the registry server.      |
 | `.dockerignore`         | Excludes secrets, venv, data, and logs from the build context.  |
 
-## 10. Troubleshooting
+On the RHEL/Podman server (§8), these files live outside the repo:
+
+| File                                                  | Purpose                                                   |
+|-------------------------------------------------------|-----------------------------------------------------------|
+| `/etc/containers/systemd/radio-tracker.container`     | Quadlet unit for the app (replaces `docker-compose.prod.yml`). |
+| `/etc/containers/systemd/registry.container`          | Quadlet unit for the image registry on port `5000`.       |
+| `/etc/containers/registries.conf.d/radio-tracker.conf` | Marks `10.0.0.104:5000` as an HTTP (insecure) registry.  |
+| `/etc/radio-tracker/radio-tracker.env`                | The server's copy of `.env` (mode `600`).                 |
+| `/etc/radio-tracker/smb.cred`                         | SMB username/password for the artifacts mount (mode `600`). |
+| `/etc/fstab`                                          | Mounts the artifacts share at `/srv/radio-tracker/artifacts`. |
+| `/srv/radio-tracker/logs`                             | App logs, mounted at `/app/logs`.                         |
+| `/srv/registry`                                       | Registry image storage.                                   |
+
+## 11. Troubleshooting
 
 - **`no matching manifest for linux/amd64/v4 ... no match for platform`** —
   the image was built for a different CPU architecture (e.g. arm64). Rebuild
@@ -321,7 +509,7 @@ On macOS (local dev), mount the share at `./artifacts` with:
   prod compose file sets this). If FCC itself returns 503, the fallback still
   skips records — that's an FCC outage, not a container problem.
 
-## 11. Security Notes
+## 12. Security Notes
 
 - **`DEBUG=true`** is convenient for a home/lab server (it also serves media
   files from `artifacts/`). For any internet-exposed deployment, set
