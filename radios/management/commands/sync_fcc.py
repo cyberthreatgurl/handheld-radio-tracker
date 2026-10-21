@@ -165,6 +165,7 @@ class Command(BaseCommand):
                     brand.grantee_code,
                     start_date=start_date,
                     end_date=end_date,
+                    full_history=full_history,
                 )
                 total_added += added
                 total_updated += updated

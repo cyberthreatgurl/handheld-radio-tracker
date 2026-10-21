@@ -118,7 +118,7 @@ class Command(BaseCommand):
         grantee_summaries = []
         for grantee_code in grantees:
             if sync_first:
-                fetch_and_sync_fcc_id(grantee_code)
+                fetch_and_sync_fcc_id(grantee_code, full_history=True)
             grantee_summaries.append(_summarize_grantee(grantee_code))
 
         if grantee_summaries:

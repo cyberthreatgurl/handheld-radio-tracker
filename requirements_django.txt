@@ -1,12 +1,12 @@
-Django>=5.1,<5.2
-psycopg2-binary>=2.9.9
+Django>=5.2,<5.3
+psycopg2-binary>=2.9.13
 django-tailwind>=3.8.0
 beautifulsoup4>=4.12.3
 requests>=2.31.0
 playwright>=1.52,<2
 pypdf>=5.0,<6
 cryptography>=43,<46
-pillow>=10.0,<12
+pillow>=12.3,<13
 pypdfium2>=4.30,<5
 pytesseract>=0.3.10,<0.4
 gunicorn>=23.0,<24

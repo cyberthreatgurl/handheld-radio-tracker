@@ -7,7 +7,7 @@ import time
 from collections import Counter
 from decimal import Decimal, InvalidOperation
 from html import unescape
-from datetime import datetime, time as datetime_time, timezone as datetime_timezone, date
+from datetime import datetime, time as datetime_time, timedelta, timezone as datetime_timezone, date
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
@@ -19,7 +19,7 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 from radios.models import (
-    Brand, IgnoredGrantee, Manufacturer, Radio,
+    Brand, FCCSyncState, GranteeSyncState, IgnoredGrantee, Manufacturer, Radio,
     RadioFCCTestReport, RadioManual, RadioOETDocument, SyncSkippedGrantee,
     normalize_grantee_code,
 )
@@ -5217,7 +5217,76 @@ def _ensure_grantee_brand_and_manufacturer(grantee_code, grantee_name):
     manufacturer.brands.add(brand)
     return brand, manufacturer
 
-def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_reload=False, honor_skip_lists=True, preserve_existing=False):
+# Grants dated up to this many days before a grantee's last sync are still
+# processed, covering the gap between FCC (US) grant dates and UTC sync times.
+_GRANTEE_CUTOFF_MARGIN_DAYS = 1
+
+
+def _grantee_sync_cutoff(grantee_code, skipped_codes):
+    """Return when this grantee's grants were last fully synced, or None.
+
+    Prefers the grantee's own GranteeSyncState. Falls back to the global
+    'Update All Known Grantees' baseline when that sync covered the grantee:
+    it has a Brand, is not on the sync-skipped list, and has radios on file.
+    """
+    state = GranteeSyncState.objects.filter(grantee_code=grantee_code).first()
+    if state is not None:
+        return state.last_synced_at
+
+    global_cutoff = FCCSyncState.get_instance().last_grantee_sync_at
+    if not global_cutoff or grantee_code in skipped_codes:
+        return None
+    if not Brand.objects.filter(grantee_code__iexact=grantee_code).exists():
+        return None
+    if not Radio.objects.filter(fcc_id__istartswith=grantee_code).exists():
+        return None
+    return global_cutoff
+
+
+def _as_aware_datetime(value):
+    """Return a date/datetime as an aware datetime (dates become UTC midnight)."""
+    if not isinstance(value, datetime):
+        value = datetime.combine(value, datetime_time.min)
+    if timezone.is_naive(value):
+        value = timezone.make_aware(value, datetime_timezone.utc)
+    return value
+
+
+def _record_grant_date(primary_record):
+    """Return the FCC API record's grantDate as a date, or None."""
+    parsed = _parse_datetime_value((primary_record or {}).get('grantDate'))
+    return parsed.date() if parsed else None
+
+
+def _stamp_grantee_sync(grantee_code, synced_through, deferred_grant_dates):
+    """Record that ``grantee_code`` has been synced through ``synced_through``.
+
+    Records deferred for a retry (no usable FCC metadata) hold the stamp back
+    to the earliest deferred grant date so the next sync picks them up again.
+    A deferred record with no grant date leaves the stamp unchanged.
+    """
+    if any(d is None for d in deferred_grant_dates):
+        logger.info(
+            "FCC grantee sync stamp withheld grantee=%s reason=deferred_record_without_grant_date",
+            grantee_code,
+        )
+        return
+    if deferred_grant_dates:
+        earliest = datetime.combine(
+            min(deferred_grant_dates), datetime_time.min, tzinfo=datetime_timezone.utc,
+        )
+        synced_through = min(synced_through, earliest)
+    GranteeSyncState.objects.update_or_create(
+        grantee_code=grantee_code,
+        defaults={'last_synced_at': synced_through},
+    )
+    logger.info(
+        "FCC grantee sync stamped grantee=%s last_synced_at=%s deferred_records=%s",
+        grantee_code, synced_through.isoformat(), len(deferred_grant_dates),
+    )
+
+
+def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_reload=False, honor_skip_lists=True, preserve_existing=False, full_history=False):
     """
     Fetches FCC ID data using curl_cffi and saves it to the database.
 
@@ -5230,6 +5299,11 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         preserve_existing: When True, do not overwrite non-empty radio fields
                        (freq_bands_tx, power_watts, grant_date, etc.) — only
                        fill in fields that are currently blank.
+        full_history:  For a grantee-code query with no start_date, process
+                       every grant. By default only grants dated on or after
+                       the grantee's last sync are processed (see
+                       _grantee_sync_cutoff); older grants are skipped before
+                       any FCC page lookups.
 
     Returns (count_added, count_updated, messages)
     """
@@ -5305,7 +5379,29 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         return 0, 0, messages
 
     records = [result] if isinstance(result, dict) else (result if result else [])
+    exact_grantee = _exact_grantee_query(fcc_id_query)
+
+    # Grantee-code syncs: the FCC API returns the grantee's full grant list
+    # in seconds; the slow part is the per-record FCC page lookups. Skip
+    # grants dated before the grantee's last sync so only new ones are
+    # looked up. `prior_cutoff` also decides whether this run may advance
+    # the grantee's stamp (a dated window must start at or before it).
+    prior_cutoff = _grantee_sync_cutoff(exact_grantee, skipped_codes) if exact_grantee else None
+    grant_date_cutoff = None
+    if exact_grantee and start_date is None and not full_history and not force_reload and prior_cutoff:
+        grant_date_cutoff = (
+            prior_cutoff.astimezone(datetime_timezone.utc).date()
+            - timedelta(days=_GRANTEE_CUTOFF_MARGIN_DAYS)
+        )
+    can_stamp_grantee = bool(exact_grantee) and (
+        start_date is None
+        or (prior_cutoff is not None and _as_aware_datetime(start_date) <= prior_cutoff)
+    )
+    synced_through = _as_aware_datetime(end_date) if end_date else timezone.now()
+
     if not records:
+        if can_stamp_grantee:
+            _stamp_grantee_sync(exact_grantee, synced_through, [])
         logger.info(
             "FCC sync no records returned query=%s start_date=%s end_date=%s — skipping",
             fcc_id_query,
@@ -5318,7 +5414,6 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
             + ". Nothing to process."
         )
         return 0, 0, messages
-    exact_grantee = _exact_grantee_query(fcc_id_query)
     # When the user submits a specific full FCC ID (e.g. "2AN62-GC5"), the allowlist
     # is too aggressive: filings like "Change in Identification" contain no radio
     # keywords but are legitimate updates to an existing device grant.
@@ -5337,6 +5432,8 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
     skipped_key_fob = 0
     skipped_empty_metadata = 0
     skipped_stale = 0
+    skipped_before_cutoff = 0
+    deferred_grant_dates = []
     attached_reports = 0
     synced_oet_docs = 0
     brand_cache = {}
@@ -5344,7 +5441,10 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
 
     count_added = 0
     count_updated = 0
-    logger.info("FCC sync parsing records query=%s record_count=%s", fcc_id_query, len(records))
+    logger.info(
+        "FCC sync parsing records query=%s record_count=%s grant_date_cutoff=%s",
+        fcc_id_query, len(records), grant_date_cutoff,
+    )
     for idx, res in enumerate(records, start=1):
         fcc_id = res.get('FCCId', '')
         if not fcc_id:
@@ -5381,6 +5481,19 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 exact_grantee,
                 grantee_code,
                 fcc_id,
+            )
+            continue
+
+        record_grant_date = _record_grant_date(res)
+        if (
+            grant_date_cutoff is not None
+            and record_grant_date is not None
+            and record_grant_date < grant_date_cutoff
+        ):
+            skipped_before_cutoff += 1
+            logger.debug(
+                "FCC sync skipped grant before cutoff query=%s fcc_id=%s grant_date=%s cutoff=%s",
+                fcc_id_query, fcc_id, record_grant_date, grant_date_cutoff,
             )
             continue
 
@@ -5664,6 +5777,7 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         # are intentionally not stamped so they are retried next time.
         if _metadata_is_empty(sec_metadata):
             skipped_empty_metadata += 1
+            deferred_grant_dates.append(record_grant_date)
             logger.warning(
                 "FCC ingest skipped record source=fcc_api query=%s "
                 "fcc_id=%s reason=empty_secondary_metadata "
@@ -5701,6 +5815,11 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
                 )
                 _stamp_lookup_timestamp(radio, lookup_started_at)
             skipped_non_radio += 1
+            # No rule parts usually means an FCC page failed (503) rather
+            # than a genuine non-radio; keep the grant inside the next
+            # sync's window so it is classified again.
+            if not sec_metadata.get('rule_parts'):
+                deferred_grant_dates.append(record_grant_date)
             logger.info(
                 "FCC ingest skipped record source=fcc_api query=%s "
                 "fcc_id=%s reason=not_a_radio_device "
@@ -6087,17 +6206,25 @@ def fetch_and_sync_fcc_id(fcc_id_query, start_date=None, end_date=None, force_re
         messages.append(
             f"Skipped {skipped_stale} radio records because FCC last-modified data was not newer than the prior lookup timestamp."
         )
+    if skipped_before_cutoff:
+        messages.append(
+            f"Skipped {skipped_before_cutoff} grant(s) dated before the last sync "
+            f"of {exact_grantee} (cutoff {grant_date_cutoff.strftime('%m/%d/%Y')})."
+        )
     if attached_reports:
         messages.append(f"Attached {attached_reports} FCC test report files.")
     if synced_oet_docs:
         messages.append(f"Synced {synced_oet_docs} OET exhibit documents.")
     messages.append(f"Successfully processed {len(records)} records for {fcc_id_query}.")
+    if can_stamp_grantee:
+        _stamp_grantee_sync(exact_grantee, synced_through, deferred_grant_dates)
     logger.info(
-        "FCC sync completed query=%s added=%s updated=%s exact_grantee=%s skipped_non_exact=%s skipped_non_radio=%s skipped_denylist=%s skipped_ignored_rule_part=%s skipped_key_fob=%s skipped_empty_metadata=%s skipped_stale_lookup=%s attached_test_reports=%s synced_oet_documents=%s",
+        "FCC sync completed query=%s added=%s updated=%s exact_grantee=%s skipped_before_cutoff=%s skipped_non_exact=%s skipped_non_radio=%s skipped_denylist=%s skipped_ignored_rule_part=%s skipped_key_fob=%s skipped_empty_metadata=%s skipped_stale_lookup=%s attached_test_reports=%s synced_oet_documents=%s",
         fcc_id_query,
         count_added,
         count_updated,
         exact_grantee,
+        skipped_before_cutoff,
         skipped_non_exact,
         skipped_non_radio,
         skipped_denylist,

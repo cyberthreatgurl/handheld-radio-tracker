@@ -24,7 +24,7 @@ A Django web application for managing and browsing ham radio specifications with
 
 ## Prerequisites
 
-- Python 3.10 - 3.13 (Python 3.14 not yet fully supported by Django)
+- Python 3.15 (matches the Docker image)
 - PostgreSQL 14+
 - Node.js 16+ (for Tailwind CSS)
 - npm (comes with Node.js)

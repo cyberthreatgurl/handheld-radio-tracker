@@ -1159,6 +1159,36 @@ class FCCSyncState(models.Model):
         return "Never synced"
 
 
+class GranteeSyncState(models.Model):
+    """Per-grantee record of the last completed FCC API sync.
+
+    A grantee-code sync with no explicit date window only processes grants
+    dated on or after ``last_synced_at``; older grants were already handled
+    by an earlier sync.
+    """
+
+    grantee_code = models.CharField(
+        max_length=20,
+        unique=True,
+        db_index=True,
+        help_text="FCC grantee code (e.g. '2ASNS').",
+    )
+    last_synced_at = models.DateTimeField(
+        help_text="Grants dated on or after this day are processed by the "
+                  "next grantee sync. Clear this row to force a full-history "
+                  "sync for the grantee.",
+    )
+
+    class Meta:
+        """Model options: verbose names and ordering."""
+        verbose_name = 'Grantee Sync State'
+        verbose_name_plural = 'Grantee Sync State'
+        ordering = ['grantee_code']
+
+    def __str__(self):
+        return f"{self.grantee_code}: {self.last_synced_at.strftime('%Y-%m-%d %H:%M UTC')}"
+
+
 # ---------------------------------------------------------------------------
 # User accounts, membership, and community comments
 # ---------------------------------------------------------------------------

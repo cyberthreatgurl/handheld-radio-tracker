@@ -94,7 +94,7 @@ radio-tracker/
 
 ## Prerequisites
 
-- Python 3.10 to 3.13
+- Python 3.15 (matches the Docker image)
 - PostgreSQL
 - Node.js and npm for Tailwind
 - Google Chrome installed locally for the most reliable FCC OET retrieval

@@ -70,7 +70,7 @@ class AuditOETSyncCommandTest(TestCase):
 
         self.assertEqual(mocked_fetch.call_count, 2)
         mocked_fetch.assert_any_call('2AJGM-ONE')
-        mocked_fetch.assert_any_call('2AJGM')
+        mocked_fetch.assert_any_call('2AJGM', full_history=True)
 
 
 class SyncFCCCommandIgnoreListTest(TestCase):
@@ -83,9 +83,11 @@ class SyncFCCCommandIgnoreListTest(TestCase):
         with patch('radios.management.commands.sync_fcc.fetch_and_sync_fcc_id', return_value=(0, 0, [])) as mocked_fetch:
             call_command('sync_fcc', '--all-grantees', stdout=output)
 
+        # Migration 0048 seeds the Sifang (2A4R6) brand, so it is processed too.
         rendered = output.getvalue()
-        self.assertIn('Found 1 grantees to process.', rendered)
-        mocked_fetch.assert_called_once_with('2AJGM', start_date=None, end_date=ANY)
+        self.assertNotIn('Processing grantee XH8', rendered)
+        mocked_fetch.assert_any_call('2AJGM', start_date=None, end_date=ANY, full_history=False)
+        self.assertNotIn('XH8', [c.args[0] for c in mocked_fetch.call_args_list])
 
 
 @override_settings(MEDIA_ROOT=tempfile.gettempdir())

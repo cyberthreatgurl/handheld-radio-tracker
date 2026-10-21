@@ -175,7 +175,7 @@ class Command(BaseCommand):
 
                 self.stdout.write(f'  Syncing grantee {query} ({r.brand} {r.model})...')
                 try:
-                    fetch_and_sync_fcc_id(query)
+                    fetch_and_sync_fcc_id(query, full_history=True)
                 except Exception as exc:
                     self.stderr.write(
                         self.style.ERROR(f'  Error syncing {query}: {exc}')

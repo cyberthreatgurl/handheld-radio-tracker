@@ -3,7 +3,7 @@ from .models import (
     Radio, RadioCertification, RadioServiceType, Brand,
     RadioManual, RadioFCCTestReport, RadioOETDocument, RadioFirmware,
     Manufacturer, IgnoredGrantee, SyncSkippedGrantee, FCCSyncState,
-    MembershipPlan, RadioComment, UserProfile,
+    GranteeSyncState, MembershipPlan, RadioComment, UserProfile,
     delete_brand_and_related,
 )
 
@@ -99,6 +99,15 @@ class ManufacturerAdmin(admin.ModelAdmin):
 class IgnoredGranteeAdmin(admin.ModelAdmin):
     list_display = ['grantee_code', 'reason', 'updated_at']
     search_fields = ['grantee_code', 'reason', 'notes']
+    ordering = ['grantee_code']
+
+
+@admin.register(GranteeSyncState)
+class GranteeSyncStateAdmin(admin.ModelAdmin):
+    """Per-grantee last-sync dates. Delete a row to force a full-history sync."""
+
+    list_display = ['grantee_code', 'last_synced_at']
+    search_fields = ['grantee_code']
     ordering = ['grantee_code']
 
 
@@ -207,7 +216,9 @@ class FCCSyncStateAdmin(admin.ModelAdmin):
         sync_state = FCCSyncState.get_instance()
 
         for brand in grantees:
-            added, updated, _ = fetch_and_sync_fcc_id(brand.grantee_code)
+            added, updated, _ = fetch_and_sync_fcc_id(
+                brand.grantee_code, full_history=True,
+            )
             total_added += added
             total_updated += updated
             count += 1
